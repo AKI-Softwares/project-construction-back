@@ -30,6 +30,6 @@ users       User[]
 
 model Permission {
   id      Int @id @default(autoincrement())
-  action  String
+  action  String @unique
   roles   Role[]
 }
