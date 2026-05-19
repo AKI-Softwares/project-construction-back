@@ -1,3 +1,4 @@
+import "dotenv/config";
 declare module '@fastify/jwt' {
     interface FastifyJWT {
         user: {
@@ -11,5 +12,4 @@ declare module 'fastify' {
         authenticate: any;
     }
 }
-export {};
 //# sourceMappingURL=server.d.ts.map
