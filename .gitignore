@@ -1,9 +1,29 @@
-node_modules
+# Dependências
+node_modules/
 
-/generated/prisma
+# Build
+dist/
 
-.env
-
-commands
-
+# Prisma gerado
+/generated/
 .prisma/
+
+# Artefatos compilados pelo tsc (nunca devem ficar ao lado do fonte)
+# Exceção: src/shared/types/*.d.ts são augmentações manuais
+*.js.map
+*.d.ts
+!src/shared/types/*.d.ts
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# Misc
+commands
+.DS_Store
+
+CLAUDE.md
+.claude/
+
+.playwright-mcp/
