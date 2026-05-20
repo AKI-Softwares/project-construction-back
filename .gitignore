@@ -12,6 +12,7 @@ dist/
 # Exceção: src/shared/types/*.d.ts são augmentações manuais
 *.js.map
 *.d.ts
+*.d.ts.map
 !src/shared/types/*.d.ts
 
 # Ambiente
