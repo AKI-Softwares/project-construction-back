@@ -60,7 +60,9 @@ export async function buildApp() {
       message:
         env.NODE_ENV === "production"
           ? "Internal server error"
-          : error.message,
+          : error instanceof Error
+            ? error.message
+            : String(error),
     });
   });
 

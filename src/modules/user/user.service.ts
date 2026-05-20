@@ -51,7 +51,13 @@ export class UserService {
       ? await bcrypt.hash(input.password, SALT_ROUNDS)
       : undefined;
 
-    return this.repo.update(id, { ...input, passwordHash });
+    const updateData: UpdateUserInput & { passwordHash?: string } = {};
+    if (input.name !== undefined) updateData.name = input.name;
+    if (input.email !== undefined) updateData.email = input.email;
+    if (input.roleId !== undefined) updateData.roleId = input.roleId;
+    if (passwordHash !== undefined) updateData.passwordHash = passwordHash;
+
+    return this.repo.update(id, updateData);
   }
 
   async deleteUser(id: number) {
