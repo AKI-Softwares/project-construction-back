@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { UserRepository } from "./user.repository.js";
 import { UserService } from "./user.service.js";
 import { UserController } from "./user.controller.js";
@@ -6,7 +7,7 @@ import { createUserSchema, updateUserSchema, userParamsSchema } from "./user.sch
 import { checkRole } from "../../shared/rbac/check-role.js";
 import { Role } from "../../shared/rbac/roles.js";
 
-export async function userRoutes(app: FastifyInstance) {
+export async function userRoutes(app: FastifyInstance<any, any, any, any, ZodTypeProvider>) {
   const repo = new UserRepository();
   const service = new UserService(repo);
   const controller = new UserController(service);
