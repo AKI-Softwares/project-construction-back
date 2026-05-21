@@ -1,0 +1,247 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-05-20T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v8",
+  "resources": [
+    {
+      "_id": "wrk_construction_back",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "project-construction-back",
+      "description": "API de construction (Fastify + Prisma). Auth JWT.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_construction_back",
+      "name": "Base Environment",
+      "data": {
+        "baseUrl": "http://localhost:3000",
+        "token": ""
+      },
+      "dataPropertyOrder": {
+        "&": ["baseUrl", "token"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1
+    },
+    {
+      "_id": "env_local",
+      "_type": "environment",
+      "parentId": "env_base",
+      "name": "Local",
+      "data": {
+        "baseUrl": "http://localhost:3000",
+        "token": ""
+      },
+      "dataPropertyOrder": {
+        "&": ["baseUrl", "token"]
+      },
+      "color": "#7d69cb",
+      "isPrivate": false,
+      "metaSortKey": 2
+    },
+    {
+      "_id": "env_dev",
+      "_type": "environment",
+      "parentId": "env_base",
+      "name": "Dev (Vercel)",
+      "data": {
+        "baseUrl": "https://project-construction-back.vercel.app",
+        "token": ""
+      },
+      "dataPropertyOrder": {
+        "&": ["baseUrl", "token"]
+      },
+      "color": "#3eb7e0",
+      "isPrivate": false,
+      "metaSortKey": 3
+    },
+    {
+      "_id": "env_prod",
+      "_type": "environment",
+      "parentId": "env_base",
+      "name": "Production",
+      "data": {
+        "baseUrl": "https://project-construction-back.vercel.app",
+        "token": ""
+      },
+      "dataPropertyOrder": {
+        "&": ["baseUrl", "token"]
+      },
+      "color": "#e05050",
+      "isPrivate": false,
+      "metaSortKey": 4
+    },
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Health",
+      "description": "Health checks publicos",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 100
+    },
+    {
+      "_id": "req_health",
+      "_type": "request",
+      "parentId": "fld_health",
+      "name": "GET /health",
+      "description": "Retorna { status: 'ok' }",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/health",
+      "body": {},
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": 1
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Auth",
+      "description": "Login + perfil",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 200
+    },
+    {
+      "_id": "req_auth_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/login",
+      "description": "Autentica e retorna { token }. Copie o token para a env var 'token'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"changeme\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {},
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_auth_me",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "GET /auth/me",
+      "description": "Retorna usuario do token. Requer Bearer.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/auth/me",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "fld_users",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Users",
+      "description": "CRUD de usuarios. Maioria exige role ADMIN/MANAGER.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 300
+    },
+    {
+      "_id": "req_users_list",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "GET /users",
+      "description": "Lista usuarios. Requer ADMIN ou MANAGER.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/users",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_users_get",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "GET /users/:id",
+      "description": "Busca usuario por id. Autenticado (service valida se proprio ou admin).",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/users/1",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_users_create",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "POST /users",
+      "description": "Cria usuario. Requer ADMIN. roleId: id da role existente em DB.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/users",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Joao Silva\",\n  \"email\": \"joao@example.com\",\n  \"password\": \"senha123\",\n  \"roleId\": 1\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_users_update",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "PATCH /users/:id",
+      "description": "Atualiza usuario. Autenticado (service valida permissao). Todos campos opcionais.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/users/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Novo Nome\"\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_users_delete",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "DELETE /users/:id",
+      "description": "Remove usuario. Requer ADMIN.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/users/1",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 5
+    }
+  ]
+}
