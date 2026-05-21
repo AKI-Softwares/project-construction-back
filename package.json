@@ -12,6 +12,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:push:dev": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"api/**/*.ts\""
@@ -24,6 +25,9 @@
   "author": "",
   "license": "ISC",
   "type": "module",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "bugs": {
     "url": "https://github.com/AKI-Softwares/project-construction-back/issues"
   },
