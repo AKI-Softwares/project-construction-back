@@ -18,7 +18,7 @@
       "parentId": "wrk_construction_back",
       "name": "Base Environment",
       "data": {
-        "baseUrl": "http://localhost:3000",
+        "baseUrl": "http://localhost:3333",
         "token": ""
       },
       "dataPropertyOrder": {
@@ -34,7 +34,7 @@
       "parentId": "env_base",
       "name": "Local",
       "data": {
-        "baseUrl": "http://localhost:3000",
+        "baseUrl": "http://localhost:3333",
         "token": ""
       },
       "dataPropertyOrder": {
