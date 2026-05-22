@@ -20,6 +20,9 @@ dist/
 .env.*
 !.env.example
 
+# Seed contém credencial default do super-admin — não versionar
+prisma/seed.ts
+
 # Misc
 commands
 .DS_Store
