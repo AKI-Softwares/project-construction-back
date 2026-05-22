@@ -7,15 +7,21 @@ datasource db {
   provider = "postgresql"
 }
 
+enum InspectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String    @db.VarChar(255)
-  email     String    @unique @db.VarChar(255)
-  passwordHash String    @map("password_hash") @db.VarChar(255)
-  roleId    Int       @map("role_id")
-  role      Role      @relation(fields: [roleId], references: [id])
-  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(255)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  roleId       Int      @map("role_id")
+  role         Role     @relation(fields: [roleId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   inspectChecklists Checklist[] @relation("InspectBy")
   signedChecklists  Checklist[] @relation("SignedBy")
@@ -30,19 +36,22 @@ model Role {
   isSystem    Boolean      @default(false) @map("is_system")
   permissions Permission[] @relation("RolePermissions")
   users       User[]
-  createdAt   DateTime?    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime?    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("Role")
 }
 
 model Permission {
-  id        Int    @id @default(autoincrement())
-  action    String @unique @db.VarChar(100)
-  resource  String @db.VarChar(50)
-  operation String @db.VarChar(50)
-  roles     Role[] @relation("RolePermissions")
+  id        Int      @id @default(autoincrement())
+  action    String   @unique @db.VarChar(100)
+  resource  String   @db.VarChar(50)
+  operation String   @db.VarChar(50)
+  roles     Role[]   @relation("RolePermissions")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@unique([resource, operation])
   @@map("Permission")
 }
 
@@ -52,8 +61,8 @@ model Building {
   address    String      @db.VarChar(255)
   apartments Apartment[]
   checklists Checklist[]
-  createdAt  DateTime?   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt  DateTime?   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("Building")
 }
@@ -62,11 +71,14 @@ model Apartment {
   id           Int          @id @default(autoincrement())
   buildingId   Int          @map("building_id")
   building     Building     @relation(fields: [buildingId], references: [id])
+  floor        Int
+  number       String       @db.VarChar(20)
   dependencies Dependency[]
   checklists   Checklist[]
-  createdAt    DateTime?    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime?    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@unique([buildingId, floor, number])
   @@map("Apartment")
 }
 
@@ -77,21 +89,21 @@ model Dependency {
   apartmentId Int         @map("apartment_id")
   apartment   Apartment   @relation(fields: [apartmentId], references: [id])
   checklists  Checklist[]
-  createdAt   DateTime?   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime?   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("Dependency")
 }
 
 model Inspection {
-  id           Int         @id @default(autoincrement())
-  name         String      @db.VarChar(255)
-  approved     Boolean?    @default(false)
-  observations String?     @db.Text
+  id           Int              @id @default(autoincrement())
+  name         String           @db.VarChar(255)
+  status       InspectionStatus @default(PENDING)
+  observations String?          @db.Text
   services     Service[]
   checklists   Checklist[]
-  createdAt    DateTime?   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime?   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("Inspection")
 }
@@ -103,8 +115,8 @@ model Service {
   inspectionId Int?        @map("inspection_id")
   inspection   Inspection? @relation(fields: [inspectionId], references: [id])
   checklists   Checklist[]
-  createdAt    DateTime?   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime?   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("Service")
 }
@@ -123,11 +135,17 @@ model Checklist {
   inspection     Inspection @relation(fields: [inspectionId], references: [id])
   inspectById    Int        @map("inspect_by")
   inspectBy      User       @relation("InspectBy", fields: [inspectById], references: [id])
-  signedById     Int        @map("signed_by")
-  signedBy       User       @relation("SignedBy", fields: [signedById], references: [id])
+  signedById     Int?       @map("signed_by")
+  signedBy       User?      @relation("SignedBy", fields: [signedById], references: [id])
   dateInspection DateTime   @map("date_inspection") @db.Timestamptz
-  createdAt      DateTime?  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime?  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@index([buildingId])
+  @@index([apartmentId])
+  @@index([dependencyId])
+  @@index([inspectionId])
+  @@index([inspectById])
+  @@index([signedById])
   @@map("Checklist")
 }

@@ -24,7 +24,7 @@ export const userResponseSchema = z.object({
   email: z.string(),
   roleId: z.number(),
   role: z.object({ id: z.number(), name: z.string() }),
-  createdAt: z.date().nullable(),
+  createdAt: z.date(),
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
