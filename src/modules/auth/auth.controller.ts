@@ -13,7 +13,7 @@ export class AuthController {
     reply: FastifyReply,
   ) {
     const payload = await this.service.login(request.body);
-    const token = this.app.jwt.sign(payload, { expiresIn: "7d" });
+    const token = this.app.jwt.sign(payload, { expiresIn: "1d" });
     return reply.send({ token });
   }
 

@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-05-20T00:00:00.000Z",
+  "__export_date": "2026-05-22T00:00:00.000Z",
   "__export_source": "insomnia.desktop.app:v8",
   "resources": [
     {
@@ -114,12 +114,12 @@
       "_type": "request",
       "parentId": "fld_auth",
       "name": "POST /auth/login",
-      "description": "Autentica e retorna { token }. Copie o token para a env var 'token'.",
+      "description": "Autentica e retorna { token }. Copie o token para a env var 'token'. Payload do JWT: { sub, roleId, permissions: string[] }. TTL: 1d.",
       "method": "POST",
       "url": "{{ _.baseUrl }}/auth/login",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"changeme\"\n}"
+        "text": "{\n  \"email\": \"<email>\",\n  \"password\": \"<password>\"\n}"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" }
@@ -148,7 +148,7 @@
       "_type": "request_group",
       "parentId": "wrk_construction_back",
       "name": "Users",
-      "description": "CRUD de usuarios. Maioria exige role ADMIN/MANAGER.",
+      "description": "CRUD de usuarios. Authz por permissao: users:read, users:create, users:update, users:delete.",
       "environment": {},
       "environmentPropertyOrder": null,
       "metaSortKey": 300
@@ -158,7 +158,7 @@
       "_type": "request",
       "parentId": "fld_users",
       "name": "GET /users",
-      "description": "Lista usuarios. Requer ADMIN ou MANAGER.",
+      "description": "Lista usuarios. Requer permissao 'users:read'.",
       "method": "GET",
       "url": "{{ _.baseUrl }}/users",
       "body": {},
@@ -174,7 +174,7 @@
       "_type": "request",
       "parentId": "fld_users",
       "name": "GET /users/:id",
-      "description": "Busca usuario por id. Autenticado (service valida se proprio ou admin).",
+      "description": "Busca usuario por id. Autenticado (sem preHandler de permissao).",
       "method": "GET",
       "url": "{{ _.baseUrl }}/users/1",
       "body": {},
@@ -190,7 +190,7 @@
       "_type": "request",
       "parentId": "fld_users",
       "name": "POST /users",
-      "description": "Cria usuario. Requer ADMIN. roleId: id da role existente em DB.",
+      "description": "Cria usuario. Requer permissao 'users:create'. roleId: id de role existente (busque via GET /roles).",
       "method": "POST",
       "url": "{{ _.baseUrl }}/users",
       "body": {
@@ -211,7 +211,7 @@
       "_type": "request",
       "parentId": "fld_users",
       "name": "PATCH /users/:id",
-      "description": "Atualiza usuario. Autenticado (service valida permissao). Todos campos opcionais.",
+      "description": "Atualiza usuario. Autenticado. Service exige: self OR 'users:update'. Alterar 'roleId' exige 'users:update'.",
       "method": "PATCH",
       "url": "{{ _.baseUrl }}/users/1",
       "body": {
@@ -232,9 +232,135 @@
       "_type": "request",
       "parentId": "fld_users",
       "name": "DELETE /users/:id",
-      "description": "Remove usuario. Requer ADMIN.",
+      "description": "Remove usuario. Requer permissao 'users:delete'.",
       "method": "DELETE",
       "url": "{{ _.baseUrl }}/users/1",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 5
+    },
+    {
+      "_id": "fld_permissions",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Permissions",
+      "description": "Catalogo de permissoes (read-only). Authz: permissions:read.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 400
+    },
+    {
+      "_id": "req_permissions_list",
+      "_type": "request",
+      "parentId": "fld_permissions",
+      "name": "GET /permissions",
+      "description": "Lista todas as permissoes agrupadas por resource. Requer 'permissions:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/permissions",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "fld_roles",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Roles",
+      "description": "CRUD de roles. Authz por permissao: roles:read, roles:create, roles:update, roles:delete. Roles com isSystem=true nao podem ser deletadas e devem manter ao menos 1 permissao.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 500
+    },
+    {
+      "_id": "req_roles_list",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "GET /roles",
+      "description": "Lista todas as roles com suas permissoes e contagem de usuarios. Requer 'roles:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/roles",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_roles_get",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "GET /roles/:id",
+      "description": "Busca role por id. Requer 'roles:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/roles/1",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_roles_create",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "POST /roles",
+      "description": "Cria role nova. Requer 'roles:create'. permissionIds: lista nao-vazia de ids existentes (busque via GET /permissions).",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/roles",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Inspector\",\n  \"description\": \"Read-only access to checklists.\",\n  \"permissionIds\": [29, 32]\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_roles_update",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "PATCH /roles/:id",
+      "description": "Atualiza role. Requer 'roles:update'. Todos campos opcionais. permissionIds (se enviado) faz SET completo. isSystem nao pode ficar sem permissoes.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/roles/2",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"permissionIds\": [29, 30, 32]\n}"
+      },
+      "headers": [
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_roles_delete",
+      "_type": "request",
+      "parentId": "fld_roles",
+      "name": "DELETE /roles/:id",
+      "description": "Remove role. Requer 'roles:delete'. 403 se isSystem=true. 409 se houver usuarios atribuidos (reatribua antes).",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/roles/2",
       "body": {},
       "headers": [],
       "authentication": {

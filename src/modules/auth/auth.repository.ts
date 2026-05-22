@@ -4,7 +4,13 @@ export class AuthRepository {
   async findUserByEmail(email: string) {
     return prisma.user.findUnique({
       where: { email },
-      include: { role: true },
+      include: {
+        role: {
+          include: {
+            permissions: { select: { action: true } },
+          },
+        },
+      },
     });
   }
 }

@@ -14,37 +14,42 @@ export class UserService {
 
   async getUser(id: number) {
     const user = await this.repo.findById(id);
-    if (!user) throw new HttpError(404, "Usuário não encontrado.");
+    if (!user) throw new HttpError(404, "User not found.");
     return user;
   }
 
   async createUser(input: CreateUserInput) {
     const existing = await this.repo.findByEmail(input.email);
-    if (existing) throw new HttpError(409, "E-mail já cadastrado.");
+    if (existing) throw new HttpError(409, "Email already registered.");
 
     const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
     return this.repo.create({ ...input, passwordHash });
   }
 
-  async updateUser(id: number, input: UpdateUserInput, requesterId: number, requesterRole: string) {
+  async updateUser(
+    id: number,
+    input: UpdateUserInput,
+    requesterId: number,
+    requesterPerms: string[],
+  ) {
     const user = await this.repo.findById(id);
-    if (!user) throw new HttpError(404, "Usuário não encontrado.");
+    if (!user) throw new HttpError(404, "User not found.");
 
-    // Usuário só pode editar a si mesmo; ADMIN pode editar qualquer um
     const isSelf = id === requesterId;
-    const isAdmin = requesterRole === "ADMIN";
-    if (!isSelf && !isAdmin) {
-      throw new HttpError(403, "Acesso negado.");
+    const canUpdateAny = requesterPerms.includes("users:update");
+
+    if (!isSelf && !canUpdateAny) {
+      throw new HttpError(403, "Access denied.");
     }
 
-    // Somente ADMIN pode alterar o role de outro usuário
-    if (input.roleId && !isAdmin) {
-      throw new HttpError(403, "Apenas ADMIN pode alterar o perfil de um usuário.");
+    // Only callers with users:update may change roleId
+    if (input.roleId !== undefined && !canUpdateAny) {
+      throw new HttpError(403, "Only users with 'users:update' may change role.");
     }
 
     if (input.email && input.email !== user.email) {
       const emailTaken = await this.repo.findByEmail(input.email);
-      if (emailTaken) throw new HttpError(409, "E-mail já em uso.");
+      if (emailTaken) throw new HttpError(409, "Email already in use.");
     }
 
     const passwordHash = input.password
@@ -62,7 +67,7 @@ export class UserService {
 
   async deleteUser(id: number) {
     const user = await this.repo.findById(id);
-    if (!user) throw new HttpError(404, "Usuário não encontrado.");
+    if (!user) throw new HttpError(404, "User not found.");
     await this.repo.delete(id);
   }
 }

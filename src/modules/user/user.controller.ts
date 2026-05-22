@@ -31,13 +31,13 @@ export class UserController {
     reply: FastifyReply,
   ) {
     const requesterId = Number(request.user.sub);
-    const requesterRole = request.user.role;
+    const requesterPerms = request.user.permissions;
 
     const user = await this.service.updateUser(
       request.params.id,
       request.body,
       requesterId,
-      requesterRole,
+      requesterPerms,
     );
     return reply.send(user);
   }

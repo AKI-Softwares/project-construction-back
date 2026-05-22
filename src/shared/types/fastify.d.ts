@@ -3,9 +3,15 @@ import "fastify";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
+    payload: {
+      sub: string;
+      roleId: number;
+      permissions: string[];
+    };
     user: {
       sub: string;
-      role: string;
+      roleId: number;
+      permissions: string[];
     };
   }
 }
