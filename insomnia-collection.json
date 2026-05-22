@@ -119,7 +119,7 @@
       "url": "{{ _.baseUrl }}/auth/login",
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"super-admin@aki.com.br\",\n  \"password\": \"Aki@SuperAdmin#2026\"\n}"
+        "text": "{\n  \"email\": \"<email>\",\n  \"password\": \"<password>\"\n}"
       },
       "headers": [
         { "name": "Content-Type", "value": "application/json" }
