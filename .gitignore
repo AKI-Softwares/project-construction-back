@@ -20,9 +20,6 @@ dist/
 .env.*
 !.env.example
 
-# Seed com credenciais — nao commitar (compartilhar fora do repo)
-prisma/seed.ts
-
 # Misc
 commands
 .DS_Store
