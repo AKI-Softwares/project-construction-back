@@ -9,17 +9,20 @@ export class AuthService {
   async login(input: LoginInput) {
     const user = await this.repo.findUserByEmail(input.email);
     if (!user) {
-      throw new HttpError(401, "Credenciais inválidas.");
+      throw new HttpError(401, "Invalid credentials.");
     }
 
     const passwordMatch = await bcrypt.compare(input.password, user.passwordHash);
     if (!passwordMatch) {
-      throw new HttpError(401, "Credenciais inválidas.");
+      throw new HttpError(401, "Invalid credentials.");
     }
+
+    const permissions = user.role.permissions.map((p) => p.action);
 
     return {
       sub: String(user.id),
-      role: user.role.name,
+      roleId: user.roleId,
+      permissions,
     };
   }
 }
