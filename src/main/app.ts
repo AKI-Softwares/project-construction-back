@@ -14,6 +14,9 @@ import { authRoutes } from "../modules/auth/auth.routes.js";
 import { userRoutes } from "../modules/user/user.routes.js";
 import { roleRoutes } from "../modules/role/role.routes.js";
 import { permissionRoutes } from "../modules/permission/permission.routes.js";
+import { buildingRoutes } from "../modules/building/building.routes.js";
+import { apartmentTypeRoutes } from "../modules/apartment-type/apartment-type.routes.js";
+import { apartmentRoutes } from "../modules/apartment/apartment.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -44,6 +47,9 @@ export async function buildApp() {
   await app.register(userRoutes, { prefix: "/users" });
   await app.register(roleRoutes, { prefix: "/roles" });
   await app.register(permissionRoutes, { prefix: "/permissions" });
+  await app.register(buildingRoutes, { prefix: "/buildings" });
+  await app.register(apartmentTypeRoutes, { prefix: "/apartment-types" });
+  await app.register(apartmentRoutes, { prefix: "/apartments" });
 
   // Error handler global
   app.setErrorHandler((error, _request, reply) => {
