@@ -368,6 +368,326 @@
         "token": "{{ _.token }}"
       },
       "metaSortKey": 5
+    },
+
+    {
+      "_id": "fld_buildings",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Buildings",
+      "description": "CRUD de empreendimentos. Authz: buildings:read/create/update/delete. Lat/lng para futuras APIs de geolocalização.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 600
+    },
+    {
+      "_id": "req_buildings_list",
+      "_type": "request",
+      "parentId": "fld_buildings",
+      "name": "GET /buildings",
+      "description": "Lista empreendimentos. Retorna _count.apartments. Requer 'buildings:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/buildings",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_buildings_get",
+      "_type": "request",
+      "parentId": "fld_buildings",
+      "name": "GET /buildings/:id",
+      "description": "Busca empreendimento por id. Retorna apartments[]. Requer 'buildings:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/buildings/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_buildings_create",
+      "_type": "request",
+      "parentId": "fld_buildings",
+      "name": "POST /buildings",
+      "description": "Cria empreendimento. Lat/lng opcionais. Requer 'buildings:create'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/buildings",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Residencial Alfa\",\n  \"address\": \"Rua das Flores, 100, São Paulo, SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_buildings_update",
+      "_type": "request",
+      "parentId": "fld_buildings",
+      "name": "PATCH /buildings/:id",
+      "description": "Atualiza empreendimento. Todos os campos opcionais. Requer 'buildings:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/buildings/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Residencial Alfa II\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_buildings_delete",
+      "_type": "request",
+      "parentId": "fld_buildings",
+      "name": "DELETE /buildings/:id",
+      "description": "Remove empreendimento. 409 se tiver apartamentos vinculados. Requer 'buildings:delete'.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/buildings/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 5
+    },
+
+    {
+      "_id": "fld_apartment_types",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Apartment Types",
+      "description": "Templates de apartamento (tipo). Reusa entre empreendimentos. Sub-rotas de cômodos sob apartment-types:update.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 700
+    },
+    {
+      "_id": "req_apt_types_list",
+      "_type": "request",
+      "parentId": "fld_apartment_types",
+      "name": "GET /apartment-types",
+      "description": "Lista tipos com rooms[] e _count.apartments. Requer 'apartment-types:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/apartment-types",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_apt_types_get",
+      "_type": "request",
+      "parentId": "fld_apartment_types",
+      "name": "GET /apartment-types/:id",
+      "description": "Busca tipo por id. Inclui rooms[] e _count.apartments. Requer 'apartment-types:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/apartment-types/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_apt_types_create",
+      "_type": "request",
+      "parentId": "fld_apartment_types",
+      "name": "POST /apartment-types",
+      "description": "Cria tipo de apartamento. Nome único. Requer 'apartment-types:create'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/apartment-types",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"2 Quartos Padrão\",\n  \"description\": \"Dois quartos, sala, cozinha, 1 banheiro\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_apt_types_update",
+      "_type": "request",
+      "parentId": "fld_apartment_types",
+      "name": "PATCH /apartment-types/:id",
+      "description": "Atualiza tipo. name e description opcionais. 409 se nome duplicado. Requer 'apartment-types:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/apartment-types/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"description\": \"Dois quartos, sala ampla, cozinha americana, 1 banheiro\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_apt_types_delete",
+      "_type": "request",
+      "parentId": "fld_apartment_types",
+      "name": "DELETE /apartment-types/:id",
+      "description": "Remove tipo. 409 se houver apartamentos instanciados. Requer 'apartment-types:delete'.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/apartment-types/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_apt_types_room_add",
+      "_type": "request",
+      "parentId": "fld_apartment_types",
+      "name": "POST /apartment-types/:id/rooms",
+      "description": "Adiciona cômodo ao template. Nome único por tipo. Requer 'apartment-types:update'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/apartment-types/1/rooms",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Quarto 1\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 6
+    },
+    {
+      "_id": "req_apt_types_room_delete",
+      "_type": "request",
+      "parentId": "fld_apartment_types",
+      "name": "DELETE /apartment-types/:id/rooms/:roomId",
+      "description": "Remove cômodo do template. Não afeta apartamentos já instanciados (roomId vira null). Requer 'apartment-types:update'.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/apartment-types/1/rooms/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 7
+    },
+
+    {
+      "_id": "fld_apartments",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Apartments",
+      "description": "Instâncias de apartamento em empreendimentos. POST instancia o tipo: copia cômodos do template em $transaction. Sub-rotas de cômodo e serviço sob apartments:update.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 800
+    },
+    {
+      "_id": "req_apartments_list",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "GET /apartments",
+      "description": "Lista apartamentos. Filtro opcional ?buildingId=. Requer 'apartments:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/apartments?buildingId=1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_apartments_get",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "GET /apartments/:id",
+      "description": "Busca apartamento por id. Inclui rooms[] com services[]. Requer 'apartments:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/apartments/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_apartments_create",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "POST /apartments",
+      "description": "Instancia apartamento. Copia cômodos do ApartmentType em $transaction. identifier único por empreendimento. floor e block opcionais. Requer 'apartments:create'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/apartments",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"buildingId\": 1,\n  \"apartmentTypeId\": 1,\n  \"identifier\": \"101\",\n  \"floor\": 1,\n  \"block\": \"A\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_apartments_update",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "PATCH /apartments/:id",
+      "description": "Atualiza identifier, floor e block. 409 se identifier duplicado no empreendimento. Requer 'apartments:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/apartments/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"identifier\": \"101A\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_apartments_delete",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "DELETE /apartments/:id",
+      "description": "Remove apartamento e seus cômodos (cascade). Requer 'apartments:delete'.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/apartments/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_apartments_room_rename",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "PATCH /apartments/:id/rooms/:roomId",
+      "description": "Renomeia cômodo da instância (ApartmentRoom.id, não Room.id). Não afeta o template. Requer 'apartments:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/apartments/1/rooms/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Suite Master\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 6
+    },
+    {
+      "_id": "req_apartments_service_add",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "POST /apartments/:id/rooms/:roomId/services",
+      "description": "Adiciona serviço ao cômodo da instância. 409 se já vinculado. Requer 'apartments:update'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/apartments/1/rooms/1/services",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"serviceId\": 1\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 7
+    },
+    {
+      "_id": "req_apartments_service_delete",
+      "_type": "request",
+      "parentId": "fld_apartments",
+      "name": "DELETE /apartments/:id/rooms/:roomId/services/:serviceId",
+      "description": "Remove serviço do cômodo da instância. Requer 'apartments:update'.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/apartments/1/rooms/1/services/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 8
     }
   ]
 }

@@ -23,9 +23,6 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  inspectChecklists Checklist[] @relation("InspectBy")
-  signedChecklists  Checklist[] @relation("SignedBy")
-
   @@map("User")
 }
 
@@ -56,96 +53,110 @@ model Permission {
 }
 
 model Building {
-  id         Int         @id @default(autoincrement())
-  name       String      @db.VarChar(255)
-  address    String      @db.VarChar(255)
+  id         Int           @id @default(autoincrement())
+  name       String        @db.VarChar(255)
+  address    String        @db.VarChar(500)
+  latitude   Float?
+  longitude  Float?
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   apartments Apartment[]
-  checklists Checklist[]
-  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt  DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("Building")
 }
 
-model Apartment {
-  id           Int          @id @default(autoincrement())
-  buildingId   Int          @map("building_id")
-  building     Building     @relation(fields: [buildingId], references: [id])
-  floor        Int
-  number       String       @db.VarChar(20)
-  dependencies Dependency[]
-  checklists   Checklist[]
-  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+model ApartmentType {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique @db.VarChar(255)
+  description String?     @db.VarChar(500)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  rooms       Room[]
+  apartments  Apartment[]
 
-  @@unique([buildingId, floor, number])
+  @@map("ApartmentType")
+}
+
+model Room {
+  id              Int             @id @default(autoincrement())
+  apartmentTypeId Int             @map("apartment_type_id")
+  name            String          @db.VarChar(255)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  apartmentType   ApartmentType   @relation(fields: [apartmentTypeId], references: [id])
+  apartmentRooms  ApartmentRoom[]
+
+  @@unique([apartmentTypeId, name])
+  @@index([apartmentTypeId])
+  @@map("Room")
+}
+
+model Apartment {
+  id              Int             @id @default(autoincrement())
+  buildingId      Int             @map("building_id")
+  apartmentTypeId Int             @map("apartment_type_id")
+  identifier      String          @db.VarChar(50)
+  floor           Int?
+  block           String?         @db.VarChar(50)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  building        Building        @relation(fields: [buildingId], references: [id])
+  apartmentType   ApartmentType   @relation(fields: [apartmentTypeId], references: [id])
+  rooms           ApartmentRoom[]
+
+  @@unique([buildingId, identifier])
+  @@index([apartmentTypeId])
   @@map("Apartment")
 }
 
-model Dependency {
-  id          Int         @id @default(autoincrement())
-  name        String      @db.VarChar(255)
-  quantity    Int?
-  apartmentId Int         @map("apartment_id")
-  apartment   Apartment   @relation(fields: [apartmentId], references: [id])
-  checklists  Checklist[]
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+model ApartmentRoom {
+  id            Int                    @id @default(autoincrement())
+  apartmentId   Int                    @map("apartment_id")
+  roomId        Int?                   @map("room_id")
+  name          String                 @db.VarChar(255)
+  createdAt     DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  apartment     Apartment              @relation(fields: [apartmentId], references: [id], onDelete: Cascade)
+  room          Room?                  @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  services      ApartmentRoomService[]
 
-  @@map("Dependency")
+  @@index([apartmentId])
+  @@index([roomId])
+  @@map("ApartmentRoom")
 }
 
+model ApartmentRoomService {
+  id              Int           @id @default(autoincrement())
+  apartmentRoomId Int           @map("apartment_room_id")
+  serviceId       Int           @map("service_id")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  apartmentRoom   ApartmentRoom @relation(fields: [apartmentRoomId], references: [id], onDelete: Cascade)
+  service         Service       @relation(fields: [serviceId], references: [id])
+
+  @@unique([apartmentRoomId, serviceId])
+  @@index([serviceId])
+  @@map("ApartmentRoomService")
+}
+
+// Minimal stub — Spec 2 adds description, category, RoomDefaultService
+model Service {
+  id                    Int                    @id @default(autoincrement())
+  name                  String                 @db.VarChar(255)
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  apartmentRoomServices ApartmentRoomService[]
+
+  @@map("Service")
+}
+
+// Dormant until Spec 3 — relations to Service/Checklist removed
 model Inspection {
   id           Int              @id @default(autoincrement())
   name         String           @db.VarChar(255)
   status       InspectionStatus @default(PENDING)
   observations String?          @db.Text
-  services     Service[]
-  checklists   Checklist[]
   createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("Inspection")
-}
-
-model Service {
-  id           Int         @id @default(autoincrement())
-  name         String      @db.VarChar(255)
-  type         String?     @db.VarChar(255)
-  inspectionId Int?        @map("inspection_id")
-  inspection   Inspection? @relation(fields: [inspectionId], references: [id])
-  checklists   Checklist[]
-  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-
-  @@map("Service")
-}
-
-model Checklist {
-  id             Int        @id @default(autoincrement())
-  buildingId     Int        @map("building_id")
-  building       Building   @relation(fields: [buildingId], references: [id])
-  apartmentId    Int        @map("apartment_id")
-  apartment      Apartment  @relation(fields: [apartmentId], references: [id])
-  dependencyId   Int        @map("dependency_id")
-  dependency     Dependency @relation(fields: [dependencyId], references: [id])
-  serviceId      Int?       @map("service_id")
-  service        Service?   @relation(fields: [serviceId], references: [id])
-  inspectionId   Int        @map("inspection_id")
-  inspection     Inspection @relation(fields: [inspectionId], references: [id])
-  inspectById    Int        @map("inspect_by")
-  inspectBy      User       @relation("InspectBy", fields: [inspectById], references: [id])
-  signedById     Int?       @map("signed_by")
-  signedBy       User?      @relation("SignedBy", fields: [signedById], references: [id])
-  dateInspection DateTime   @map("date_inspection") @db.Timestamptz
-  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-
-  @@index([buildingId])
-  @@index([apartmentId])
-  @@index([dependencyId])
-  @@index([inspectionId])
-  @@index([inspectById])
-  @@index([signedById])
-  @@map("Checklist")
 }

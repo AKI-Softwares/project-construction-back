@@ -1,0 +1,172 @@
+import { prisma } from "../../shared/infra/database/prisma.js";
+import type { CreateApartmentInput, UpdateApartmentInput } from "./apartment.schema.js";
+
+const APARTMENT_ROOM_SERVICE_SELECT = {
+  id: true,
+  serviceId: true,
+  service: { select: { id: true, name: true } },
+} as const;
+
+const APARTMENT_ROOM_SELECT = {
+  id: true,
+  roomId: true,
+  name: true,
+  createdAt: true,
+  updatedAt: true,
+  services: { select: APARTMENT_ROOM_SERVICE_SELECT },
+} as const;
+
+const APARTMENT_LIST_SELECT = {
+  id: true,
+  buildingId: true,
+  apartmentTypeId: true,
+  identifier: true,
+  floor: true,
+  block: true,
+  createdAt: true,
+  updatedAt: true,
+  building: { select: { id: true, name: true } },
+  apartmentType: { select: { id: true, name: true } },
+} as const;
+
+const APARTMENT_DETAIL_SELECT = {
+  id: true,
+  buildingId: true,
+  apartmentTypeId: true,
+  identifier: true,
+  floor: true,
+  block: true,
+  createdAt: true,
+  updatedAt: true,
+  building: { select: { id: true, name: true } },
+  apartmentType: { select: { id: true, name: true } },
+  rooms: {
+    select: APARTMENT_ROOM_SELECT,
+    orderBy: { name: "asc" as const },
+  },
+} as const;
+
+export class ApartmentRepository {
+  async findAll(buildingId?: number) {
+    return prisma.apartment.findMany({
+      ...(buildingId !== undefined && { where: { buildingId } }),
+      select: APARTMENT_LIST_SELECT,
+      orderBy: [{ buildingId: "asc" as const }, { identifier: "asc" as const }],
+    });
+  }
+
+  async findById(id: number) {
+    return prisma.apartment.findUnique({
+      where: { id },
+      select: APARTMENT_DETAIL_SELECT,
+    });
+  }
+
+  async findByBuildingAndIdentifier(buildingId: number, identifier: string) {
+    return prisma.apartment.findUnique({
+      where: { buildingId_identifier: { buildingId, identifier } },
+      select: { id: true },
+    });
+  }
+
+  async findBuildingById(id: number) {
+    return prisma.building.findUnique({ where: { id }, select: { id: true } });
+  }
+
+  async findApartmentTypeWithRooms(id: number) {
+    return prisma.apartmentType.findUnique({
+      where: { id },
+      select: { id: true, rooms: { select: { id: true, name: true } } },
+    });
+  }
+
+  async createWithRooms(
+    input: CreateApartmentInput,
+    rooms: { id: number; name: string }[],
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const apartment = await tx.apartment.create({
+        data: {
+          buildingId: input.buildingId,
+          apartmentTypeId: input.apartmentTypeId,
+          identifier: input.identifier,
+          ...(input.floor !== undefined && { floor: input.floor }),
+          ...(input.block !== undefined && { block: input.block }),
+        },
+      });
+
+      if (rooms.length > 0) {
+        await tx.apartmentRoom.createMany({
+          data: rooms.map((room) => ({
+            apartmentId: apartment.id,
+            roomId: room.id,
+            name: room.name,
+          })),
+        });
+      }
+
+      const result = await tx.apartment.findUnique({
+        where: { id: apartment.id },
+        select: APARTMENT_DETAIL_SELECT,
+      });
+
+      return result!;
+    });
+  }
+
+  async update(id: number, data: UpdateApartmentInput) {
+    return prisma.apartment.update({
+      where: { id },
+      data: {
+        ...(data.identifier !== undefined && { identifier: data.identifier }),
+        ...(data.floor !== undefined && { floor: data.floor }),
+        ...(data.block !== undefined && { block: data.block }),
+      },
+      select: APARTMENT_DETAIL_SELECT,
+    });
+  }
+
+  async delete(id: number) {
+    return prisma.apartment.delete({ where: { id }, select: { id: true } });
+  }
+
+  async findApartmentRoom(apartmentId: number, roomId: number) {
+    return prisma.apartmentRoom.findFirst({
+      where: { id: roomId, apartmentId },
+      select: { id: true, name: true },
+    });
+  }
+
+  async updateApartmentRoomName(roomId: number, name: string) {
+    return prisma.apartmentRoom.update({
+      where: { id: roomId },
+      data: { name },
+      select: APARTMENT_ROOM_SELECT,
+    });
+  }
+
+  async findService(id: number) {
+    return prisma.service.findUnique({ where: { id }, select: { id: true } });
+  }
+
+  async findApartmentRoomService(apartmentRoomId: number, serviceId: number) {
+    return prisma.apartmentRoomService.findUnique({
+      where: { apartmentRoomId_serviceId: { apartmentRoomId, serviceId } },
+      select: { id: true },
+    });
+  }
+
+  async addRoomService(apartmentRoomId: number, serviceId: number) {
+    return prisma.apartmentRoomService.create({
+      data: { apartmentRoomId, serviceId },
+      select: APARTMENT_ROOM_SERVICE_SELECT,
+    });
+  }
+
+  async deleteRoomService(apartmentRoomId: number, serviceId: number) {
+    return prisma.apartmentRoomService.delete({
+      where: { apartmentRoomId_serviceId: { apartmentRoomId, serviceId } },
+      select: { id: true },
+    });
+  }
+}
