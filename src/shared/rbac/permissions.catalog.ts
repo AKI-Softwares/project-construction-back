@@ -16,26 +16,20 @@ export const PERMISSIONS = [
   { action: "buildings:update",    resource: "buildings",      operation: "update" },
   { action: "buildings:delete",    resource: "buildings",      operation: "delete" },
 
+  { action: "apartment-types:read",   resource: "apartment-types", operation: "read"   },
+  { action: "apartment-types:create", resource: "apartment-types", operation: "create" },
+  { action: "apartment-types:update", resource: "apartment-types", operation: "update" },
+  { action: "apartment-types:delete", resource: "apartment-types", operation: "delete" },
+
   { action: "apartments:read",     resource: "apartments",     operation: "read"   },
   { action: "apartments:create",   resource: "apartments",     operation: "create" },
   { action: "apartments:update",   resource: "apartments",     operation: "update" },
   { action: "apartments:delete",   resource: "apartments",     operation: "delete" },
 
-  { action: "dependencies:read",   resource: "dependencies",   operation: "read"   },
-  { action: "dependencies:create", resource: "dependencies",   operation: "create" },
-  { action: "dependencies:update", resource: "dependencies",   operation: "update" },
-  { action: "dependencies:delete", resource: "dependencies",   operation: "delete" },
-
   { action: "services:read",       resource: "services",       operation: "read"   },
   { action: "services:create",     resource: "services",       operation: "create" },
   { action: "services:update",     resource: "services",       operation: "update" },
   { action: "services:delete",     resource: "services",       operation: "delete" },
-
-  { action: "checklists:read",     resource: "checklists",     operation: "read"   },
-  { action: "checklists:create",   resource: "checklists",     operation: "create" },
-  { action: "checklists:update",   resource: "checklists",     operation: "update" },
-  { action: "checklists:delete",   resource: "checklists",     operation: "delete" },
-  { action: "checklists:sign",     resource: "checklists",     operation: "sign"   },
 
   { action: "inspections:read",    resource: "inspections",    operation: "read"   },
   { action: "inspections:create",  resource: "inspections",    operation: "create" },
