@@ -59,6 +59,13 @@ export class ServiceService {
     if (defaultCount > 0) {
       throw new HttpError(409, "Service is set as a room default and cannot be deleted.");
     }
-    await this.repo.delete(id);
+    try {
+      await this.repo.delete(id);
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
+        throw new HttpError(409, "Service is in use and cannot be deleted.");
+      }
+      throw e;
+    }
   }
 }
