@@ -76,13 +76,22 @@ export class ApartmentRepository {
   async findApartmentTypeWithRooms(id: number) {
     return prisma.apartmentType.findUnique({
       where: { id },
-      select: { id: true, rooms: { select: { id: true, name: true } } },
+      select: {
+        id: true,
+        rooms: {
+          select: {
+            id: true,
+            name: true,
+            defaultServices: { select: { serviceId: true } },
+          },
+        },
+      },
     });
   }
 
   async createWithRooms(
     input: CreateApartmentInput,
-    rooms: { id: number; name: string }[],
+    rooms: { id: number; name: string; defaultServices: { serviceId: number }[] }[],
   ) {
     return prisma.$transaction(async (tx) => {
       const apartment = await tx.apartment.create({
@@ -95,14 +104,25 @@ export class ApartmentRepository {
         },
       });
 
-      if (rooms.length > 0) {
-        await tx.apartmentRoom.createMany({
-          data: rooms.map((room) => ({
-            apartmentId: apartment.id,
-            roomId: room.id,
-            name: room.name,
-          })),
+      const createdRooms: { id: number }[] = [];
+      for (const room of rooms) {
+        const created = await tx.apartmentRoom.create({
+          data: { apartmentId: apartment.id, roomId: room.id, name: room.name },
+          select: { id: true },
         });
+        createdRooms.push(created);
+      }
+
+      const serviceData = rooms.flatMap((room, i) => {
+        const createdRoom = createdRooms[i]!;
+        return room.defaultServices.map((ds) => ({
+          apartmentRoomId: createdRoom.id,
+          serviceId: ds.serviceId,
+        }));
+      });
+
+      if (serviceData.length > 0) {
+        await tx.apartmentRoomService.createMany({ data: serviceData });
       }
 
       const result = await tx.apartment.findUnique({
