@@ -49,11 +49,13 @@ export class ServiceService {
   async deleteService(id: number) {
     const service = await this.repo.findById(id);
     if (!service) throw new HttpError(404, "Service not found.");
-    const instanceCount = await this.repo.countApartmentRoomServices(id);
+    const [instanceCount, defaultCount] = await Promise.all([
+      this.repo.countApartmentRoomServices(id),
+      this.repo.countRoomDefaultServices(id),
+    ]);
     if (instanceCount > 0) {
       throw new HttpError(409, "Service is in use by apartment instances and cannot be deleted.");
     }
-    const defaultCount = await this.repo.countRoomDefaultServices(id);
     if (defaultCount > 0) {
       throw new HttpError(409, "Service is set as a room default and cannot be deleted.");
     }
