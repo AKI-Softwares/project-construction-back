@@ -17,6 +17,7 @@ import { permissionRoutes } from "../modules/permission/permission.routes.js";
 import { buildingRoutes } from "../modules/building/building.routes.js";
 import { apartmentTypeRoutes } from "../modules/apartment-type/apartment-type.routes.js";
 import { apartmentRoutes } from "../modules/apartment/apartment.routes.js";
+import { serviceRoutes } from "../modules/service/service.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -50,6 +51,7 @@ export async function buildApp() {
   await app.register(buildingRoutes, { prefix: "/buildings" });
   await app.register(apartmentTypeRoutes, { prefix: "/apartment-types" });
   await app.register(apartmentRoutes, { prefix: "/apartments" });
+  await app.register(serviceRoutes, { prefix: "/services" });
 
   // Error handler global
   app.setErrorHandler((error, _request, reply) => {
