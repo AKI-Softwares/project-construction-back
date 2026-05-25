@@ -85,6 +85,7 @@ model Room {
   updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   apartmentType   ApartmentType   @relation(fields: [apartmentTypeId], references: [id])
   apartmentRooms  ApartmentRoom[]
+  defaultServices RoomDefaultService[]
 
   @@unique([apartmentTypeId, name])
   @@index([apartmentTypeId])
@@ -138,15 +139,28 @@ model ApartmentRoomService {
   @@map("ApartmentRoomService")
 }
 
-// Minimal stub — Spec 2 adds description, category, RoomDefaultService
 model Service {
   id                    Int                    @id @default(autoincrement())
-  name                  String                 @db.VarChar(255)
+  name                  String                 @unique @db.VarChar(255)
+  description           String?                @db.VarChar(500)
+  category              String?                @db.VarChar(100)
   createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   apartmentRoomServices ApartmentRoomService[]
+  roomDefaultServices   RoomDefaultService[]
 
   @@map("Service")
+}
+
+model RoomDefaultService {
+  roomId    Int     @map("room_id")
+  serviceId Int     @map("service_id")
+  room      Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@id([roomId, serviceId])
+  @@index([serviceId])
+  @@map("RoomDefaultService")
 }
 
 // Dormant until Spec 3 — relations to Service/Checklist removed
