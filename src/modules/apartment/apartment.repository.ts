@@ -104,22 +104,18 @@ export class ApartmentRepository {
         },
       });
 
-      const createdRooms: { id: number }[] = [];
+      const serviceData: { apartmentRoomId: number; serviceId: number }[] = [];
+
+      // createMany does not return IDs; sequential create is required to link services
       for (const room of rooms) {
         const created = await tx.apartmentRoom.create({
           data: { apartmentId: apartment.id, roomId: room.id, name: room.name },
           select: { id: true },
         });
-        createdRooms.push(created);
+        for (const ds of room.defaultServices) {
+          serviceData.push({ apartmentRoomId: created.id, serviceId: ds.serviceId });
+        }
       }
-
-      const serviceData = rooms.flatMap((room, i) => {
-        const createdRoom = createdRooms[i]!;
-        return room.defaultServices.map((ds) => ({
-          apartmentRoomId: createdRoom.id,
-          serviceId: ds.serviceId,
-        }));
-      });
 
       if (serviceData.length > 0) {
         await tx.apartmentRoomService.createMany({ data: serviceData });
