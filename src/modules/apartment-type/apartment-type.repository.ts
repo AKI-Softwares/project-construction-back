@@ -23,7 +23,6 @@ const APARTMENT_TYPE_SELECT = {
 } as const;
 
 const ROOM_DEFAULT_SERVICE_SELECT = {
-  serviceId: true,
   service: { select: { id: true, name: true, category: true } },
 } as const;
 
