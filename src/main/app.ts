@@ -20,6 +20,7 @@ import { apartmentRoutes } from "../modules/apartment/apartment.routes.js";
 import { serviceRoutes } from "../modules/service/service.routes.js";
 import { checklistRoutes } from "../modules/checklist/checklist.routes.js";
 import { visitRoutes } from "../modules/visit/visit.routes.js";
+import { nonConformityRoutes } from "../modules/non-conformity/non-conformity.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -56,6 +57,7 @@ export async function buildApp() {
   await app.register(serviceRoutes, { prefix: "/services" });
   await app.register(checklistRoutes, { prefix: "/checklists" });
   await app.register(visitRoutes, { prefix: "/visits" });
+  await app.register(nonConformityRoutes, { prefix: "/non-conformities" });
 
   // Error handler global
   app.setErrorHandler((error, _request, reply) => {
