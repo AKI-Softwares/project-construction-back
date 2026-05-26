@@ -21,7 +21,7 @@ export class NonConformityController {
       }
       throw err;
     }
-    const photo = await this.service.addPhoto(request.params.id, buffer, data.mimetype);
+    const photo = await this.service.addPhoto(request.params.id, buffer);
     return reply.status(201).send(photo);
   }
 
