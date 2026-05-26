@@ -28,3 +28,16 @@ export type UpdateApartmentTypeInput = z.infer<typeof updateApartmentTypeSchema>
 export type ApartmentTypeParams = z.infer<typeof apartmentTypeParamsSchema>;
 export type RoomParams = z.infer<typeof roomParamsSchema>;
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;
+
+export const roomServiceParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  roomId: z.coerce.number().int().positive(),
+  serviceId: z.coerce.number().int().positive(),
+});
+
+export const addRoomDefaultServiceSchema = z.object({
+  serviceId: z.coerce.number().int().positive(),
+});
+
+export type RoomServiceParams = z.infer<typeof roomServiceParamsSchema>;
+export type AddRoomDefaultServiceInput = z.infer<typeof addRoomDefaultServiceSchema>;

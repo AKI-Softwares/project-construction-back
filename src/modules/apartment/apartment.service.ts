@@ -73,6 +73,8 @@ export class ApartmentService {
   async deleteApartment(id: number) {
     const apartment = await this.repo.findById(id);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
+    const checklist = await this.repo.findChecklistByApartmentId(id);
+    if (checklist) throw new HttpError(409, "Apartment has a checklist and cannot be deleted.");
     await this.repo.delete(id);
   }
 

@@ -22,6 +22,10 @@ const APARTMENT_TYPE_SELECT = {
   _count: { select: { apartments: true } },
 } as const;
 
+const ROOM_DEFAULT_SERVICE_SELECT = {
+  service: { select: { id: true, name: true, category: true } },
+} as const;
+
 export class ApartmentTypeRepository {
   async findAll() {
     return prisma.apartmentType.findMany({
@@ -93,5 +97,38 @@ export class ApartmentTypeRepository {
 
   async deleteRoom(roomId: number) {
     return prisma.room.delete({ where: { id: roomId }, select: { id: true } });
+  }
+
+  async listRoomDefaultServices(roomId: number) {
+    return prisma.roomDefaultService.findMany({
+      where: { roomId },
+      select: ROOM_DEFAULT_SERVICE_SELECT,
+      orderBy: { service: { name: "asc" } },
+    });
+  }
+
+  async findService(serviceId: number) {
+    return prisma.service.findUnique({ where: { id: serviceId }, select: { id: true } });
+  }
+
+  async findRoomDefaultService(roomId: number, serviceId: number) {
+    return prisma.roomDefaultService.findUnique({
+      where: { roomId_serviceId: { roomId, serviceId } },
+      select: { serviceId: true },
+    });
+  }
+
+  async addRoomDefaultService(roomId: number, serviceId: number) {
+    return prisma.roomDefaultService.create({
+      data: { roomId, serviceId },
+      select: ROOM_DEFAULT_SERVICE_SELECT,
+    });
+  }
+
+  async deleteRoomDefaultService(roomId: number, serviceId: number) {
+    return prisma.roomDefaultService.delete({
+      where: { roomId_serviceId: { roomId, serviceId } },
+      select: { serviceId: true },
+    });
   }
 }

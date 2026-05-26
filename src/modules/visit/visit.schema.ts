@@ -1,0 +1,29 @@
+import { z } from "zod";
+
+export const visitParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
+export const visitItemParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  itemId: z.coerce.number().int().positive(),
+});
+
+export const finalizeVisitSchema = z.object({
+  status: z.literal("FINALIZED"),
+  observations: z.string().min(1).optional(),
+});
+
+export const updateVisitItemSchema = z.object({
+  status: z.enum(["PENDING", "OK", "NOK"]),
+});
+
+export const addNonConformitySchema = z.object({
+  description: z.string().min(1),
+});
+
+export type VisitParams = z.infer<typeof visitParamsSchema>;
+export type VisitItemParams = z.infer<typeof visitItemParamsSchema>;
+export type FinalizeVisitInput = z.infer<typeof finalizeVisitSchema>;
+export type UpdateVisitItemInput = z.infer<typeof updateVisitItemSchema>;
+export type AddNonConformityInput = z.infer<typeof addNonConformitySchema>;

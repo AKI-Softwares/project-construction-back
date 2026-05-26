@@ -3,10 +3,12 @@ import { ApartmentTypeRepository } from "./apartment-type.repository.js";
 import { ApartmentTypeService } from "./apartment-type.service.js";
 import { ApartmentTypeController } from "./apartment-type.controller.js";
 import {
+  addRoomDefaultServiceSchema,
   apartmentTypeParamsSchema,
   createApartmentTypeSchema,
   createRoomSchema,
   roomParamsSchema,
+  roomServiceParamsSchema,
   updateApartmentTypeSchema,
 } from "./apartment-type.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
@@ -74,5 +76,32 @@ export const apartmentTypeRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: [app.authenticate, checkPermission("apartment-types:update")],
     },
     controller.removeRoom.bind(controller),
+  );
+
+  app.get(
+    "/:id/rooms/:roomId/services",
+    {
+      schema: { params: roomParamsSchema },
+      preHandler: [app.authenticate, checkPermission("apartment-types:read")],
+    },
+    controller.listRoomDefaultServices.bind(controller),
+  );
+
+  app.post(
+    "/:id/rooms/:roomId/services",
+    {
+      schema: { params: roomParamsSchema, body: addRoomDefaultServiceSchema },
+      preHandler: [app.authenticate, checkPermission("apartment-types:update")],
+    },
+    controller.addRoomDefaultService.bind(controller),
+  );
+
+  app.delete(
+    "/:id/rooms/:roomId/services/:serviceId",
+    {
+      schema: { params: roomServiceParamsSchema },
+      preHandler: [app.authenticate, checkPermission("apartment-types:update")],
+    },
+    controller.removeRoomDefaultService.bind(controller),
   );
 };

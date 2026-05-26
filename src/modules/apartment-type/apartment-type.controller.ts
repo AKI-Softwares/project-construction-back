@@ -1,10 +1,12 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { ApartmentTypeService } from "./apartment-type.service.js";
 import type {
+  AddRoomDefaultServiceInput,
   ApartmentTypeParams,
   CreateApartmentTypeInput,
   CreateRoomInput,
   RoomParams,
+  RoomServiceParams,
   UpdateApartmentTypeInput,
 } from "./apartment-type.schema.js";
 
@@ -51,6 +53,40 @@ export class ApartmentTypeController {
 
   async removeRoom(request: FastifyRequest<{ Params: RoomParams }>, reply: FastifyReply) {
     await this.service.removeRoom(request.params.id, request.params.roomId);
+    return reply.status(204).send();
+  }
+
+  async listRoomDefaultServices(
+    request: FastifyRequest<{ Params: RoomParams }>,
+    reply: FastifyReply,
+  ) {
+    return reply.send(
+      await this.service.listRoomDefaultServices(request.params.id, request.params.roomId),
+    );
+  }
+
+  async addRoomDefaultService(
+    request: FastifyRequest<{ Params: RoomParams; Body: AddRoomDefaultServiceInput }>,
+    reply: FastifyReply,
+  ) {
+    return reply.status(201).send(
+      await this.service.addRoomDefaultService(
+        request.params.id,
+        request.params.roomId,
+        request.body,
+      ),
+    );
+  }
+
+  async removeRoomDefaultService(
+    request: FastifyRequest<{ Params: RoomServiceParams }>,
+    reply: FastifyReply,
+  ) {
+    await this.service.removeRoomDefaultService(
+      request.params.id,
+      request.params.roomId,
+      request.params.serviceId,
+    );
     return reply.status(204).send();
   }
 }
