@@ -27,6 +27,7 @@ export async function uploadPhoto(buffer: Buffer): Promise<{ secureUrl: string; 
 }
 
 export async function deleteCloudinaryPhoto(publicId: string): Promise<void> {
+  if (!publicId) throw new Error("publicId is required for deletion.");
   const result = await cloudinary.uploader.destroy(publicId);
   if (result.result !== "ok" && result.result !== "not found") {
     throw new Error(`Cloudinary delete failed: ${result.result}`);
