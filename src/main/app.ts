@@ -19,6 +19,7 @@ import { apartmentTypeRoutes } from "../modules/apartment-type/apartment-type.ro
 import { apartmentRoutes } from "../modules/apartment/apartment.routes.js";
 import { serviceRoutes } from "../modules/service/service.routes.js";
 import { checklistRoutes } from "../modules/checklist/checklist.routes.js";
+import { visitRoutes } from "../modules/visit/visit.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -54,6 +55,7 @@ export async function buildApp() {
   await app.register(apartmentRoutes, { prefix: "/apartments" });
   await app.register(serviceRoutes, { prefix: "/services" });
   await app.register(checklistRoutes, { prefix: "/checklists" });
+  await app.register(visitRoutes, { prefix: "/visits" });
 
   // Error handler global
   app.setErrorHandler((error, _request, reply) => {
