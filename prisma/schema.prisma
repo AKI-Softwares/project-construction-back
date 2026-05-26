@@ -263,6 +263,7 @@ model Photo {
   id              Int           @id @default(autoincrement())
   nonConformityId Int           @map("non_conformity_id")
   url             String        @db.VarChar(500)
+  publicId        String        @map("public_id") @db.VarChar(200)
   uploadedAt      DateTime      @default(now()) @map("uploaded_at") @db.Timestamptz
   nonConformity   NonConformity @relation(fields: [nonConformityId], references: [id], onDelete: Cascade)
 
