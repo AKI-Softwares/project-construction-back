@@ -1,5 +1,4 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
-import type { AddPhotoInput } from "./non-conformity.schema.js";
 
 export class NonConformityRepository {
   async findById(id: number) {
@@ -16,9 +15,9 @@ export class NonConformityRepository {
     });
   }
 
-  async addPhoto(ncId: number, data: AddPhotoInput) {
+  async addPhoto(ncId: number, url: string) {
     return prisma.photo.create({
-      data: { nonConformityId: ncId, url: data.url },
+      data: { nonConformityId: ncId, url },
       select: { id: true, url: true, uploadedAt: true },
     });
   }

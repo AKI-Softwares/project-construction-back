@@ -8,6 +8,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(8),
   PORT: z.coerce.number().default(3333),
   CORS_ORIGINS: z.string().default(""),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);
