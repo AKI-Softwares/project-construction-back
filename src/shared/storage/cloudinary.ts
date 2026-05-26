@@ -8,6 +8,8 @@ cloudinary.config({
 });
 
 export async function uploadPhoto(buffer: Buffer): Promise<string> {
+  if (!buffer.length) throw new Error("Upload buffer is empty.");
+
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -19,6 +21,7 @@ export async function uploadPhoto(buffer: Buffer): Promise<string> {
         resolve(result.secure_url);
       },
     );
+    stream.on("error", reject);
     stream.end(buffer);
   });
 }
