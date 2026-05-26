@@ -40,6 +40,8 @@ export class NonConformityService {
     if (!nc) throw new HttpError(404, "Non-conformity not found.");
     const photo = await this.repo.findPhoto(ncId, photoId);
     if (!photo) throw new HttpError(404, "Photo not found.");
+    // Cloudinary first: if DB delete fails after this, the file is orphaned in storage
+    // but the record stays intact and the client can retry. Accepted trade-off.
     try {
       await deleteCloudinaryPhoto(photo.publicId);
     } catch (err) {

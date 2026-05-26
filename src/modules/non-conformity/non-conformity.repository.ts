@@ -23,6 +23,6 @@ export class NonConformityRepository {
   }
 
   async deletePhoto(photoId: number) {
-    return prisma.photo.delete({ where: { id: photoId }, select: { id: true } });
+    await prisma.photo.delete({ where: { id: photoId } });
   }
 }
