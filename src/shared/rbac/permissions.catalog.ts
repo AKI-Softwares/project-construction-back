@@ -31,10 +31,19 @@ export const PERMISSIONS = [
   { action: "services:update",     resource: "services",       operation: "update" },
   { action: "services:delete",     resource: "services",       operation: "delete" },
 
-  { action: "inspections:read",    resource: "inspections",    operation: "read"   },
-  { action: "inspections:create",  resource: "inspections",    operation: "create" },
-  { action: "inspections:update",  resource: "inspections",    operation: "update" },
-  { action: "inspections:delete",  resource: "inspections",    operation: "delete" },
+  { action: "checklists:read",           resource: "checklists",        operation: "read"   },
+  { action: "checklists:update",         resource: "checklists",        operation: "update" },
+
+  { action: "visits:read",               resource: "visits",            operation: "read"   },
+  { action: "visits:create",             resource: "visits",            operation: "create" },
+  { action: "visits:update",             resource: "visits",            operation: "update" },
+
+  { action: "non-conformities:read",     resource: "non-conformities",  operation: "read"   },
+  { action: "non-conformities:create",   resource: "non-conformities",  operation: "create" },
+  { action: "non-conformities:delete",   resource: "non-conformities",  operation: "delete" },
+
+  { action: "photos:create",             resource: "photos",            operation: "create" },
+  { action: "photos:delete",             resource: "photos",            operation: "delete" },
 ] as const;
 
 export type PermissionAction = (typeof PERMISSIONS)[number]["action"];
