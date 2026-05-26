@@ -49,6 +49,11 @@ export class ChecklistService {
       throw new HttpError(409, "Checklist is already finalized.");
     }
 
+    const ongoingVisit = checklist.visits.find((v) => v.status === "ONGOING");
+    if (ongoingVisit) {
+      throw new HttpError(409, "A visit is already in progress for this checklist.");
+    }
+
     const items = await this.repo.findPendingOrNokItems(checklistId);
     if (items.length === 0) {
       throw new HttpError(409, "No items to inspect in this checklist.");

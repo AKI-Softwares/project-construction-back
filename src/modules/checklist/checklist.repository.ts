@@ -131,10 +131,12 @@ export class ChecklistRepository {
         })),
       });
 
-      return tx.visit.findUnique({
+      const full = await tx.visit.findUnique({
         where: { id: visit.id },
         select: VISIT_SUMMARY_SELECT,
       });
+      if (!full) throw new Error("Visit not found immediately after creation.");
+      return full;
     });
   }
 
