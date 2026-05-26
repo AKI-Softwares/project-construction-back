@@ -1,3 +1,4 @@
+import { Prisma } from "../../../generated/prisma/client.js";
 import { HttpError } from "../../shared/errors/http-error.js";
 import type { ChecklistRepository } from "./checklist.repository.js";
 import type { UpdateChecklistInput, CreateVisitInput } from "./checklist.schema.js";
@@ -59,12 +60,19 @@ export class ChecklistService {
       throw new HttpError(409, "No items to inspect in this checklist.");
     }
 
-    return this.repo.createVisitWithItems(
-      checklistId,
-      input.inspectorId,
-      createdById,
-      items.map((i) => i.id),
-    );
+    try {
+      return await this.repo.createVisitWithItems(
+        checklistId,
+        input.inspectorId,
+        createdById,
+        items.map((i) => i.id),
+      );
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
+        throw new HttpError(422, "Inspector not found.");
+      }
+      throw e;
+    }
   }
 
   async listVisits(checklistId: number) {

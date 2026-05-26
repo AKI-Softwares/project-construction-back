@@ -23,7 +23,8 @@ export class VisitController {
     request: FastifyRequest<{ Params: VisitParams; Body: FinalizeVisitInput }>,
     reply: FastifyReply,
   ) {
-    const visit = await this.service.finalizeVisit(request.params.id, request.body);
+    const userId = Number(request.user.sub);
+    const visit = await this.service.finalizeVisit(request.params.id, request.body, userId);
     return reply.status(200).send(visit);
   }
 

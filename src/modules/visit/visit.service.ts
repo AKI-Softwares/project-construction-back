@@ -15,7 +15,7 @@ export class VisitService {
     return visit;
   }
 
-  async finalizeVisit(id: number, input: FinalizeVisitInput) {
+  async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number) {
     const visit = await this.repo.findById(id);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED") throw new HttpError(400, "Visit is already finalized.");
@@ -32,7 +32,7 @@ export class VisitService {
       throw new HttpError(400, "All NOK items must have a non-conformity recorded.");
     }
 
-    const result = await this.repo.applyFinalization(visit.id, visit.checklistId, visit.items, input);
+    const result = await this.repo.applyFinalization(visit.id, visit.checklistId, visit.items, input, userId);
     if (!result) throw new Error("Visit not found after finalization.");
     return result;
   }

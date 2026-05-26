@@ -51,6 +51,7 @@ export class VisitRepository {
     checklistId: number,
     items: Array<{ checklistItemId: number; status: "PENDING" | "OK" | "NOK" }>,
     input: FinalizeVisitInput,
+    finalizedById: number,
   ) {
     return prisma.$transaction(async (tx) => {
       for (const item of items) {
@@ -76,7 +77,7 @@ export class VisitRepository {
       if (notOkCount === 0) {
         await tx.checklist.update({
           where: { id: checklistId },
-          data: { status: "FINALIZED" },
+          data: { status: "FINALIZED", finalizedById, finalizedAt: new Date() },
         });
       }
 
