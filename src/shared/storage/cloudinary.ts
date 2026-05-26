@@ -7,7 +7,7 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-export async function uploadPhoto(buffer: Buffer): Promise<string> {
+export async function uploadPhoto(buffer: Buffer): Promise<{ secureUrl: string; publicId: string }> {
   if (!buffer.length) throw new Error("Upload buffer is empty.");
 
   return new Promise((resolve, reject) => {
@@ -18,10 +18,17 @@ export async function uploadPhoto(buffer: Buffer): Promise<string> {
       },
       (error, result) => {
         if (error || !result) return reject(error ?? new Error("Cloudinary upload failed."));
-        resolve(result.secure_url);
+        resolve({ secureUrl: result.secure_url, publicId: result.public_id });
       },
     );
     stream.on("error", reject);
     stream.end(buffer);
   });
+}
+
+export async function deleteCloudinaryPhoto(publicId: string): Promise<void> {
+  const result = await cloudinary.uploader.destroy(publicId);
+  if (result.result !== "ok" && result.result !== "not found") {
+    throw new Error(`Cloudinary delete failed: ${result.result}`);
+  }
 }
