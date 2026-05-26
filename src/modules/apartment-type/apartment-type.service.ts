@@ -2,6 +2,7 @@ import { Prisma } from "../../../generated/prisma/client.js";
 import { HttpError } from "../../shared/errors/http-error.js";
 import type { ApartmentTypeRepository } from "./apartment-type.repository.js";
 import type {
+  AddRoomDefaultServiceInput,
   CreateApartmentTypeInput,
   CreateRoomInput,
   UpdateApartmentTypeInput,
@@ -81,5 +82,46 @@ export class ApartmentTypeService {
     const room = await this.repo.findRoom(apartmentTypeId, roomId);
     if (!room) throw new HttpError(404, "Room not found in this apartment type.");
     await this.repo.deleteRoom(roomId);
+  }
+
+  async listRoomDefaultServices(apartmentTypeId: number, roomId: number) {
+    const type = await this.repo.findById(apartmentTypeId);
+    if (!type) throw new HttpError(404, "Apartment type not found.");
+    const room = await this.repo.findRoom(apartmentTypeId, roomId);
+    if (!room) throw new HttpError(404, "Room not found in this apartment type.");
+    return this.repo.listRoomDefaultServices(roomId);
+  }
+
+  async addRoomDefaultService(
+    apartmentTypeId: number,
+    roomId: number,
+    input: AddRoomDefaultServiceInput,
+  ) {
+    const type = await this.repo.findById(apartmentTypeId);
+    if (!type) throw new HttpError(404, "Apartment type not found.");
+    const room = await this.repo.findRoom(apartmentTypeId, roomId);
+    if (!room) throw new HttpError(404, "Room not found in this apartment type.");
+    const service = await this.repo.findService(input.serviceId);
+    if (!service) throw new HttpError(404, "Service not found.");
+    const existing = await this.repo.findRoomDefaultService(roomId, input.serviceId);
+    if (existing) throw new HttpError(409, "Service already set as default for this room.");
+    try {
+      return await this.repo.addRoomDefaultService(roomId, input.serviceId);
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+        throw new HttpError(409, "Service already set as default for this room.");
+      }
+      throw e;
+    }
+  }
+
+  async removeRoomDefaultService(apartmentTypeId: number, roomId: number, serviceId: number) {
+    const type = await this.repo.findById(apartmentTypeId);
+    if (!type) throw new HttpError(404, "Apartment type not found.");
+    const room = await this.repo.findRoom(apartmentTypeId, roomId);
+    if (!room) throw new HttpError(404, "Room not found in this apartment type.");
+    const link = await this.repo.findRoomDefaultService(roomId, serviceId);
+    if (!link) throw new HttpError(404, "Service not set as default for this room.");
+    await this.repo.deleteRoomDefaultService(roomId, serviceId);
   }
 }

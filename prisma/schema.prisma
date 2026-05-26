@@ -7,21 +7,34 @@ datasource db {
   provider = "postgresql"
 }
 
-enum InspectionStatus {
+enum ChecklistStatus {
   PENDING
-  APPROVED
-  REJECTED
+  FINALIZED
+}
+
+enum ChecklistItemStatus {
+  PENDING
+  OK
+  NOK
+}
+
+enum VisitStatus {
+  ONGOING
+  FINALIZED
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  name         String   @db.VarChar(255)
-  email        String   @unique @db.VarChar(255)
-  passwordHash String   @map("password_hash") @db.VarChar(255)
-  roleId       Int      @map("role_id")
-  role         Role     @relation(fields: [roleId], references: [id])
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id                  Int         @id @default(autoincrement())
+  name                String      @db.VarChar(255)
+  email               String      @unique @db.VarChar(255)
+  passwordHash        String      @map("password_hash") @db.VarChar(255)
+  roleId              Int         @map("role_id")
+  role                Role        @relation(fields: [roleId], references: [id])
+  checklistsFinalized Checklist[] @relation("ChecklistFinalizedBy")
+  visitsAsInspector   Visit[]     @relation("VisitInspector")
+  visitsCreated       Visit[]     @relation("VisitCreatedBy")
+  createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("User")
 }
@@ -78,13 +91,14 @@ model ApartmentType {
 }
 
 model Room {
-  id              Int             @id @default(autoincrement())
-  apartmentTypeId Int             @map("apartment_type_id")
-  name            String          @db.VarChar(255)
-  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  apartmentType   ApartmentType   @relation(fields: [apartmentTypeId], references: [id])
+  id              Int                  @id @default(autoincrement())
+  apartmentTypeId Int                  @map("apartment_type_id")
+  name            String               @db.VarChar(255)
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  apartmentType   ApartmentType        @relation(fields: [apartmentTypeId], references: [id])
   apartmentRooms  ApartmentRoom[]
+  defaultServices RoomDefaultService[]
 
   @@unique([apartmentTypeId, name])
   @@index([apartmentTypeId])
@@ -103,6 +117,7 @@ model Apartment {
   building        Building        @relation(fields: [buildingId], references: [id])
   apartmentType   ApartmentType   @relation(fields: [apartmentTypeId], references: [id])
   rooms           ApartmentRoom[]
+  checklist       Checklist?
 
   @@unique([buildingId, identifier])
   @@index([apartmentTypeId])
@@ -126,37 +141,131 @@ model ApartmentRoom {
 }
 
 model ApartmentRoomService {
-  id              Int           @id @default(autoincrement())
-  apartmentRoomId Int           @map("apartment_room_id")
-  serviceId       Int           @map("service_id")
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  apartmentRoom   ApartmentRoom @relation(fields: [apartmentRoomId], references: [id], onDelete: Cascade)
-  service         Service       @relation(fields: [serviceId], references: [id])
+  id              Int             @id @default(autoincrement())
+  apartmentRoomId Int             @map("apartment_room_id")
+  serviceId       Int             @map("service_id")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  apartmentRoom   ApartmentRoom   @relation(fields: [apartmentRoomId], references: [id], onDelete: Cascade)
+  service         Service         @relation(fields: [serviceId], references: [id])
+  checklistItems  ChecklistItem[]
 
   @@unique([apartmentRoomId, serviceId])
   @@index([serviceId])
   @@map("ApartmentRoomService")
 }
 
-// Minimal stub — Spec 2 adds description, category, RoomDefaultService
 model Service {
   id                    Int                    @id @default(autoincrement())
-  name                  String                 @db.VarChar(255)
+  name                  String                 @unique @db.VarChar(255)
+  description           String?                @db.VarChar(500)
+  category              String?                @db.VarChar(100)
   createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   apartmentRoomServices ApartmentRoomService[]
+  roomDefaultServices   RoomDefaultService[]
 
   @@map("Service")
 }
 
-// Dormant until Spec 3 — relations to Service/Checklist removed
-model Inspection {
-  id           Int              @id @default(autoincrement())
-  name         String           @db.VarChar(255)
-  status       InspectionStatus @default(PENDING)
-  observations String?          @db.Text
-  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+model RoomDefaultService {
+  roomId    Int     @map("room_id")
+  serviceId Int     @map("service_id")
+  room      Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@id([roomId, serviceId])
+  @@index([serviceId])
+  @@map("RoomDefaultService")
+}
+
+model Checklist {
+  id            Int             @id @default(autoincrement())
+  apartmentId   Int             @unique @map("apartment_id")
+  title         String?         @db.VarChar(255)
+  status        ChecklistStatus @default(PENDING)
+  finalizedById Int?            @map("finalized_by_id")
+  finalizedAt   DateTime?       @map("finalized_at") @db.Timestamptz
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  apartment     Apartment       @relation(fields: [apartmentId], references: [id], onDelete: Restrict)
+  finalizedBy   User?           @relation("ChecklistFinalizedBy", fields: [finalizedById], references: [id])
+  items         ChecklistItem[]
+  visits        Visit[]
 
   @@map("Inspection")
+}
+
+model ChecklistItem {
+  id                     Int                  @id @default(autoincrement())
+  checklistId            Int                  @map("checklist_id")
+  apartmentRoomServiceId Int                  @map("apartment_room_service_id")
+  status                 ChecklistItemStatus  @default(PENDING)
+  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  checklist              Checklist            @relation(fields: [checklistId], references: [id], onDelete: Restrict)
+  apartmentRoomService   ApartmentRoomService @relation(fields: [apartmentRoomServiceId], references: [id], onDelete: Restrict)
+  visitItems             VisitItem[]
+
+  @@unique([checklistId, apartmentRoomServiceId])
+  @@index([checklistId])
+  @@map("ChecklistItem")
+}
+
+model Visit {
+  id           Int         @id @default(autoincrement())
+  checklistId  Int         @map("checklist_id")
+  inspectorId  Int         @map("inspector_id")
+  createdById  Int         @map("created_by_id")
+  observations String?     @db.Text
+  status       VisitStatus @default(ONGOING)
+  finalizedAt  DateTime?   @map("finalized_at") @db.Timestamptz
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  checklist    Checklist   @relation(fields: [checklistId], references: [id], onDelete: Restrict)
+  inspector    User        @relation("VisitInspector", fields: [inspectorId], references: [id])
+  createdBy    User        @relation("VisitCreatedBy", fields: [createdById], references: [id])
+  items        VisitItem[]
+
+  @@index([checklistId])
+  @@index([inspectorId])
+  @@map("Visit")
+}
+
+model VisitItem {
+  id              Int                 @id @default(autoincrement())
+  visitId         Int                 @map("visit_id")
+  checklistItemId Int                 @map("checklist_item_id")
+  status          ChecklistItemStatus @default(PENDING)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  visit           Visit               @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  checklistItem   ChecklistItem       @relation(fields: [checklistItemId], references: [id], onDelete: Restrict)
+  nonConformity   NonConformity?
+
+  @@unique([visitId, checklistItemId])
+  @@index([checklistItemId])
+  @@map("VisitItem")
+}
+
+model NonConformity {
+  id          Int       @id @default(autoincrement())
+  visitItemId Int       @unique @map("visit_item_id")
+  description String    @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  visitItem   VisitItem @relation(fields: [visitItemId], references: [id], onDelete: Cascade)
+  photos      Photo[]
+
+  @@map("NonConformity")
+}
+
+model Photo {
+  id              Int           @id @default(autoincrement())
+  nonConformityId Int           @map("non_conformity_id")
+  url             String        @db.VarChar(500)
+  uploadedAt      DateTime      @default(now()) @map("uploaded_at") @db.Timestamptz
+  nonConformity   NonConformity @relation(fields: [nonConformityId], references: [id], onDelete: Cascade)
+
+  @@index([nonConformityId])
+  @@map("Photo")
 }

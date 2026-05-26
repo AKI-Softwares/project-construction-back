@@ -76,13 +76,22 @@ export class ApartmentRepository {
   async findApartmentTypeWithRooms(id: number) {
     return prisma.apartmentType.findUnique({
       where: { id },
-      select: { id: true, rooms: { select: { id: true, name: true } } },
+      select: {
+        id: true,
+        rooms: {
+          select: {
+            id: true,
+            name: true,
+            defaultServices: { select: { serviceId: true } },
+          },
+        },
+      },
     });
   }
 
   async createWithRooms(
     input: CreateApartmentInput,
-    rooms: { id: number; name: string }[],
+    rooms: { id: number; name: string; defaultServices: { serviceId: number }[] }[],
   ) {
     return prisma.$transaction(async (tx) => {
       const apartment = await tx.apartment.create({
@@ -95,14 +104,46 @@ export class ApartmentRepository {
         },
       });
 
-      if (rooms.length > 0) {
-        await tx.apartmentRoom.createMany({
-          data: rooms.map((room) => ({
-            apartmentId: apartment.id,
-            roomId: room.id,
-            name: room.name,
-          })),
+      const serviceData: { apartmentRoomId: number; serviceId: number }[] = [];
+      const createdRoomIds: number[] = [];
+
+      // createMany does not return IDs; sequential create required to link services
+      for (const room of rooms) {
+        const created = await tx.apartmentRoom.create({
+          data: { apartmentId: apartment.id, roomId: room.id, name: room.name },
+          select: { id: true },
         });
+        createdRoomIds.push(created.id);
+        for (const ds of room.defaultServices) {
+          serviceData.push({ apartmentRoomId: created.id, serviceId: ds.serviceId });
+        }
+      }
+
+      if (serviceData.length > 0) {
+        await tx.apartmentRoomService.createMany({ data: serviceData });
+      }
+
+      // Step 4: Create Checklist (always — 1:1 with apartment)
+      const checklist = await tx.checklist.create({
+        data: { apartmentId: apartment.id },
+        select: { id: true },
+      });
+
+      // Step 5: Create ChecklistItem for each ApartmentRoomService
+      // createMany doesn't return IDs, so query them back using the created room IDs
+      if (createdRoomIds.length > 0) {
+        const createdServices = await tx.apartmentRoomService.findMany({
+          where: { apartmentRoomId: { in: createdRoomIds } },
+          select: { id: true },
+        });
+        if (createdServices.length > 0) {
+          await tx.checklistItem.createMany({
+            data: createdServices.map((s) => ({
+              checklistId: checklist.id,
+              apartmentRoomServiceId: s.id,
+            })),
+          });
+        }
       }
 
       const result = await tx.apartment.findUnique({
@@ -134,6 +175,13 @@ export class ApartmentRepository {
     return prisma.apartmentRoom.findFirst({
       where: { id: roomId, apartmentId },
       select: { id: true, name: true },
+    });
+  }
+
+  async findChecklistByApartmentId(apartmentId: number) {
+    return prisma.checklist.findUnique({
+      where: { apartmentId },
+      select: { id: true },
     });
   }
 
