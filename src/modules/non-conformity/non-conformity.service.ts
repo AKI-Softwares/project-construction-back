@@ -28,7 +28,8 @@ export class NonConformityService {
     let publicId: string;
     try {
       ({ secureUrl, publicId } = await uploadPhoto(buffer));
-    } catch {
+    } catch (err) {
+      console.error("[addPhoto] Cloudinary upload failed:", err);
       throw new HttpError(502, "Photo upload failed. Please try again.");
     }
     return this.repo.addPhoto(ncId, secureUrl, publicId);
@@ -41,9 +42,10 @@ export class NonConformityService {
     if (!photo) throw new HttpError(404, "Photo not found.");
     try {
       await deleteCloudinaryPhoto(photo.publicId);
-    } catch {
+    } catch (err) {
+      console.error("[deletePhoto] Cloudinary delete failed:", err);
       throw new HttpError(502, "Failed to delete photo from storage. Please try again.");
     }
-    return this.repo.deletePhoto(photoId);
+    await this.repo.deletePhoto(photoId);
   }
 }
