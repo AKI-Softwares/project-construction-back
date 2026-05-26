@@ -1062,10 +1062,19 @@
       "method": "POST",
       "url": "{{ _.baseUrl }}/non-conformities/1/photos",
       "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"url\": \"https://example.com/photo.jpg\"\n}"
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_photo_file",
+            "name": "file",
+            "value": "",
+            "description": "Photo file (JPEG, PNG, WebP, HEIC, HEIF — max 10 MB)",
+            "type": "file",
+            "enabled": true
+          }
+        ]
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
       "metaSortKey": 1
     },
