@@ -187,7 +187,7 @@ model Checklist {
   finalizedAt   DateTime?       @map("finalized_at") @db.Timestamptz
   createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  apartment     Apartment       @relation(fields: [apartmentId], references: [id])
+  apartment     Apartment       @relation(fields: [apartmentId], references: [id], onDelete: Restrict)
   finalizedBy   User?           @relation("ChecklistFinalizedBy", fields: [finalizedById], references: [id])
   items         ChecklistItem[]
   visits        Visit[]
@@ -202,7 +202,7 @@ model ChecklistItem {
   status                 ChecklistItemStatus  @default(PENDING)
   createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  checklist              Checklist            @relation(fields: [checklistId], references: [id])
+  checklist              Checklist            @relation(fields: [checklistId], references: [id], onDelete: Restrict)
   apartmentRoomService   ApartmentRoomService @relation(fields: [apartmentRoomServiceId], references: [id], onDelete: Restrict)
   visitItems             VisitItem[]
 
@@ -221,7 +221,7 @@ model Visit {
   finalizedAt  DateTime?   @map("finalized_at") @db.Timestamptz
   createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  checklist    Checklist   @relation(fields: [checklistId], references: [id])
+  checklist    Checklist   @relation(fields: [checklistId], references: [id], onDelete: Restrict)
   inspector    User        @relation("VisitInspector", fields: [inspectorId], references: [id])
   createdBy    User        @relation("VisitCreatedBy", fields: [createdById], references: [id])
   items        VisitItem[]
