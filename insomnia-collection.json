@@ -813,6 +813,274 @@
       "headers": [],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
       "metaSortKey": 5
+    },
+
+    {
+      "_id": "fld_checklists",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Checklists",
+      "description": "Checklists de inspeção por apartamento. Authz: checklists:read/create/update/delete. Contém visitas de inspeção.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1000
+    },
+    {
+      "_id": "req_checklists_list",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "List Checklists",
+      "description": "Lista checklists. Requer 'checklists:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/checklists",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_checklists_list_by_apartment",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "List Checklists by Apartment",
+      "description": "Lista checklists filtrado por apartamento. Requer 'checklists:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/checklists?apartmentId=1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_checklists_get",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "Get Checklist",
+      "description": "Busca checklist por id. Requer 'checklists:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/checklists/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_checklists_update_title",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "Update Checklist (title)",
+      "description": "Atualiza título do checklist. Requer 'checklists:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/checklists/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"Pré-entrega Apto 101\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_checklists_finalize",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "Finalize Checklist",
+      "description": "Finaliza o checklist alterando status para FINALIZED. Requer 'checklists:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/checklists/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"FINALIZED\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_checklists_reopen",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "Reopen Checklist",
+      "description": "Reabre o checklist alterando status para PENDING. Requer 'checklists:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/checklists/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"PENDING\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 6
+    },
+    {
+      "_id": "req_checklists_visit_create",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "Create Visit",
+      "description": "Cria visita de inspeção no checklist. Requer 'checklists:update'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/checklists/1/visits",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"inspectorId\": 2\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 7
+    },
+    {
+      "_id": "req_checklists_visits_list",
+      "_type": "request",
+      "parentId": "fld_checklists",
+      "name": "List Visits",
+      "description": "Lista visitas do checklist. Requer 'checklists:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/checklists/1/visits",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 8
+    },
+
+    {
+      "_id": "fld_visits",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Visits",
+      "description": "Visitas de inspeção. Authz: visits:read/update. Contém itens de visita e não-conformidades.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1100
+    },
+    {
+      "_id": "req_visits_get",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Get Visit",
+      "description": "Busca visita por id com itens e não-conformidades. Requer 'visits:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/visits/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_visits_finalize",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Finalize Visit",
+      "description": "Finaliza visita com observações. Requer 'visits:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/visits/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"FINALIZED\",\n  \"observations\": \"Tudo conforme\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 2
+    },
+    {
+      "_id": "req_visits_item_update_ok",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Update Visit Item (OK)",
+      "description": "Marca item da visita como OK. Requer 'visits:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/visits/1/items/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"OK\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_visits_item_update_nok",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Update Visit Item (NOK)",
+      "description": "Marca item da visita como NOK. Requer 'visits:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/visits/1/items/1",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"NOK\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_visits_nc_add",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Add Non-Conformity",
+      "description": "Adiciona não-conformidade a um item da visita. Requer 'visits:update'.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/visits/1/items/1/non-conformities",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"description\": \"Pintura com manchas visíveis\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_visits_nc_delete",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Delete Non-Conformity",
+      "description": "Remove não-conformidade de um item da visita. Requer 'visits:update'.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/visits/1/items/1/non-conformities",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 6
+    },
+
+    {
+      "_id": "fld_non_conformities",
+      "_type": "request_group",
+      "parentId": "wrk_construction_back",
+      "name": "Non-Conformities",
+      "description": "Não-conformidades de inspeção. Gestão de fotos de evidência.",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1200
+    },
+    {
+      "_id": "req_nc_photo_add",
+      "_type": "request",
+      "parentId": "fld_non_conformities",
+      "name": "Add Photo",
+      "description": "Adiciona foto de evidência à não-conformidade.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/non-conformities/1/photos",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"url\": \"https://example.com/photo.jpg\"\n}"
+      },
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_nc_photo_delete",
+      "_type": "request",
+      "parentId": "fld_non_conformities",
+      "name": "Delete Photo",
+      "description": "Remove foto de evidência da não-conformidade.",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/non-conformities/1/photos/1",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 2
     }
   ]
 }
