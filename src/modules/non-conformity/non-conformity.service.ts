@@ -19,6 +19,9 @@ export class NonConformityService {
     if (!ALLOWED_MIME_TYPES.has(mimeType)) {
       throw new HttpError(415, "Unsupported file type. Allowed: JPEG, PNG, WebP, HEIC, HEIF.");
     }
+    if (buffer.length === 0) {
+      throw new HttpError(400, "Uploaded file is empty.");
+    }
     let url: string;
     try {
       url = await uploadPhoto(buffer);

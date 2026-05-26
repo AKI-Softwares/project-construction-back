@@ -15,8 +15,11 @@ export class NonConformityController {
     let buffer: Buffer;
     try {
       buffer = await data.toBuffer();
-    } catch {
-      throw new HttpError(413, "File too large. Maximum size is 10 MB.");
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'FST_REQ_FILE_TOO_LARGE') {
+        throw new HttpError(413, "File too large. Maximum size is 10 MB.");
+      }
+      throw err;
     }
     const photo = await this.service.addPhoto(request.params.id, buffer, data.mimetype);
     return reply.status(201).send(photo);
