@@ -12,6 +12,7 @@ enum ChecklistStatus {
   FINALIZED
 }
 
+// Permanent aggregate state of a ChecklistItem after visit finalization
 enum ChecklistItemStatus {
   PENDING
   OK
@@ -23,6 +24,7 @@ enum VisitStatus {
   FINALIZED
 }
 
+// Inspector's in-field evaluation for a VisitItem; null = not yet evaluated
 enum EvaluationStatus {
   OK
   NOK
