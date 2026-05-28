@@ -127,7 +127,6 @@ export class ChecklistRepository {
         data: itemIds.map((checklistItemId) => ({
           visitId: visit.id,
           checklistItemId,
-          status: "PENDING",
         })),
       });
 

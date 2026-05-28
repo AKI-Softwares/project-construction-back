@@ -15,7 +15,7 @@ export class VisitController {
     request: FastifyRequest<{ Params: VisitParams }>,
     reply: FastifyReply,
   ) {
-    const visit = await this.service.getVisit(request.params.id);
+    const visit = await this.service.getVisitGrouped(request.params.id);
     return reply.status(200).send(visit);
   }
 
