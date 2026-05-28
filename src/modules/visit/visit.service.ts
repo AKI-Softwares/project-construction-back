@@ -20,8 +20,8 @@ export class VisitService {
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED") throw new HttpError(400, "Visit is already finalized.");
 
-    const pendingItems = visit.items.filter((i) => i.status === "PENDING");
-    if (pendingItems.length > 0) {
+    const unevaluatedItems = visit.items.filter((i) => i.status === null);
+    if (unevaluatedItems.length > 0) {
       throw new HttpError(400, "All items must be evaluated before finalizing.");
     }
 
@@ -32,7 +32,12 @@ export class VisitService {
       throw new HttpError(400, "All NOK items must have a non-conformity recorded.");
     }
 
-    const result = await this.repo.applyFinalization(visit.id, visit.checklistId, visit.items, input, userId);
+    const evaluatedItems = visit.items.map((i) => ({
+      checklistItemId: i.checklistItemId,
+      status: i.status as "OK" | "NOK",
+    }));
+
+    const result = await this.repo.applyFinalization(visit.id, visit.checklistId, evaluatedItems, input, userId);
     if (!result) throw new Error("Visit not found after finalization.");
     return result;
   }
@@ -44,6 +49,35 @@ export class VisitService {
 
     const item = visit.items.find((i) => i.id === itemId);
     if (!item) throw new HttpError(404, "Visit item not found.");
+
+    const targetRoomId = item.checklistItem.apartmentRoomService.apartmentRoom.id;
+
+    // Build room map: roomId → items
+    const roomMap = new Map<number, typeof visit.items>();
+    for (const vi of visit.items) {
+      const roomId = vi.checklistItem.apartmentRoomService.apartmentRoom.id;
+      if (!roomMap.has(roomId)) roomMap.set(roomId, []);
+      roomMap.get(roomId)!.push(vi);
+    }
+
+    // Guard 1: block switching to a different room while another room is in progress
+    for (const [roomId, roomItems] of roomMap) {
+      if (roomId === targetRoomId) continue;
+      const hasEvaluated = roomItems.some((i) => i.status !== null);
+      const hasUnevaluated = roomItems.some((i) => i.status === null);
+      if (hasEvaluated && hasUnevaluated) {
+        throw new HttpError(409, "Finish current room before switching.");
+      }
+    }
+
+    // Guard 2: block evaluating next item while current room has NOK items without NC
+    const roomItems = roomMap.get(targetRoomId) ?? [];
+    const nokWithoutNc = roomItems.filter(
+      (i) => i.id !== itemId && i.status === "NOK" && !i.nonConformity,
+    );
+    if (nokWithoutNc.length > 0) {
+      throw new HttpError(409, "Record non-conformity for all NOK items before proceeding.");
+    }
 
     return this.repo.updateVisitItemWithNcCleanup(
       itemId,
