@@ -49,7 +49,7 @@ export class VisitRepository {
   async applyFinalization(
     visitId: number,
     checklistId: number,
-    items: Array<{ checklistItemId: number; status: "PENDING" | "OK" | "NOK" }>,
+    items: Array<{ checklistItemId: number; status: "OK" | "NOK" }>,
     input: FinalizeVisitInput,
     finalizedById: number,
   ) {
@@ -87,8 +87,8 @@ export class VisitRepository {
 
   async updateVisitItemWithNcCleanup(
     itemId: number,
-    newStatus: "PENDING" | "OK" | "NOK",
-    currentStatus: string,
+    newStatus: "OK" | "NOK",
+    currentStatus: "OK" | "NOK" | null,
     ncId: number | null,
   ) {
     if (currentStatus === "NOK" && newStatus !== "NOK" && ncId !== null) {
