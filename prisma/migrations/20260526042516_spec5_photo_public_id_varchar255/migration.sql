@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Photo" ALTER COLUMN "public_id" SET DATA TYPE VARCHAR(255);

@@ -17,6 +17,9 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.ts\" \"api/**/*.ts\""
   },
+  "engines": {
+    "node": ">=22"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AKI-Softwares/project-construction-back.git"
@@ -44,6 +47,7 @@
     "dotenv": "^16.5.0",
     "fastify": "^5.8.5",
     "fastify-type-provider-zod": "^6.1.0",
+    "file-type": "^22.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
