@@ -6,6 +6,60 @@ import type {
   AddNonConformityInput,
 } from "./visit.schema.js";
 
+type GroupedItem = {
+  id: number;
+  serviceId: number;
+  serviceName: string;
+  status: string | null;
+  nonConformity: {
+    id: number;
+    description: string;
+    createdAt: Date;
+    photos: { id: number; url: string; uploadedAt: Date }[];
+  } | null;
+};
+
+type GroupedRoom = {
+  id: number;
+  name: string;
+  isComplete: boolean;
+  items: GroupedItem[];
+};
+
+type VisitRaw = NonNullable<Awaited<ReturnType<VisitRepository["findById"]>>>;
+type VisitItemRaw = VisitRaw["items"][number];
+
+function groupByRoom(items: VisitItemRaw[]): GroupedRoom[] {
+  const map = new Map<number, GroupedRoom>();
+
+  for (const item of items) {
+    const room = item.checklistItem.apartmentRoomService.apartmentRoom;
+    if (!map.has(room.id)) {
+      map.set(room.id, { id: room.id, name: room.name, isComplete: true, items: [] });
+    }
+    const group = map.get(room.id);
+    if (!group) continue;
+
+    group.isComplete = group.isComplete && item.status !== null;
+    group.items.push({
+      id: item.id,
+      serviceId: item.checklistItem.apartmentRoomService.service.id,
+      serviceName: item.checklistItem.apartmentRoomService.service.name,
+      status: item.status,
+      nonConformity: item.nonConformity
+        ? {
+            id: item.nonConformity.id,
+            description: item.nonConformity.description,
+            createdAt: item.nonConformity.createdAt,
+            photos: item.nonConformity.photos,
+          }
+        : null,
+    });
+  }
+
+  return Array.from(map.values());
+}
+
 export class VisitService {
   constructor(private repo: VisitRepository) {}
 
@@ -13,6 +67,13 @@ export class VisitService {
     const visit = await this.repo.findById(id);
     if (!visit) throw new HttpError(404, "Visit not found.");
     return visit;
+  }
+
+  async getVisitGrouped(id: number) {
+    const visit = await this.repo.findById(id);
+    if (!visit) throw new HttpError(404, "Visit not found.");
+    const { items, ...rest } = visit;
+    return { ...rest, rooms: groupByRoom(items) };
   }
 
   async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number) {

@@ -8,43 +8,6 @@ import type {
   AddNonConformityInput,
 } from "./visit.schema.js";
 
-type VisitDetail = NonNullable<Awaited<ReturnType<VisitService["getVisit"]>>>;
-type VisitItemRaw = VisitDetail["items"][number];
-
-function groupByRoom(items: VisitItemRaw[]) {
-  const map = new Map<number, {
-    id: number;
-    name: string;
-    isComplete: boolean;
-    items: object[];
-  }>();
-
-  for (const item of items) {
-    const room = item.checklistItem.apartmentRoomService.apartmentRoom;
-    if (!map.has(room.id)) {
-      map.set(room.id, { id: room.id, name: room.name, isComplete: true, items: [] });
-    }
-    const group = map.get(room.id)!;
-    if (item.status === null) group.isComplete = false;
-    group.items.push({
-      id: item.id,
-      serviceId: item.checklistItem.apartmentRoomService.service.id,
-      serviceName: item.checklistItem.apartmentRoomService.service.name,
-      status: item.status,
-      nonConformity: item.nonConformity
-        ? {
-            id: item.nonConformity.id,
-            description: item.nonConformity.description,
-            createdAt: item.nonConformity.createdAt,
-            photos: item.nonConformity.photos,
-          }
-        : null,
-    });
-  }
-
-  return Array.from(map.values());
-}
-
 export class VisitController {
   constructor(private service: VisitService) {}
 
@@ -52,9 +15,8 @@ export class VisitController {
     request: FastifyRequest<{ Params: VisitParams }>,
     reply: FastifyReply,
   ) {
-    const visit = await this.service.getVisit(request.params.id);
-    const { items, ...rest } = visit;
-    return reply.status(200).send({ ...rest, rooms: groupByRoom(items) });
+    const visit = await this.service.getVisitGrouped(request.params.id);
+    return reply.status(200).send(visit);
   }
 
   async finalize(
