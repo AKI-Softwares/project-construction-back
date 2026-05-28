@@ -32,10 +32,9 @@ export class VisitService {
       throw new HttpError(400, "All NOK items must have a non-conformity recorded.");
     }
 
-    const evaluatedItems = visit.items.map((i) => ({
-      checklistItemId: i.checklistItemId,
-      status: i.status as "OK" | "NOK",
-    }));
+    const evaluatedItems = visit.items
+      .filter((i): i is typeof i & { status: "OK" | "NOK" } => i.status !== null)
+      .map((i) => ({ checklistItemId: i.checklistItemId, status: i.status }));
 
     const result = await this.repo.applyFinalization(visit.id, visit.checklistId, evaluatedItems, input, userId);
     if (!result) throw new Error("Visit not found after finalization.");
@@ -72,6 +71,7 @@ export class VisitService {
 
     // Guard 2: block evaluating next item while current room has NOK items without NC
     const roomItems = roomMap.get(targetRoomId) ?? [];
+    // i.id !== itemId: re-evaluating the current NOK item (e.g., NOK → OK) is always allowed
     const nokWithoutNc = roomItems.filter(
       (i) => i.id !== itemId && i.status === "NOK" && !i.nonConformity,
     );
