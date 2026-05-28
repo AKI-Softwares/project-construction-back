@@ -1,12 +1,12 @@
-/*
-  Warnings:
-
-  - The `status` column on the `VisitItem` table would be dropped and recreated. This will lead to data loss if there is data in the column.
-
-*/
 -- CreateEnum
 CREATE TYPE "EvaluationStatus" AS ENUM ('OK', 'NOK');
 
--- AlterTable
-ALTER TABLE "VisitItem" DROP COLUMN "status",
-ADD COLUMN     "status" "EvaluationStatus";
+-- AlterTable (safe: preserve OK/NOK rows, convert PENDING to NULL)
+ALTER TABLE "VisitItem"
+  ALTER COLUMN "status" DROP DEFAULT,
+  ALTER COLUMN "status" TYPE "EvaluationStatus"
+    USING CASE
+      WHEN "status"::text = 'PENDING' THEN NULL
+      ELSE "status"::text::"EvaluationStatus"
+    END,
+  ALTER COLUMN "status" DROP NOT NULL;

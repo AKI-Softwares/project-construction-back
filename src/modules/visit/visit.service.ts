@@ -10,7 +10,7 @@ type GroupedItem = {
   id: number;
   serviceId: number;
   serviceName: string;
-  status: string | null;
+  status: "OK" | "NOK" | null;
   nonConformity: {
     id: number;
     description: string;
@@ -63,12 +63,6 @@ function groupByRoom(items: VisitItemRaw[]): GroupedRoom[] {
 export class VisitService {
   constructor(private repo: VisitRepository) {}
 
-  async getVisit(id: number) {
-    const visit = await this.repo.findById(id);
-    if (!visit) throw new HttpError(404, "Visit not found.");
-    return visit;
-  }
-
   async getVisitGrouped(id: number) {
     const visit = await this.repo.findById(id);
     if (!visit) throw new HttpError(404, "Visit not found.");
@@ -99,7 +93,7 @@ export class VisitService {
 
     const result = await this.repo.applyFinalization(visit.id, visit.checklistId, evaluatedItems, input, userId);
     if (!result) throw new Error("Visit not found after finalization.");
-    return result;
+    return this.getVisitGrouped(visit.id);
   }
 
   async updateVisitItem(visitId: number, itemId: number, input: UpdateVisitItemInput) {
@@ -120,7 +114,9 @@ export class VisitService {
       roomMap.get(roomId)!.push(vi);
     }
 
-    // Guard 1: block switching to a different room while another room is in progress
+    // Guard 1: only one room may be in progress at a time.
+    // A room is "in progress" if it has ≥1 evaluated AND ≥1 unevaluated item.
+    // Inspector is free to start any untouched room, but cannot switch away from a partially-evaluated room.
     for (const [roomId, roomItems] of roomMap) {
       if (roomId === targetRoomId) continue;
       const hasEvaluated = roomItems.some((i) => i.status !== null);
