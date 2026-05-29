@@ -12,6 +12,7 @@ enum ChecklistStatus {
   FINALIZED
 }
 
+// Permanent aggregate state of a ChecklistItem after visit finalization
 enum ChecklistItemStatus {
   PENDING
   OK
@@ -21,6 +22,12 @@ enum ChecklistItemStatus {
 enum VisitStatus {
   ONGOING
   FINALIZED
+}
+
+// Inspector's in-field evaluation for a VisitItem; null = not yet evaluated
+enum EvaluationStatus {
+  OK
+  NOK
 }
 
 model User {
@@ -232,14 +239,14 @@ model Visit {
 }
 
 model VisitItem {
-  id              Int                 @id @default(autoincrement())
-  visitId         Int                 @map("visit_id")
-  checklistItemId Int                 @map("checklist_item_id")
-  status          ChecklistItemStatus @default(PENDING)
-  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  visit           Visit               @relation(fields: [visitId], references: [id], onDelete: Cascade)
-  checklistItem   ChecklistItem       @relation(fields: [checklistItemId], references: [id], onDelete: Restrict)
+  id              Int               @id @default(autoincrement())
+  visitId         Int               @map("visit_id")
+  checklistItemId Int               @map("checklist_item_id")
+  status          EvaluationStatus?
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  visit           Visit             @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  checklistItem   ChecklistItem     @relation(fields: [checklistItemId], references: [id], onDelete: Restrict)
   nonConformity   NonConformity?
 
   @@unique([visitId, checklistItemId])
