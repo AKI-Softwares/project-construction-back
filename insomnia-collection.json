@@ -953,6 +953,41 @@
       "metaSortKey": 1100
     },
     {
+      "_id": "req_visits_my_visits",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "My Visits",
+      "description": "Lista visitas atribuídas ao usuário autenticado. Filtro opcional ?status=NOT_STARTED. Requer 'visits:read'.",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/visits/mine",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "parameters": [
+        {
+          "id": "param_status_filter",
+          "name": "status",
+          "value": "NOT_STARTED",
+          "description": "Filter by visit status (e.g., NOT_STARTED, IN_PROGRESS, FINALIZED)",
+          "disabled": true
+        }
+      ],
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_visits_start",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Start Visit",
+      "description": "Inicia visita, alterando status para ONGOING. Requer 'visits:update'.",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/visits/1/start",
+      "body": {},
+      "headers": [],
+      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "metaSortKey": 2
+    },
+    {
       "_id": "req_visits_get",
       "_type": "request",
       "parentId": "fld_visits",
@@ -963,7 +998,7 @@
       "body": {},
       "headers": [],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
-      "metaSortKey": 1
+      "metaSortKey": 3
     },
     {
       "_id": "req_visits_finalize",
@@ -979,7 +1014,7 @@
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
-      "metaSortKey": 2
+      "metaSortKey": 4
     },
     {
       "_id": "req_visits_item_update_ok",
@@ -995,7 +1030,7 @@
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
-      "metaSortKey": 3
+      "metaSortKey": 5
     },
     {
       "_id": "req_visits_item_update_nok",
@@ -1011,7 +1046,7 @@
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
-      "metaSortKey": 4
+      "metaSortKey": 6
     },
     {
       "_id": "req_visits_nc_add",
@@ -1027,7 +1062,7 @@
       },
       "headers": [{ "name": "Content-Type", "value": "application/json" }],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
-      "metaSortKey": 5
+      "metaSortKey": 7
     },
     {
       "_id": "req_visits_nc_delete",
@@ -1040,7 +1075,7 @@
       "body": {},
       "headers": [],
       "authentication": { "type": "bearer", "token": "{{ _.token }}" },
-      "metaSortKey": 6
+      "metaSortKey": 8
     },
 
     {

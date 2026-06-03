@@ -1,0 +1,5 @@
+-- AlterEnum
+ALTER TYPE "VisitStatus" ADD VALUE 'NOT_STARTED';
+
+-- AlterTable
+ALTER TABLE "Visit" ALTER COLUMN "status" SET DEFAULT 'NOT_STARTED';
