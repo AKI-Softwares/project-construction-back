@@ -119,7 +119,7 @@ export class ChecklistRepository {
   ) {
     return prisma.$transaction(async (tx) => {
       const visit = await tx.visit.create({
-        data: { checklistId, inspectorId, createdById, status: "ONGOING" },
+        data: { checklistId, inspectorId, createdById },
         select: { id: true },
       });
 
