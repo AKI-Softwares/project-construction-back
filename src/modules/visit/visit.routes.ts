@@ -5,6 +5,7 @@ import { VisitController } from "./visit.controller.js";
 import {
   visitParamsSchema,
   visitItemParamsSchema,
+  visitMineQuerySchema,
   finalizeVisitSchema,
   updateVisitItemSchema,
   addNonConformitySchema,
@@ -16,6 +17,17 @@ export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
   const service = new VisitService(repo);
   const controller = new VisitController(service);
 
+  // GET /mine must be registered before GET /:id to prevent Fastify
+  // from capturing "mine" as an :id parameter value.
+  app.get(
+    "/mine",
+    {
+      schema: { querystring: visitMineQuerySchema },
+      preHandler: [app.authenticate, checkPermission("visits:read")],
+    },
+    controller.listMine.bind(controller),
+  );
+
   app.get(
     "/:id",
     {
@@ -23,6 +35,15 @@ export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: [app.authenticate, checkPermission("visits:read")],
     },
     controller.getOne.bind(controller),
+  );
+
+  app.patch(
+    "/:id/start",
+    {
+      schema: { params: visitParamsSchema },
+      preHandler: [app.authenticate, checkPermission("visits:update")],
+    },
+    controller.start.bind(controller),
   );
 
   app.patch(

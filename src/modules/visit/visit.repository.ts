@@ -1,6 +1,24 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
 import type { FinalizeVisitInput } from "./visit.schema.js";
 
+const VISIT_MINE_SELECT = {
+  id: true,
+  status: true,
+  createdAt: true,
+  checklist: {
+    select: {
+      apartment: {
+        select: {
+          identifier: true,
+          floor: true,
+          block: true,
+          building: { select: { name: true } },
+        },
+      },
+    },
+  },
+} as const;
+
 const VISIT_DETAIL_SELECT = {
   id: true,
   checklistId: true,
@@ -11,6 +29,18 @@ const VISIT_DETAIL_SELECT = {
   updatedAt: true,
   inspector: { select: { id: true, name: true } },
   createdBy: { select: { id: true, name: true } },
+  checklist: {
+    select: {
+      apartment: {
+        select: {
+          identifier: true,
+          floor: true,
+          block: true,
+          building: { select: { name: true } },
+        },
+      },
+    },
+  },
   items: {
     select: {
       id: true,
@@ -122,5 +152,24 @@ export class VisitRepository {
 
   async deleteNonConformity(ncId: number) {
     return prisma.nonConformity.delete({ where: { id: ncId }, select: { id: true } });
+  }
+
+  async findByInspectorId(inspectorId: number, status?: "NOT_STARTED" | "ONGOING" | "FINALIZED") {
+    return prisma.visit.findMany({
+      where: {
+        inspectorId,
+        ...(status !== undefined && { status }),
+      },
+      select: VISIT_MINE_SELECT,
+      orderBy: { createdAt: "desc" as const },
+    });
+  }
+
+  async updateStatus(visitId: number, status: "ONGOING") {
+    return prisma.visit.update({
+      where: { id: visitId },
+      data: { status },
+      select: VISIT_MINE_SELECT,
+    });
   }
 }

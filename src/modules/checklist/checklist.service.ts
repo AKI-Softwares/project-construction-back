@@ -50,8 +50,10 @@ export class ChecklistService {
       throw new HttpError(409, "Checklist is already finalized.");
     }
 
-    const ongoingVisit = checklist.visits.find((v) => v.status === "ONGOING");
-    if (ongoingVisit) {
+    const activeVisit = checklist.visits.find(
+      (v) => v.status === "NOT_STARTED" || v.status === "ONGOING",
+    );
+    if (activeVisit) {
       throw new HttpError(409, "A visit is already in progress for this checklist.");
     }
 

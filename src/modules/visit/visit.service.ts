@@ -4,6 +4,7 @@ import type {
   FinalizeVisitInput,
   UpdateVisitItemInput,
   AddNonConformityInput,
+  VisitMineQuery,
 } from "./visit.schema.js";
 
 type GroupedItem = {
@@ -66,14 +67,34 @@ export class VisitService {
   async getVisitGrouped(id: number) {
     const visit = await this.repo.findById(id);
     if (!visit) throw new HttpError(404, "Visit not found.");
-    const { items, ...rest } = visit;
-    return { ...rest, rooms: groupByRoom(items) };
+    const { items, checklist, ...rest } = visit;
+    return { ...rest, apartment: checklist.apartment, rooms: groupByRoom(items) };
+  }
+
+  async getMyVisits(inspectorId: number, status?: VisitMineQuery["status"]) {
+    const visits = await this.repo.findByInspectorId(inspectorId, status);
+    return visits.map(({ checklist, ...rest }) => ({
+      ...rest,
+      apartment: checklist.apartment,
+    }));
+  }
+
+  async startVisit(visitId: number) {
+    const visit = await this.repo.findById(visitId);
+    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (visit.status !== "NOT_STARTED") {
+      throw new HttpError(409, "Visit has already been started or finalized.");
+    }
+    const updated = await this.repo.updateStatus(visitId, "ONGOING");
+    const { checklist, ...rest } = updated;
+    return { ...rest, apartment: checklist.apartment };
   }
 
   async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number) {
     const visit = await this.repo.findById(id);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED") throw new HttpError(400, "Visit is already finalized.");
+    if (visit.status === "NOT_STARTED") throw new HttpError(400, "Visit has not been started yet.");
 
     const unevaluatedItems = visit.items.filter((i) => i.status === null);
     if (unevaluatedItems.length > 0) {
@@ -100,6 +121,7 @@ export class VisitService {
     const visit = await this.repo.findById(visitId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED") throw new HttpError(400, "Visit is already finalized.");
+    if (visit.status === "NOT_STARTED") throw new HttpError(400, "Visit has not been started yet.");
 
     const item = visit.items.find((i) => i.id === itemId);
     if (!item) throw new HttpError(404, "Visit item not found.");
@@ -148,6 +170,7 @@ export class VisitService {
     const visit = await this.repo.findById(visitId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED") throw new HttpError(400, "Visit is already finalized.");
+    if (visit.status === "NOT_STARTED") throw new HttpError(400, "Visit has not been started yet.");
 
     const item = visit.items.find((i) => i.id === itemId);
     if (!item) throw new HttpError(404, "Visit item not found.");
@@ -164,6 +187,8 @@ export class VisitService {
   async deleteNonConformity(visitId: number, itemId: number) {
     const visit = await this.repo.findById(visitId);
     if (!visit) throw new HttpError(404, "Visit not found.");
+    if (visit.status === "FINALIZED") throw new HttpError(400, "Visit is already finalized.");
+    if (visit.status === "NOT_STARTED") throw new HttpError(400, "Visit has not been started yet.");
 
     const item = visit.items.find((i) => i.id === itemId);
     if (!item) throw new HttpError(404, "Visit item not found.");

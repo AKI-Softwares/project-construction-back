@@ -20,6 +20,7 @@ enum ChecklistItemStatus {
 }
 
 enum VisitStatus {
+  NOT_STARTED
   ONGOING
   FINALIZED
 }
@@ -224,7 +225,7 @@ model Visit {
   inspectorId  Int         @map("inspector_id")
   createdById  Int         @map("created_by_id")
   observations String?     @db.Text
-  status       VisitStatus @default(ONGOING)
+  status       VisitStatus @default(NOT_STARTED)
   finalizedAt  DateTime?   @map("finalized_at") @db.Timestamptz
   createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
