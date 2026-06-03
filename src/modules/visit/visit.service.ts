@@ -187,6 +187,7 @@ export class VisitService {
   async deleteNonConformity(visitId: number, itemId: number) {
     const visit = await this.repo.findById(visitId);
     if (!visit) throw new HttpError(404, "Visit not found.");
+    if (visit.status === "FINALIZED") throw new HttpError(400, "Visit is already finalized.");
     if (visit.status === "NOT_STARTED") throw new HttpError(400, "Visit has not been started yet.");
 
     const item = visit.items.find((i) => i.id === itemId);

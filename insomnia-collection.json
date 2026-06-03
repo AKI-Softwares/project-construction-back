@@ -979,7 +979,7 @@
       "_type": "request",
       "parentId": "fld_visits",
       "name": "Start Visit",
-      "description": "Inicia visita, alterando status para IN_PROGRESS. Requer 'visits:update'.",
+      "description": "Inicia visita, alterando status para ONGOING. Requer 'visits:update'.",
       "method": "PATCH",
       "url": "{{ _.baseUrl }}/visits/1/start",
       "body": {},
