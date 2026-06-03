@@ -3,6 +3,7 @@ import type { VisitService } from "./visit.service.js";
 import type {
   VisitParams,
   VisitItemParams,
+  VisitMineQuery,
   FinalizeVisitInput,
   UpdateVisitItemInput,
   AddNonConformityInput,
@@ -16,6 +17,23 @@ export class VisitController {
     reply: FastifyReply,
   ) {
     const visit = await this.service.getVisitGrouped(request.params.id);
+    return reply.status(200).send(visit);
+  }
+
+  async listMine(
+    request: FastifyRequest<{ Querystring: VisitMineQuery }>,
+    reply: FastifyReply,
+  ) {
+    const inspectorId = Number(request.user.sub);
+    const visits = await this.service.getMyVisits(inspectorId, request.query.status);
+    return reply.status(200).send(visits);
+  }
+
+  async start(
+    request: FastifyRequest<{ Params: VisitParams }>,
+    reply: FastifyReply,
+  ) {
+    const visit = await this.service.startVisit(request.params.id);
     return reply.status(200).send(visit);
   }
 
