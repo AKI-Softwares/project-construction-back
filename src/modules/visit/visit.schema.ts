@@ -9,6 +9,10 @@ export const visitItemParamsSchema = z.object({
   itemId: z.coerce.number().int().positive(),
 });
 
+export const visitMineQuerySchema = z.object({
+  status: z.enum(["NOT_STARTED", "ONGOING", "FINALIZED"]).optional(),
+});
+
 export const finalizeVisitSchema = z.object({
   status: z.literal("FINALIZED"),
   observations: z.string().min(1).optional(),
@@ -24,6 +28,7 @@ export const addNonConformitySchema = z.object({
 
 export type VisitParams = z.infer<typeof visitParamsSchema>;
 export type VisitItemParams = z.infer<typeof visitItemParamsSchema>;
+export type VisitMineQuery = z.infer<typeof visitMineQuerySchema>;
 export type FinalizeVisitInput = z.infer<typeof finalizeVisitSchema>;
 export type UpdateVisitItemInput = z.infer<typeof updateVisitItemSchema>;
 export type AddNonConformityInput = z.infer<typeof addNonConformitySchema>;
