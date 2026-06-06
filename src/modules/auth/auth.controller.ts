@@ -18,6 +18,8 @@ export class AuthController {
   }
 
   async me(request: FastifyRequest, reply: FastifyReply) {
-    return reply.send({ user: request.user });
+    const userId = Number((request.user as { sub: string }).sub);
+    const user = await this.service.getMe(userId);
+    return reply.send(user);
   }
 }
