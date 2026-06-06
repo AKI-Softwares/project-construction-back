@@ -6,6 +6,12 @@ import type { LoginInput } from "./auth.schema.js";
 export class AuthService {
   constructor(private readonly repo: AuthRepository) {}
 
+  async getMe(userId: number) {
+    const user = await this.repo.findUserById(userId);
+    if (!user) throw new HttpError(404, "User not found.");
+    return user;
+  }
+
   async login(input: LoginInput) {
     const user = await this.repo.findUserByEmail(input.email);
     if (!user) {
