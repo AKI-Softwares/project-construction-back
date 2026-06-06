@@ -10,7 +10,12 @@ export const visitItemParamsSchema = z.object({
 });
 
 export const visitMineQuerySchema = z.object({
-  status: z.enum(["NOT_STARTED", "ONGOING", "FINALIZED"]).optional(),
+  status: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val ? (val.split(",") as Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">) : undefined,
+    ),
 });
 
 export const finalizeVisitSchema = z.object({

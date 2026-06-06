@@ -154,11 +154,11 @@ export class VisitRepository {
     return prisma.nonConformity.delete({ where: { id: ncId }, select: { id: true } });
   }
 
-  async findByInspectorId(inspectorId: number, status?: "NOT_STARTED" | "ONGOING" | "FINALIZED") {
+  async findByInspectorId(inspectorId: number, status?: Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">) {
     return prisma.visit.findMany({
       where: {
         inspectorId,
-        ...(status !== undefined && { status }),
+        ...(status !== undefined && status.length > 0 && { status: { in: status } }),
       },
       select: VISIT_MINE_SELECT,
       orderBy: { createdAt: "desc" as const },
