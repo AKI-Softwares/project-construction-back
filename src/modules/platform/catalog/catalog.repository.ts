@@ -41,7 +41,7 @@ export class CatalogRepository {
   }
 
   async deleteService(id: number) {
-    return prisma.service.delete({ where: { id } });
+    return prisma.service.deleteMany({ where: { id, companyId: null } });
   }
 
   async findAllApartmentTypes() {
@@ -75,6 +75,6 @@ export class CatalogRepository {
   }
 
   async deleteApartmentType(id: number) {
-    return prisma.apartmentType.delete({ where: { id } });
+    return prisma.apartmentType.deleteMany({ where: { id, companyId: null } });
   }
 }

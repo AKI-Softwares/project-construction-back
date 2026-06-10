@@ -12,7 +12,7 @@ export class RoleTemplateRepository {
     return prisma.role.findMany({ where: { companyId: null, isCompanyAdmin: false }, select: TEMPLATE_SELECT, orderBy: { name: 'asc' } });
   }
   findById(id: number) {
-    return prisma.role.findFirst({ where: { id, companyId: null }, select: TEMPLATE_SELECT });
+    return prisma.role.findFirst({ where: { id, companyId: null, isCompanyAdmin: false }, select: TEMPLATE_SELECT });
   }
   create(data: CreateRoleTemplateInput) {
     return prisma.role.create({
@@ -39,6 +39,6 @@ export class RoleTemplateRepository {
     });
   }
   delete(id: number) {
-    return prisma.role.delete({ where: { id } });
+    return prisma.role.deleteMany({ where: { id, companyId: null, isCompanyAdmin: false } });
   }
 }
