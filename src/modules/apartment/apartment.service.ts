@@ -21,7 +21,7 @@ export class ApartmentService {
     return apartment;
   }
 
-  async createApartment(input: CreateApartmentInput) {
+  async createApartment(input: CreateApartmentInput, companyId: number) {
     const building = await this.repo.findBuildingById(input.buildingId);
     if (!building) throw new HttpError(404, "Building not found.");
 
@@ -42,7 +42,7 @@ export class ApartmentService {
     }
 
     try {
-      return await this.repo.createWithRooms(input, type.rooms);
+      return await this.repo.createWithRooms(input, type.rooms, companyId);
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&

@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
+import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { VisitService } from "./visit.service.js";
 import type {
   VisitParams,
@@ -75,10 +76,12 @@ export class VisitController {
     }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     const nc = await this.service.addNonConformity(
       request.params.id,
       request.params.itemId,
       request.body,
+      companyId,
     );
     return reply.status(201).send(nc);
   }

@@ -44,11 +44,12 @@ export class BuildingRepository {
     });
   }
 
-  async create(data: CreateBuildingInput) {
+  async create(data: CreateBuildingInput, companyId: number) {
     return prisma.building.create({
       data: {
         name: data.name,
         address: data.address,
+        companyId,
         ...(data.latitude !== undefined && { latitude: data.latitude }),
         ...(data.longitude !== undefined && { longitude: data.longitude }),
       },

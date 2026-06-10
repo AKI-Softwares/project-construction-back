@@ -151,9 +151,9 @@ export class VisitRepository {
     });
   }
 
-  async createNonConformity(visitItemId: number, description: string) {
+  async createNonConformity(visitItemId: number, description: string, companyId: number) {
     return prisma.nonConformity.create({
-      data: { visitItemId, description },
+      data: { visitItemId, description, companyId },
       select: {
         id: true,
         description: true,

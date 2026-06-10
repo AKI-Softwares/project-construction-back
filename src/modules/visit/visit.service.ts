@@ -205,6 +205,7 @@ export class VisitService {
     visitId: number,
     itemId: number,
     input: AddNonConformityInput,
+    companyId: number,
   ) {
     const visit = await this.repo.findById(visitId);
     if (!visit) throw new HttpError(404, "Visit not found.");
@@ -225,7 +226,7 @@ export class VisitService {
       throw new HttpError(409, "This item already has a non-conformity.");
     }
 
-    return this.repo.createNonConformity(itemId, input.description);
+    return this.repo.createNonConformity(itemId, input.description, companyId);
   }
 
   async deleteNonConformity(visitId: number, itemId: number) {

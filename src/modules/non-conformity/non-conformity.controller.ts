@@ -1,5 +1,6 @@
 import { HttpError } from "../../shared/errors/http-error.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
+import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { NonConformityService } from "./non-conformity.service.js";
 import type { NcParams, PhotoParams } from "./non-conformity.schema.js";
 
@@ -21,7 +22,8 @@ export class NonConformityController {
       }
       throw err;
     }
-    const photo = await this.service.addPhoto(request.params.id, buffer);
+    const companyId = getTenantId(request);
+    const photo = await this.service.addPhoto(request.params.id, buffer, companyId);
     return reply.status(201).send(photo);
   }
 

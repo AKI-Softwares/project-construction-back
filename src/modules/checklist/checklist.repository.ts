@@ -119,10 +119,11 @@ export class ChecklistRepository {
     inspectorId: number,
     createdById: number,
     itemIds: number[],
+    companyId: number,
   ) {
     return prisma.$transaction(async (tx) => {
       const visit = await tx.visit.create({
-        data: { checklistId, inspectorId, createdById },
+        data: { checklistId, inspectorId, createdById, companyId },
         select: { id: true },
       });
 

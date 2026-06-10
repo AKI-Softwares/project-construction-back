@@ -54,6 +54,7 @@ export class ChecklistService {
     checklistId: number,
     input: CreateVisitInput,
     createdById: number,
+    companyId: number,
   ) {
     const checklist = await this.repo.findById(checklistId);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
@@ -82,6 +83,7 @@ export class ChecklistService {
         input.inspectorId,
         createdById,
         items.map((i) => i.id),
+        companyId,
       );
     } catch (e) {
       if (

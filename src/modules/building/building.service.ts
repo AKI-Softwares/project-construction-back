@@ -18,8 +18,8 @@ export class BuildingService {
     return building;
   }
 
-  async createBuilding(input: CreateBuildingInput) {
-    return this.repo.create(input);
+  async createBuilding(input: CreateBuildingInput, companyId: number) {
+    return this.repo.create(input, companyId);
   }
 
   async updateBuilding(id: number, input: UpdateBuildingInput) {

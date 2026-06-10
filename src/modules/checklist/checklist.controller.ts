@@ -1,4 +1,5 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
+import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { ChecklistService } from "./checklist.service.js";
 import type {
   ChecklistParams,
@@ -52,10 +53,12 @@ export class ChecklistController {
     reply: FastifyReply,
   ) {
     const createdById = Number(request.user.sub);
+    const companyId = getTenantId(request);
     const visit = await this.service.createVisit(
       request.params.id,
       request.body,
       createdById,
+      companyId,
     );
     return reply.status(201).send(visit);
   }

@@ -99,6 +99,7 @@ export class ApartmentRepository {
       name: string;
       defaultServices: { serviceId: number }[];
     }[],
+    companyId: number,
   ) {
     return prisma.$transaction(async (tx) => {
       const apartment = await tx.apartment.create({
@@ -106,6 +107,7 @@ export class ApartmentRepository {
           buildingId: input.buildingId,
           apartmentTypeId: input.apartmentTypeId,
           identifier: input.identifier,
+          companyId,
           ...(input.floor !== undefined && { floor: input.floor }),
           ...(input.block !== undefined && { block: input.block }),
         },
@@ -135,7 +137,7 @@ export class ApartmentRepository {
 
       // Step 4: Create Checklist (always — 1:1 with apartment)
       const checklist = await tx.checklist.create({
-        data: { apartmentId: apartment.id },
+        data: { apartmentId: apartment.id, companyId },
         select: { id: true },
       });
 

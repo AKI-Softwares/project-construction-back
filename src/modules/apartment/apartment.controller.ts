@@ -1,4 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { ApartmentService } from "./apartment.service.js";
 import type {
   AddRoomServiceInput,
@@ -34,9 +35,10 @@ export class ApartmentController {
     request: FastifyRequest<{ Body: CreateApartmentInput }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     return reply
       .status(201)
-      .send(await this.service.createApartment(request.body));
+      .send(await this.service.createApartment(request.body, companyId));
   }
 
   async update(

@@ -15,9 +15,9 @@ export class NonConformityRepository {
     });
   }
 
-  async addPhoto(ncId: number, url: string, publicId: string) {
+  async addPhoto(ncId: number, url: string, publicId: string, companyId: number) {
     return prisma.photo.create({
-      data: { nonConformityId: ncId, url, publicId },
+      data: { nonConformityId: ncId, url, publicId, companyId },
       select: { id: true, url: true, uploadedAt: true },
     });
   }

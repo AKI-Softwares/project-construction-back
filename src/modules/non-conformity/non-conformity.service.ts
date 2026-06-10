@@ -17,7 +17,7 @@ const ALLOWED_MIME_TYPES = new Set([
 export class NonConformityService {
   constructor(private repo: NonConformityRepository) {}
 
-  async addPhoto(ncId: number, buffer: Buffer) {
+  async addPhoto(ncId: number, buffer: Buffer, companyId: number) {
     const nc = await this.repo.findById(ncId);
     if (!nc) throw new HttpError(404, "Non-conformity not found.");
     if (buffer.length === 0) {
@@ -38,7 +38,7 @@ export class NonConformityService {
       console.error("[addPhoto] Cloudinary upload failed:", err);
       throw new HttpError(502, "Photo upload failed. Please try again.");
     }
-    return this.repo.addPhoto(ncId, secureUrl, publicId);
+    return this.repo.addPhoto(ncId, secureUrl, publicId, companyId);
   }
 
   async deletePhoto(ncId: number, photoId: number) {
