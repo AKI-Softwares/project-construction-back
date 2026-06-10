@@ -1,5 +1,8 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
-import type { CreateApartmentInput, UpdateApartmentInput } from "./apartment.schema.js";
+import type {
+  CreateApartmentInput,
+  UpdateApartmentInput,
+} from "./apartment.schema.js";
 
 const APARTMENT_ROOM_SERVICE_SELECT = {
   id: true,
@@ -91,7 +94,11 @@ export class ApartmentRepository {
 
   async createWithRooms(
     input: CreateApartmentInput,
-    rooms: { id: number; name: string; defaultServices: { serviceId: number }[] }[],
+    rooms: {
+      id: number;
+      name: string;
+      defaultServices: { serviceId: number }[];
+    }[],
   ) {
     return prisma.$transaction(async (tx) => {
       const apartment = await tx.apartment.create({
@@ -115,7 +122,10 @@ export class ApartmentRepository {
         });
         createdRoomIds.push(created.id);
         for (const ds of room.defaultServices) {
-          serviceData.push({ apartmentRoomId: created.id, serviceId: ds.serviceId });
+          serviceData.push({
+            apartmentRoomId: created.id,
+            serviceId: ds.serviceId,
+          });
         }
       }
 

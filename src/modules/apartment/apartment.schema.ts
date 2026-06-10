@@ -43,9 +43,13 @@ export const apartmentQuerySchema = z.object({
 
 export type CreateApartmentInput = z.infer<typeof createApartmentSchema>;
 export type UpdateApartmentInput = z.infer<typeof updateApartmentSchema>;
-export type UpdateApartmentRoomInput = z.infer<typeof updateApartmentRoomSchema>;
+export type UpdateApartmentRoomInput = z.infer<
+  typeof updateApartmentRoomSchema
+>;
 export type AddRoomServiceInput = z.infer<typeof addRoomServiceSchema>;
 export type ApartmentParams = z.infer<typeof apartmentParamsSchema>;
 export type ApartmentRoomParams = z.infer<typeof apartmentRoomParamsSchema>;
-export type ApartmentRoomServiceParams = z.infer<typeof apartmentRoomServiceParamsSchema>;
+export type ApartmentRoomServiceParams = z.infer<
+  typeof apartmentRoomServiceParamsSchema
+>;
 export type ApartmentQuery = z.infer<typeof apartmentQuerySchema>;

@@ -16,7 +16,7 @@ export class NonConformityController {
     try {
       buffer = await data.toBuffer();
     } catch (err: unknown) {
-      if ((err as { code?: string }).code === 'FST_REQ_FILE_TOO_LARGE') {
+      if ((err as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE") {
         throw new HttpError(413, "File too large. Maximum size is 10 MB.");
       }
       throw err;

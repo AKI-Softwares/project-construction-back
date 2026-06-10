@@ -32,3 +32,5 @@ CLAUDE.md
 .vscode/
 
 .playwright-mcp/
+
+coverage/

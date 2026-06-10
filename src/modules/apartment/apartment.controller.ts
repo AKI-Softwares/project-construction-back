@@ -18,7 +18,9 @@ export class ApartmentController {
     request: FastifyRequest<{ Querystring: ApartmentQuery }>,
     reply: FastifyReply,
   ) {
-    return reply.send(await this.service.listApartments(request.query.buildingId));
+    return reply.send(
+      await this.service.listApartments(request.query.buildingId),
+    );
   }
 
   async getOne(
@@ -32,11 +34,16 @@ export class ApartmentController {
     request: FastifyRequest<{ Body: CreateApartmentInput }>,
     reply: FastifyReply,
   ) {
-    return reply.status(201).send(await this.service.createApartment(request.body));
+    return reply
+      .status(201)
+      .send(await this.service.createApartment(request.body));
   }
 
   async update(
-    request: FastifyRequest<{ Params: ApartmentParams; Body: UpdateApartmentInput }>,
+    request: FastifyRequest<{
+      Params: ApartmentParams;
+      Body: UpdateApartmentInput;
+    }>,
     reply: FastifyReply,
   ) {
     return reply.send(
@@ -75,13 +82,15 @@ export class ApartmentController {
     }>,
     reply: FastifyReply,
   ) {
-    return reply.status(201).send(
-      await this.service.addServiceToRoom(
-        request.params.id,
-        request.params.roomId,
-        request.body,
-      ),
-    );
+    return reply
+      .status(201)
+      .send(
+        await this.service.addServiceToRoom(
+          request.params.id,
+          request.params.roomId,
+          request.body,
+        ),
+      );
   }
 
   async removeService(

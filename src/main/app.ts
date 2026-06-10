@@ -21,6 +21,7 @@ import { serviceRoutes } from "../modules/service/service.routes.js";
 import { checklistRoutes } from "../modules/checklist/checklist.routes.js";
 import { visitRoutes } from "../modules/visit/visit.routes.js";
 import { nonConformityRoutes } from "../modules/non-conformity/non-conformity.routes.js";
+import { platformRoutes } from "../modules/platform/platform.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -58,13 +59,16 @@ export async function buildApp() {
   await app.register(checklistRoutes, { prefix: "/checklists" });
   await app.register(visitRoutes, { prefix: "/visits" });
   await app.register(nonConformityRoutes, { prefix: "/non-conformities" });
+  await app.register(platformRoutes, { prefix: "/platform" });
 
   // Error handler global
   app.setErrorHandler((error, _request, reply) => {
     app.log.error(error);
 
-    if ((error as { code?: string }).code === 'FST_REQ_FILE_TOO_LARGE') {
-      return reply.status(413).send({ message: 'File too large. Maximum size is 10 MB.' });
+    if ((error as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE") {
+      return reply
+        .status(413)
+        .send({ message: "File too large. Maximum size is 10 MB." });
     }
 
     if (error instanceof HttpError) {

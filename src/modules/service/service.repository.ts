@@ -1,5 +1,8 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
-import type { CreateServiceInput, UpdateServiceInput } from "./service.schema.js";
+import type {
+  CreateServiceInput,
+  UpdateServiceInput,
+} from "./service.schema.js";
 
 const SERVICE_SELECT = {
   id: true,
@@ -25,15 +28,20 @@ export class ServiceRepository {
     return prisma.service.findUnique({ where: { id }, select: SERVICE_SELECT });
   }
 
-  async findByName(name: string) {
-    return prisma.service.findUnique({ where: { name }, select: { id: true } });
+  async findByName(name: string, companyId?: number | null) {
+    return prisma.service.findFirst({
+      where: companyId !== undefined ? { name, companyId } : { name },
+      select: { id: true },
+    });
   }
 
   async create(data: CreateServiceInput) {
     return prisma.service.create({
       data: {
         name: data.name,
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.category !== undefined && { category: data.category }),
       },
       select: SERVICE_SELECT,
@@ -45,7 +53,9 @@ export class ServiceRepository {
       where: { id },
       data: {
         ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.category !== undefined && { category: data.category }),
       },
       select: SERVICE_SELECT,

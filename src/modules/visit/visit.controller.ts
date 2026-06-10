@@ -25,7 +25,10 @@ export class VisitController {
     reply: FastifyReply,
   ) {
     const inspectorId = Number(request.user.sub);
-    const visits = await this.service.getMyVisits(inspectorId, request.query.status);
+    const visits = await this.service.getMyVisits(
+      inspectorId,
+      request.query.status,
+    );
     return reply.status(200).send(visits);
   }
 
@@ -42,12 +45,19 @@ export class VisitController {
     reply: FastifyReply,
   ) {
     const userId = Number(request.user.sub);
-    const visit = await this.service.finalizeVisit(request.params.id, request.body, userId);
+    const visit = await this.service.finalizeVisit(
+      request.params.id,
+      request.body,
+      userId,
+    );
     return reply.status(200).send(visit);
   }
 
   async updateItem(
-    request: FastifyRequest<{ Params: VisitItemParams; Body: UpdateVisitItemInput }>,
+    request: FastifyRequest<{
+      Params: VisitItemParams;
+      Body: UpdateVisitItemInput;
+    }>,
     reply: FastifyReply,
   ) {
     const item = await this.service.updateVisitItem(
@@ -59,7 +69,10 @@ export class VisitController {
   }
 
   async addNonConformity(
-    request: FastifyRequest<{ Params: VisitItemParams; Body: AddNonConformityInput }>,
+    request: FastifyRequest<{
+      Params: VisitItemParams;
+      Body: AddNonConformityInput;
+    }>,
     reply: FastifyReply,
   ) {
     const nc = await this.service.addNonConformity(
@@ -74,7 +87,10 @@ export class VisitController {
     request: FastifyRequest<{ Params: VisitItemParams }>,
     reply: FastifyReply,
   ) {
-    await this.service.deleteNonConformity(request.params.id, request.params.itemId);
+    await this.service.deleteNonConformity(
+      request.params.id,
+      request.params.itemId,
+    );
     return reply.status(204).send();
   }
 }

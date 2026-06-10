@@ -73,7 +73,10 @@ const VISIT_DETAIL_SELECT = {
 
 export class VisitRepository {
   async findById(id: number) {
-    return prisma.visit.findUnique({ where: { id }, select: VISIT_DETAIL_SELECT });
+    return prisma.visit.findUnique({
+      where: { id },
+      select: VISIT_DETAIL_SELECT,
+    });
   }
 
   async applyFinalization(
@@ -96,7 +99,9 @@ export class VisitRepository {
         data: {
           status: "FINALIZED",
           finalizedAt: new Date(),
-          ...(input.observations !== undefined && { observations: input.observations }),
+          ...(input.observations !== undefined && {
+            observations: input.observations,
+          }),
         },
       });
 
@@ -111,7 +116,10 @@ export class VisitRepository {
         });
       }
 
-      return tx.visit.findUnique({ where: { id: visitId }, select: VISIT_DETAIL_SELECT });
+      return tx.visit.findUnique({
+        where: { id: visitId },
+        select: VISIT_DETAIL_SELECT,
+      });
     });
   }
 
@@ -127,7 +135,12 @@ export class VisitRepository {
         return tx.visitItem.update({
           where: { id: itemId },
           data: { status: newStatus },
-          select: { id: true, status: true, visitId: true, checklistItemId: true },
+          select: {
+            id: true,
+            status: true,
+            visitId: true,
+            checklistItemId: true,
+          },
         });
       });
     }
@@ -151,14 +164,21 @@ export class VisitRepository {
   }
 
   async deleteNonConformity(ncId: number) {
-    return prisma.nonConformity.delete({ where: { id: ncId }, select: { id: true } });
+    return prisma.nonConformity.delete({
+      where: { id: ncId },
+      select: { id: true },
+    });
   }
 
-  async findByInspectorId(inspectorId: number, status?: Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">) {
+  async findByInspectorId(
+    inspectorId: number,
+    status?: Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">,
+  ) {
     return prisma.visit.findMany({
       where: {
         inspectorId,
-        ...(status !== undefined && status.length > 0 && { status: { in: status } }),
+        ...(status !== undefined &&
+          status.length > 0 && { status: { in: status } }),
       },
       select: VISIT_MINE_SELECT,
       orderBy: { createdAt: "desc" as const },

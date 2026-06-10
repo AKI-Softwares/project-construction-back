@@ -85,7 +85,10 @@ export class ChecklistRepository {
   }
 
   async findById(id: number) {
-    return prisma.checklist.findUnique({ where: { id }, select: CHECKLIST_DETAIL_SELECT });
+    return prisma.checklist.findUnique({
+      where: { id },
+      select: CHECKLIST_DETAIL_SELECT,
+    });
   }
 
   async update(

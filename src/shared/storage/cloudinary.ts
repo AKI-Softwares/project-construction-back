@@ -7,17 +7,22 @@ cloudinary.config({
   api_secret: env.CLOUDINARY_API_SECRET,
 });
 
-export async function uploadPhoto(buffer: Buffer): Promise<{ secureUrl: string; publicId: string }> {
+export async function uploadPhoto(
+  buffer: Buffer,
+): Promise<{ secureUrl: string; publicId: string }> {
   if (!buffer.length) throw new Error("Upload buffer is empty.");
 
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: "home/checkobra",
-        transformation: [{ width: 1920, quality: 80, fetch_format: "auto", crop: "limit" }],
+        transformation: [
+          { width: 1920, quality: 80, fetch_format: "auto", crop: "limit" },
+        ],
       },
       (error, result) => {
-        if (error || !result) return reject(error ?? new Error("Cloudinary upload failed."));
+        if (error || !result)
+          return reject(error ?? new Error("Cloudinary upload failed."));
         resolve({ secureUrl: result.secure_url, publicId: result.public_id });
       },
     );

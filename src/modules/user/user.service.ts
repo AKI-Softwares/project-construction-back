@@ -44,7 +44,10 @@ export class UserService {
 
     // Only callers with users:update may change roleId
     if (input.roleId !== undefined && !canUpdateAny) {
-      throw new HttpError(403, "Only users with 'users:update' may change role.");
+      throw new HttpError(
+        403,
+        "Only users with 'users:update' may change role.",
+      );
     }
 
     if (input.email && input.email !== user.email) {

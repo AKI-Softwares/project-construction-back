@@ -5,12 +5,18 @@ declare module "@fastify/jwt" {
   interface FastifyJWT {
     payload: {
       sub: string;
-      roleId: number;
+      companyId: number | null;
+      isPlatformAdmin: boolean;
+      isCompanyAdmin: boolean;
+      roleId: number | null;
       permissions: string[];
     };
     user: {
       sub: string;
-      roleId: number;
+      companyId: number | null;
+      isPlatformAdmin: boolean;
+      isCompanyAdmin: boolean;
+      roleId: number | null;
       permissions: string[];
     };
   }

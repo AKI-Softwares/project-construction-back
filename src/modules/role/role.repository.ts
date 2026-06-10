@@ -15,22 +15,33 @@ const ROLE_SELECT = {
 
 export class RoleRepository {
   async findAll() {
-    return prisma.role.findMany({ select: ROLE_SELECT, orderBy: { name: "asc" } });
+    return prisma.role.findMany({
+      select: ROLE_SELECT,
+      orderBy: { name: "asc" },
+    });
   }
 
   async findById(id: number) {
     return prisma.role.findUnique({ where: { id }, select: ROLE_SELECT });
   }
 
-  async findByName(name: string) {
-    return prisma.role.findUnique({ where: { name } });
+  async findByName(name: string, companyId?: number | null) {
+    return prisma.role.findFirst({
+      where: companyId !== undefined ? { name, companyId } : { name },
+    });
   }
 
-  async create(data: { name: string; description?: string; permissionIds: number[] }) {
+  async create(data: {
+    name: string;
+    description?: string;
+    permissionIds: number[];
+  }) {
     return prisma.role.create({
       data: {
         name: data.name,
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         permissions: { connect: data.permissionIds.map((id) => ({ id })) },
       },
       select: ROLE_SELECT,
@@ -39,13 +50,19 @@ export class RoleRepository {
 
   async update(
     id: number,
-    data: { name?: string; description?: string | null; permissionIds?: number[] },
+    data: {
+      name?: string;
+      description?: string | null;
+      permissionIds?: number[];
+    },
   ) {
     return prisma.role.update({
       where: { id },
       data: {
         ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
         ...(data.permissionIds !== undefined && {
           permissions: { set: data.permissionIds.map((pid) => ({ id: pid })) },
         }),

@@ -31,32 +31,68 @@ enum EvaluationStatus {
   NOK
 }
 
+enum CompanyStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+model Company {
+  id               Int             @id @default(autoincrement())
+  name             String          @db.VarChar(255)
+  slug             String          @unique @db.VarChar(100)
+  status           CompanyStatus   @default(PENDING)
+  createdAt        DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  users            User[]
+  roles            Role[]
+  buildings        Building[]
+  apartmentTypes   ApartmentType[]
+  services         Service[]
+  apartments       Apartment[]
+  checklists       Checklist[]
+  visits           Visit[]
+  nonConformities  NonConformity[]
+  photos           Photo[]
+
+  @@map("Company")
+}
+
 model User {
   id                  Int         @id @default(autoincrement())
   name                String      @db.VarChar(255)
   email               String      @unique @db.VarChar(255)
   passwordHash        String      @map("password_hash") @db.VarChar(255)
-  roleId              Int         @map("role_id")
-  role                Role        @relation(fields: [roleId], references: [id])
+  roleId              Int?        @map("role_id")
+  companyId           Int?        @map("company_id")
+  isPlatformAdmin     Boolean     @default(false) @map("is_platform_admin")
+  role                Role?       @relation(fields: [roleId], references: [id])
+  company             Company?    @relation(fields: [companyId], references: [id])
   checklistsFinalized Checklist[] @relation("ChecklistFinalizedBy")
   visitsAsInspector   Visit[]     @relation("VisitInspector")
   visitsCreated       Visit[]     @relation("VisitCreatedBy")
   createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@index([companyId])
   @@map("User")
 }
 
 model Role {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique @db.VarChar(255)
-  description String?      @db.VarChar(500)
-  isSystem    Boolean      @default(false) @map("is_system")
-  permissions Permission[] @relation("RolePermissions")
-  users       User[]
-  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id             Int          @id @default(autoincrement())
+  name           String       @db.VarChar(255)
+  description    String?      @db.VarChar(500)
+  isSystem       Boolean      @default(false) @map("is_system")
+  isCompanyAdmin Boolean      @default(false) @map("is_company_admin")
+  companyId      Int?         @map("company_id")
+  company        Company?     @relation(fields: [companyId], references: [id])
+  permissions    Permission[] @relation("RolePermissions")
+  users          User[]
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("Role")
 }
 
@@ -79,22 +115,29 @@ model Building {
   address    String        @db.VarChar(500)
   latitude   Float?
   longitude  Float?
+  companyId  Int?          @map("company_id")
+  company    Company?      @relation(fields: [companyId], references: [id])
   createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   apartments Apartment[]
 
+  @@index([companyId])
   @@map("Building")
 }
 
 model ApartmentType {
   id          Int         @id @default(autoincrement())
-  name        String      @unique @db.VarChar(255)
-  description String?     @db.VarChar(500)
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  name        String        @db.VarChar(255)
+  description String?       @db.VarChar(500)
+  companyId   Int?          @map("company_id")
+  company     Company?      @relation(fields: [companyId], references: [id])
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   rooms       Room[]
   apartments  Apartment[]
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("ApartmentType")
 }
 
@@ -120,6 +163,8 @@ model Apartment {
   identifier      String          @db.VarChar(50)
   floor           Int?
   block           String?         @db.VarChar(50)
+  companyId       Int?            @map("company_id")
+  company         Company?        @relation(fields: [companyId], references: [id])
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   building        Building        @relation(fields: [buildingId], references: [id])
@@ -129,6 +174,7 @@ model Apartment {
 
   @@unique([buildingId, identifier])
   @@index([apartmentTypeId])
+  @@index([companyId])
   @@map("Apartment")
 }
 
@@ -164,14 +210,18 @@ model ApartmentRoomService {
 
 model Service {
   id                    Int                    @id @default(autoincrement())
-  name                  String                 @unique @db.VarChar(255)
+  name                  String                 @db.VarChar(255)
   description           String?                @db.VarChar(500)
   category              String?                @db.VarChar(100)
+  companyId             Int?                   @map("company_id")
+  company               Company?               @relation(fields: [companyId], references: [id])
   createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   apartmentRoomServices ApartmentRoomService[]
   roomDefaultServices   RoomDefaultService[]
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("Service")
 }
 
@@ -193,6 +243,8 @@ model Checklist {
   status        ChecklistStatus @default(PENDING)
   finalizedById Int?            @map("finalized_by_id")
   finalizedAt   DateTime?       @map("finalized_at") @db.Timestamptz
+  companyId     Int?            @map("company_id")
+  company       Company?        @relation(fields: [companyId], references: [id])
   createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   apartment     Apartment       @relation(fields: [apartmentId], references: [id], onDelete: Restrict)
@@ -200,6 +252,7 @@ model Checklist {
   items         ChecklistItem[]
   visits        Visit[]
 
+  @@index([companyId])
   @@map("Inspection")
 }
 
@@ -227,6 +280,8 @@ model Visit {
   observations String?     @db.Text
   status       VisitStatus @default(NOT_STARTED)
   finalizedAt  DateTime?   @map("finalized_at") @db.Timestamptz
+  companyId    Int?        @map("company_id")
+  company      Company?    @relation(fields: [companyId], references: [id])
   createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   checklist    Checklist   @relation(fields: [checklistId], references: [id], onDelete: Restrict)
@@ -236,6 +291,7 @@ model Visit {
 
   @@index([checklistId])
   @@index([inspectorId])
+  @@index([companyId])
   @@map("Visit")
 }
 
@@ -261,9 +317,12 @@ model NonConformity {
   description String    @db.Text
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  companyId   Int?      @map("company_id")
+  company     Company?  @relation(fields: [companyId], references: [id])
   visitItem   VisitItem @relation(fields: [visitItemId], references: [id], onDelete: Cascade)
   photos      Photo[]
 
+  @@index([companyId])
   @@map("NonConformity")
 }
 
@@ -273,8 +332,11 @@ model Photo {
   url             String        @db.VarChar(500)
   publicId        String        @map("public_id") @db.VarChar(255)
   uploadedAt      DateTime      @default(now()) @map("uploaded_at") @db.Timestamptz
+  companyId       Int?          @map("company_id")
+  company         Company?      @relation(fields: [companyId], references: [id])
   nonConformity   NonConformity @relation(fields: [nonConformityId], references: [id], onDelete: Cascade)
 
   @@index([nonConformityId])
+  @@index([companyId])
   @@map("Photo")
 }

@@ -16,14 +16,16 @@ export class RoleService {
   }
 
   async createRole(input: CreateRoleInput) {
-    const existing = await this.repo.findByName(input.name);
+    const existing = await this.repo.findByName(input.name, null);
     if (existing) throw new HttpError(409, "Role name already exists.");
 
     await this.assertPermissionsExist(input.permissionIds);
 
     return this.repo.create({
       name: input.name,
-      ...(input.description !== undefined && { description: input.description }),
+      ...(input.description !== undefined && {
+        description: input.description,
+      }),
       permissionIds: input.permissionIds,
     });
   }
@@ -33,21 +35,28 @@ export class RoleService {
     if (!role) throw new HttpError(404, "Role not found.");
 
     if (input.name && input.name !== role.name) {
-      const taken = await this.repo.findByName(input.name);
+      const taken = await this.repo.findByName(input.name, null);
       if (taken) throw new HttpError(409, "Role name already exists.");
     }
 
     if (input.permissionIds !== undefined) {
       if (role.isSystem && input.permissionIds.length === 0) {
-        throw new HttpError(403, "System role must keep at least one permission.");
+        throw new HttpError(
+          403,
+          "System role must keep at least one permission.",
+        );
       }
       await this.assertPermissionsExist(input.permissionIds);
     }
 
     return this.repo.update(id, {
       ...(input.name !== undefined && { name: input.name }),
-      ...(input.description !== undefined && { description: input.description }),
-      ...(input.permissionIds !== undefined && { permissionIds: input.permissionIds }),
+      ...(input.description !== undefined && {
+        description: input.description,
+      }),
+      ...(input.permissionIds !== undefined && {
+        permissionIds: input.permissionIds,
+      }),
     });
   }
 
