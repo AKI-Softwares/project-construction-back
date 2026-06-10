@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { Prisma } from '../../../generated/prisma/client.js';
 import { HttpError } from '../../shared/errors/http-error.js';
 import type { AuthRepository } from './auth.repository.js';
 import type { LoginInput, RegisterCompanyInput } from './auth.schema.js';
@@ -43,9 +44,19 @@ export class AuthService {
     if (existingEmail) throw new HttpError(409, 'Email already registered.');
 
     const passwordHash = await bcrypt.hash(input.admin.password, 12);
-    return this.repo.createCompanyWithAdmin({
-      company: input.company,
-      admin: { name: input.admin.name, email: input.admin.email, passwordHash },
-    });
+    try {
+      return await this.repo.createCompanyWithAdmin({
+        company: input.company,
+        admin: { name: input.admin.name, email: input.admin.email, passwordHash },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new HttpError(409, 'Company slug or email already taken.');
+      }
+      throw err;
+    }
   }
 }

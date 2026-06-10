@@ -41,15 +41,20 @@ export class ApartmentTypeRepository {
     });
   }
 
-  async findByName(name: string) {
-    return prisma.apartmentType.findUnique({ where: { name }, select: { id: true } });
+  async findByName(name: string, companyId?: number | null) {
+    return prisma.apartmentType.findFirst({
+      where: companyId !== undefined ? { name, companyId } : { name },
+      select: { id: true },
+    });
   }
 
   async create(data: CreateApartmentTypeInput) {
     return prisma.apartmentType.create({
       data: {
         name: data.name,
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
       },
       select: APARTMENT_TYPE_SELECT,
     });
@@ -60,7 +65,9 @@ export class ApartmentTypeRepository {
       where: { id },
       data: {
         ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && { description: data.description }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
       },
       select: APARTMENT_TYPE_SELECT,
     });
@@ -108,7 +115,10 @@ export class ApartmentTypeRepository {
   }
 
   async findService(serviceId: number) {
-    return prisma.service.findUnique({ where: { id: serviceId }, select: { id: true } });
+    return prisma.service.findUnique({
+      where: { id: serviceId },
+      select: { id: true },
+    });
   }
 
   async findRoomDefaultService(roomId: number, serviceId: number) {
