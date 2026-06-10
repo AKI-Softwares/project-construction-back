@@ -1,12 +1,19 @@
-import { prisma } from "../../shared/infra/database/prisma.js";
+import { prisma } from '../../shared/infra/database/prisma.js';
 
 export class AuthRepository {
   async findUserByEmail(email: string) {
     return prisma.user.findUnique({
       where: { email },
-      include: {
+      select: {
+        id: true,
+        passwordHash: true,
+        companyId: true,
+        isPlatformAdmin: true,
+        roleId: true,
+        company: { select: { status: true } },
         role: {
-          include: {
+          select: {
+            isCompanyAdmin: true,
             permissions: { select: { action: true } },
           },
         },
@@ -21,7 +28,9 @@ export class AuthRepository {
         id: true,
         name: true,
         email: true,
-        role: { select: { id: true, name: true } },
+        isPlatformAdmin: true,
+        company: { select: { id: true, name: true, status: true } },
+        role: { select: { id: true, name: true, isCompanyAdmin: true } },
       },
     });
   }
