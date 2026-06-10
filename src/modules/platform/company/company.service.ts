@@ -1,0 +1,79 @@
+import { HttpError } from '../../../shared/errors/http-error.js';
+import type { CompanyRepository } from './company.repository.js';
+import type {
+  CreateCompanyInput,
+  UpdateCompanyInput,
+  UpdateCompanyStatusInput,
+  ListCompaniesQuery,
+} from './company.schema.js';
+
+export class CompanyService {
+  constructor(private repo: CompanyRepository) {}
+
+  async list(query: ListCompaniesQuery) {
+    return this.repo.findAll(query.status);
+  }
+
+  async getOne(id: number) {
+    const company = await this.repo.findById(id);
+    if (!company) throw new HttpError(404, 'Company not found.');
+    return company;
+  }
+
+  async create(input: CreateCompanyInput) {
+    const existing = await this.repo.findBySlug(input.slug);
+    if (existing) throw new HttpError(409, 'Company slug already taken.');
+    return this.repo.create(input);
+  }
+
+  async update(id: number, input: UpdateCompanyInput) {
+    const company = await this.repo.findById(id);
+    if (!company) throw new HttpError(404, 'Company not found.');
+    if (input.slug && input.slug !== company.slug) {
+      const existing = await this.repo.findBySlug(input.slug);
+      if (existing) throw new HttpError(409, 'Company slug already taken.');
+    }
+    return this.repo.update(id, input);
+  }
+
+  async updateStatus(id: number, input: UpdateCompanyStatusInput) {
+    const company = await this.repo.findById(id);
+    if (!company) throw new HttpError(404, 'Company not found.');
+
+    if (input.status === 'ACTIVE' && company.status === 'PENDING') {
+      const { prisma } = await import('../../../shared/infra/database/prisma.js');
+
+      const templateRoles = await prisma.role.findMany({
+        where: { companyId: null, isCompanyAdmin: false },
+        select: {
+          name: true,
+          description: true,
+          permissions: { select: { id: true } },
+        },
+      });
+
+      const templateServices = await prisma.service.findMany({
+        where: { companyId: null },
+        select: { name: true, description: true, category: true },
+      });
+
+      const templateApartmentTypes = await prisma.apartmentType.findMany({
+        where: { companyId: null },
+        select: { name: true, description: true },
+      });
+
+      await this.repo.seedCompanyOnActivation(
+        id,
+        templateRoles.map((r) => ({
+          name: r.name,
+          description: r.description,
+          permissionIds: r.permissions.map((p) => p.id),
+        })),
+        templateServices,
+        templateApartmentTypes,
+      );
+    }
+
+    return this.repo.updateStatus(id, input.status);
+  }
+}
