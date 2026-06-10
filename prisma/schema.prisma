@@ -44,6 +44,8 @@ model Company {
   status    CompanyStatus @default(PENDING)
   createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  users     User[]
+  roles     Role[]
 
   @@map("Company")
 }
@@ -53,27 +55,36 @@ model User {
   name                String      @db.VarChar(255)
   email               String      @unique @db.VarChar(255)
   passwordHash        String      @map("password_hash") @db.VarChar(255)
-  roleId              Int         @map("role_id")
-  role                Role        @relation(fields: [roleId], references: [id])
+  roleId              Int?        @map("role_id")
+  companyId           Int?        @map("company_id")
+  isPlatformAdmin     Boolean     @default(false) @map("is_platform_admin")
+  role                Role?       @relation(fields: [roleId], references: [id])
+  company             Company?    @relation(fields: [companyId], references: [id])
   checklistsFinalized Checklist[] @relation("ChecklistFinalizedBy")
   visitsAsInspector   Visit[]     @relation("VisitInspector")
   visitsCreated       Visit[]     @relation("VisitCreatedBy")
   createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@index([companyId])
   @@map("User")
 }
 
 model Role {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique @db.VarChar(255)
-  description String?      @db.VarChar(500)
-  isSystem    Boolean      @default(false) @map("is_system")
-  permissions Permission[] @relation("RolePermissions")
-  users       User[]
-  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id             Int          @id @default(autoincrement())
+  name           String       @db.VarChar(255)
+  description    String?      @db.VarChar(500)
+  isSystem       Boolean      @default(false) @map("is_system")
+  isCompanyAdmin Boolean      @default(false) @map("is_company_admin")
+  companyId      Int?         @map("company_id")
+  company        Company?     @relation(fields: [companyId], references: [id])
+  permissions    Permission[] @relation("RolePermissions")
+  users          User[]
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
+  @@unique([companyId, name])
+  @@index([companyId])
   @@map("Role")
 }
 
