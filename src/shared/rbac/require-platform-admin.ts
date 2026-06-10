@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { HttpError } from "../errors/http-error.js";
 
-export function requirePlatformAdmin(
+export async function requirePlatformAdmin(
   request: FastifyRequest,
   _reply: FastifyReply,
 ) {

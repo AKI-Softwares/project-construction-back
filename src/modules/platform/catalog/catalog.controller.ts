@@ -9,8 +9,8 @@ import type {
 export class CatalogController {
   constructor(private service: CatalogService) {}
 
-  listServices(_r: FastifyRequest, reply: FastifyReply)  { return reply.send(this.service.listServices()); }
-  listAptTypes(_r: FastifyRequest, reply: FastifyReply)  { return reply.send(this.service.listApartmentTypes()); }
+  async listServices(_r: FastifyRequest, reply: FastifyReply)  { return reply.send(await this.service.listServices()); }
+  async listAptTypes(_r: FastifyRequest, reply: FastifyReply)  { return reply.send(await this.service.listApartmentTypes()); }
 
   async getService(r: FastifyRequest<{ Params: CatalogParams }>, reply: FastifyReply) {
     return reply.send(await this.service.getService(r.params.id));
