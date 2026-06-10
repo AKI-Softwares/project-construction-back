@@ -63,8 +63,10 @@ export async function buildApp() {
   app.setErrorHandler((error, _request, reply) => {
     app.log.error(error);
 
-    if ((error as { code?: string }).code === 'FST_REQ_FILE_TOO_LARGE') {
-      return reply.status(413).send({ message: 'File too large. Maximum size is 10 MB.' });
+    if ((error as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE") {
+      return reply
+        .status(413)
+        .send({ message: "File too large. Maximum size is 10 MB." });
     }
 
     if (error instanceof HttpError) {

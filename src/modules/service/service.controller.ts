@@ -10,26 +10,45 @@ import type {
 export class ServiceController {
   constructor(private readonly service: ServiceService) {}
 
-  async list(request: FastifyRequest<{ Querystring: ServiceQuery }>, reply: FastifyReply) {
+  async list(
+    request: FastifyRequest<{ Querystring: ServiceQuery }>,
+    reply: FastifyReply,
+  ) {
     return reply.send(await this.service.listServices(request.query.category));
   }
 
-  async getOne(request: FastifyRequest<{ Params: ServiceParams }>, reply: FastifyReply) {
+  async getOne(
+    request: FastifyRequest<{ Params: ServiceParams }>,
+    reply: FastifyReply,
+  ) {
     return reply.send(await this.service.getService(request.params.id));
   }
 
-  async create(request: FastifyRequest<{ Body: CreateServiceInput }>, reply: FastifyReply) {
-    return reply.status(201).send(await this.service.createService(request.body));
+  async create(
+    request: FastifyRequest<{ Body: CreateServiceInput }>,
+    reply: FastifyReply,
+  ) {
+    return reply
+      .status(201)
+      .send(await this.service.createService(request.body));
   }
 
   async update(
-    request: FastifyRequest<{ Params: ServiceParams; Body: UpdateServiceInput }>,
+    request: FastifyRequest<{
+      Params: ServiceParams;
+      Body: UpdateServiceInput;
+    }>,
     reply: FastifyReply,
   ) {
-    return reply.send(await this.service.updateService(request.params.id, request.body));
+    return reply.send(
+      await this.service.updateService(request.params.id, request.body),
+    );
   }
 
-  async remove(request: FastifyRequest<{ Params: ServiceParams }>, reply: FastifyReply) {
+  async remove(
+    request: FastifyRequest<{ Params: ServiceParams }>,
+    reply: FastifyReply,
+  ) {
     await this.service.deleteService(request.params.id);
     return reply.status(204).send();
   }

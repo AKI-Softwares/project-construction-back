@@ -1,6 +1,10 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { RoleService } from "./role.service.js";
-import type { CreateRoleInput, UpdateRoleInput, RoleParams } from "./role.schema.js";
+import type {
+  CreateRoleInput,
+  UpdateRoleInput,
+  RoleParams,
+} from "./role.schema.js";
 
 export class RoleController {
   constructor(private readonly service: RoleService) {}

@@ -1,6 +1,10 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { UserService } from "./user.service.js";
-import type { CreateUserInput, UpdateUserInput, UserParams } from "./user.schema.js";
+import type {
+  CreateUserInput,
+  UpdateUserInput,
+  UserParams,
+} from "./user.schema.js";
 
 export class UserController {
   constructor(private readonly service: UserService) {}

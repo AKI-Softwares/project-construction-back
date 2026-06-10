@@ -1,6 +1,9 @@
 import { HttpError } from "../../shared/errors/http-error.js";
 import type { BuildingRepository } from "./building.repository.js";
-import type { CreateBuildingInput, UpdateBuildingInput } from "./building.schema.js";
+import type {
+  CreateBuildingInput,
+  UpdateBuildingInput,
+} from "./building.schema.js";
 
 export class BuildingService {
   constructor(private readonly repo: BuildingRepository) {}
@@ -30,7 +33,10 @@ export class BuildingService {
     if (!building) throw new HttpError(404, "Building not found.");
     const apartmentCount = await this.repo.countApartments(id);
     if (apartmentCount > 0) {
-      throw new HttpError(409, "Building has apartments and cannot be deleted.");
+      throw new HttpError(
+        409,
+        "Building has apartments and cannot be deleted.",
+      );
     }
     await this.repo.delete(id);
   }

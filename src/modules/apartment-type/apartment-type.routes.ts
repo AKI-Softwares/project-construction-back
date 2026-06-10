@@ -45,7 +45,10 @@ export const apartmentTypeRoutes: FastifyPluginAsyncZod = async (app) => {
   app.patch(
     "/:id",
     {
-      schema: { params: apartmentTypeParamsSchema, body: updateApartmentTypeSchema },
+      schema: {
+        params: apartmentTypeParamsSchema,
+        body: updateApartmentTypeSchema,
+      },
       preHandler: [app.authenticate, checkPermission("apartment-types:update")],
     },
     controller.update.bind(controller),

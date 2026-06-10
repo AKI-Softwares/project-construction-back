@@ -68,7 +68,10 @@ export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
     "/:id/items/:itemId/non-conformities",
     {
       schema: { params: visitItemParamsSchema, body: addNonConformitySchema },
-      preHandler: [app.authenticate, checkPermission("non-conformities:create")],
+      preHandler: [
+        app.authenticate,
+        checkPermission("non-conformities:create"),
+      ],
     },
     controller.addNonConformity.bind(controller),
   );
@@ -77,7 +80,10 @@ export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
     "/:id/items/:itemId/non-conformities",
     {
       schema: { params: visitItemParamsSchema },
-      preHandler: [app.authenticate, checkPermission("non-conformities:delete")],
+      preHandler: [
+        app.authenticate,
+        checkPermission("non-conformities:delete"),
+      ],
     },
     controller.deleteNonConformity.bind(controller),
   );

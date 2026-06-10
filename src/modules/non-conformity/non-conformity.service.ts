@@ -1,6 +1,9 @@
 import { fileTypeFromBuffer } from "file-type";
 import { HttpError } from "../../shared/errors/http-error.js";
-import { uploadPhoto, deleteCloudinaryPhoto } from "../../shared/storage/cloudinary.js";
+import {
+  uploadPhoto,
+  deleteCloudinaryPhoto,
+} from "../../shared/storage/cloudinary.js";
 import type { NonConformityRepository } from "./non-conformity.repository.js";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -22,7 +25,10 @@ export class NonConformityService {
     }
     const detected = await fileTypeFromBuffer(buffer);
     if (!detected || !ALLOWED_MIME_TYPES.has(detected.mime)) {
-      throw new HttpError(415, "Unsupported file type. Allowed: JPEG, PNG, WebP, HEIC, HEIF.");
+      throw new HttpError(
+        415,
+        "Unsupported file type. Allowed: JPEG, PNG, WebP, HEIC, HEIF.",
+      );
     }
     let secureUrl: string;
     let publicId: string;
@@ -46,7 +52,10 @@ export class NonConformityService {
       await deleteCloudinaryPhoto(photo.publicId);
     } catch (err) {
       console.error("[deletePhoto] Cloudinary delete failed:", err);
-      throw new HttpError(502, "Failed to delete photo from storage. Please try again.");
+      throw new HttpError(
+        502,
+        "Failed to delete photo from storage. Please try again.",
+      );
     }
     await this.repo.deletePhoto(photoId);
   }

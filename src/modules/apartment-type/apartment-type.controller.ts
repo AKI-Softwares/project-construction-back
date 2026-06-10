@@ -17,7 +17,10 @@ export class ApartmentTypeController {
     return reply.send(await this.service.listApartmentTypes());
   }
 
-  async getOne(request: FastifyRequest<{ Params: ApartmentTypeParams }>, reply: FastifyReply) {
+  async getOne(
+    request: FastifyRequest<{ Params: ApartmentTypeParams }>,
+    reply: FastifyReply,
+  ) {
     return reply.send(await this.service.getApartmentType(request.params.id));
   }
 
@@ -25,11 +28,16 @@ export class ApartmentTypeController {
     request: FastifyRequest<{ Body: CreateApartmentTypeInput }>,
     reply: FastifyReply,
   ) {
-    return reply.status(201).send(await this.service.createApartmentType(request.body));
+    return reply
+      .status(201)
+      .send(await this.service.createApartmentType(request.body));
   }
 
   async update(
-    request: FastifyRequest<{ Params: ApartmentTypeParams; Body: UpdateApartmentTypeInput }>,
+    request: FastifyRequest<{
+      Params: ApartmentTypeParams;
+      Body: UpdateApartmentTypeInput;
+    }>,
     reply: FastifyReply,
   ) {
     return reply.send(
@@ -37,21 +45,30 @@ export class ApartmentTypeController {
     );
   }
 
-  async remove(request: FastifyRequest<{ Params: ApartmentTypeParams }>, reply: FastifyReply) {
+  async remove(
+    request: FastifyRequest<{ Params: ApartmentTypeParams }>,
+    reply: FastifyReply,
+  ) {
     await this.service.deleteApartmentType(request.params.id);
     return reply.status(204).send();
   }
 
   async addRoom(
-    request: FastifyRequest<{ Params: ApartmentTypeParams; Body: CreateRoomInput }>,
+    request: FastifyRequest<{
+      Params: ApartmentTypeParams;
+      Body: CreateRoomInput;
+    }>,
     reply: FastifyReply,
   ) {
-    return reply.status(201).send(
-      await this.service.addRoom(request.params.id, request.body),
-    );
+    return reply
+      .status(201)
+      .send(await this.service.addRoom(request.params.id, request.body));
   }
 
-  async removeRoom(request: FastifyRequest<{ Params: RoomParams }>, reply: FastifyReply) {
+  async removeRoom(
+    request: FastifyRequest<{ Params: RoomParams }>,
+    reply: FastifyReply,
+  ) {
     await this.service.removeRoom(request.params.id, request.params.roomId);
     return reply.status(204).send();
   }
@@ -61,21 +78,29 @@ export class ApartmentTypeController {
     reply: FastifyReply,
   ) {
     return reply.send(
-      await this.service.listRoomDefaultServices(request.params.id, request.params.roomId),
+      await this.service.listRoomDefaultServices(
+        request.params.id,
+        request.params.roomId,
+      ),
     );
   }
 
   async addRoomDefaultService(
-    request: FastifyRequest<{ Params: RoomParams; Body: AddRoomDefaultServiceInput }>,
+    request: FastifyRequest<{
+      Params: RoomParams;
+      Body: AddRoomDefaultServiceInput;
+    }>,
     reply: FastifyReply,
   ) {
-    return reply.status(201).send(
-      await this.service.addRoomDefaultService(
-        request.params.id,
-        request.params.roomId,
-        request.body,
-      ),
-    );
+    return reply
+      .status(201)
+      .send(
+        await this.service.addRoomDefaultService(
+          request.params.id,
+          request.params.roomId,
+          request.body,
+        ),
+      );
   }
 
   async removeRoomDefaultService(

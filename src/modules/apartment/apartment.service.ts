@@ -25,7 +25,9 @@ export class ApartmentService {
     const building = await this.repo.findBuildingById(input.buildingId);
     if (!building) throw new HttpError(404, "Building not found.");
 
-    const type = await this.repo.findApartmentTypeWithRooms(input.apartmentTypeId);
+    const type = await this.repo.findApartmentTypeWithRooms(
+      input.apartmentTypeId,
+    );
     if (!type) throw new HttpError(404, "Apartment type not found.");
 
     const existing = await this.repo.findByBuildingAndIdentifier(
@@ -33,14 +35,23 @@ export class ApartmentService {
       input.identifier,
     );
     if (existing) {
-      throw new HttpError(409, "Apartment identifier already exists in this building.");
+      throw new HttpError(
+        409,
+        "Apartment identifier already exists in this building.",
+      );
     }
 
     try {
       return await this.repo.createWithRooms(input, type.rooms);
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-        throw new HttpError(409, "Apartment identifier already exists in this building.");
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        throw new HttpError(
+          409,
+          "Apartment identifier already exists in this building.",
+        );
       }
       throw e;
     }
@@ -50,21 +61,33 @@ export class ApartmentService {
     const apartment = await this.repo.findById(id);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
 
-    if (input.identifier !== undefined && input.identifier !== apartment.identifier) {
+    if (
+      input.identifier !== undefined &&
+      input.identifier !== apartment.identifier
+    ) {
       const existing = await this.repo.findByBuildingAndIdentifier(
         apartment.buildingId,
         input.identifier,
       );
       if (existing) {
-        throw new HttpError(409, "Apartment identifier already exists in this building.");
+        throw new HttpError(
+          409,
+          "Apartment identifier already exists in this building.",
+        );
       }
     }
 
     try {
       return await this.repo.update(id, input);
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-        throw new HttpError(409, "Apartment identifier already exists in this building.");
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
+        throw new HttpError(
+          409,
+          "Apartment identifier already exists in this building.",
+        );
       }
       throw e;
     }
@@ -74,7 +97,11 @@ export class ApartmentService {
     const apartment = await this.repo.findById(id);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
     const checklist = await this.repo.findChecklistByApartmentId(id);
-    if (checklist) throw new HttpError(409, "Apartment has a checklist and cannot be deleted.");
+    if (checklist)
+      throw new HttpError(
+        409,
+        "Apartment has a checklist and cannot be deleted.",
+      );
     await this.repo.delete(id);
   }
 
@@ -101,19 +128,30 @@ export class ApartmentService {
     if (!room) throw new HttpError(404, "Room not found in this apartment.");
     const service = await this.repo.findService(input.serviceId);
     if (!service) throw new HttpError(404, "Service not found.");
-    const existing = await this.repo.findApartmentRoomService(roomId, input.serviceId);
-    if (existing) throw new HttpError(409, "Service already added to this room.");
+    const existing = await this.repo.findApartmentRoomService(
+      roomId,
+      input.serviceId,
+    );
+    if (existing)
+      throw new HttpError(409, "Service already added to this room.");
     try {
       return await this.repo.addRoomService(roomId, input.serviceId);
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002"
+      ) {
         throw new HttpError(409, "Service already added to this room.");
       }
       throw e;
     }
   }
 
-  async removeServiceFromRoom(apartmentId: number, roomId: number, serviceId: number) {
+  async removeServiceFromRoom(
+    apartmentId: number,
+    roomId: number,
+    serviceId: number,
+  ) {
     const apartment = await this.repo.findById(apartmentId);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
     const room = await this.repo.findApartmentRoom(apartmentId, roomId);

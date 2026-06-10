@@ -1,5 +1,8 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
-import type { CreateBuildingInput, UpdateBuildingInput } from "./building.schema.js";
+import type {
+  CreateBuildingInput,
+  UpdateBuildingInput,
+} from "./building.schema.js";
 
 const BUILDING_LIST_SELECT = {
   id: true,

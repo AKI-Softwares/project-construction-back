@@ -14,7 +14,9 @@ export const visitMineQuerySchema = z.object({
     .string()
     .optional()
     .transform((val) =>
-      val ? (val.split(",") as Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">) : undefined,
+      val
+        ? (val.split(",") as Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">)
+        : undefined,
     ),
 });
 

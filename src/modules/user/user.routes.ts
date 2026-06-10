@@ -2,7 +2,11 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { UserRepository } from "./user.repository.js";
 import { UserService } from "./user.service.js";
 import { UserController } from "./user.controller.js";
-import { createUserSchema, updateUserSchema, userParamsSchema } from "./user.schema.js";
+import {
+  createUserSchema,
+  updateUserSchema,
+  userParamsSchema,
+} from "./user.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
 
 export const userRoutes: FastifyPluginAsyncZod = async (app) => {

@@ -1,7 +1,10 @@
 import { Prisma } from "../../../generated/prisma/client.js";
 import { HttpError } from "../../shared/errors/http-error.js";
 import type { ChecklistRepository } from "./checklist.repository.js";
-import type { UpdateChecklistInput, CreateVisitInput } from "./checklist.schema.js";
+import type {
+  UpdateChecklistInput,
+  CreateVisitInput,
+} from "./checklist.schema.js";
 
 export class ChecklistService {
   constructor(private repo: ChecklistRepository) {}
@@ -16,7 +19,11 @@ export class ChecklistService {
     return checklist;
   }
 
-  async updateChecklist(id: number, input: UpdateChecklistInput, userId: number) {
+  async updateChecklist(
+    id: number,
+    input: UpdateChecklistInput,
+    userId: number,
+  ) {
     const checklist = await this.repo.findById(id);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
 
@@ -43,7 +50,11 @@ export class ChecklistService {
     return this.repo.update(id, updateData);
   }
 
-  async createVisit(checklistId: number, input: CreateVisitInput, createdById: number) {
+  async createVisit(
+    checklistId: number,
+    input: CreateVisitInput,
+    createdById: number,
+  ) {
     const checklist = await this.repo.findById(checklistId);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
     if (checklist.status === "FINALIZED") {
@@ -54,7 +65,10 @@ export class ChecklistService {
       (v) => v.status === "NOT_STARTED" || v.status === "ONGOING",
     );
     if (activeVisit) {
-      throw new HttpError(409, "A visit is already in progress for this checklist.");
+      throw new HttpError(
+        409,
+        "A visit is already in progress for this checklist.",
+      );
     }
 
     const items = await this.repo.findPendingOrNokItems(checklistId);
@@ -70,7 +84,10 @@ export class ChecklistService {
         items.map((i) => i.id),
       );
     } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2003") {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2003"
+      ) {
         throw new HttpError(422, "Inspector not found.");
       }
       throw e;

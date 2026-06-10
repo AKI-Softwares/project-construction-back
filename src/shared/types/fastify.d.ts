@@ -1,7 +1,7 @@
-import '@fastify/jwt';
-import 'fastify';
+import "@fastify/jwt";
+import "fastify";
 
-declare module '@fastify/jwt' {
+declare module "@fastify/jwt" {
   interface FastifyJWT {
     payload: {
       sub: string;
@@ -22,11 +22,11 @@ declare module '@fastify/jwt' {
   }
 }
 
-declare module 'fastify' {
+declare module "fastify" {
   interface FastifyInstance {
     authenticate: (
-      request: import('fastify').FastifyRequest,
-      reply: import('fastify').FastifyReply,
+      request: import("fastify").FastifyRequest,
+      reply: import("fastify").FastifyReply,
     ) => Promise<void>;
   }
 }
