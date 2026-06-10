@@ -12,8 +12,16 @@ export const tokenResponseSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 export type TokenResponse = z.infer<typeof tokenResponseSchema>;
 
-// Temporary stub — Task 13 will replace with proper Zod schema
-export type RegisterCompanyInput = {
-  company: { name: string; slug: string };
-  admin: { name: string; email: string; password: string };
-};
+export const registerCompanySchema = z.object({
+  company: z.object({
+    name: z.string().min(2).max(255),
+    slug: z.string().min(2).max(100).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers and hyphens only.'),
+  }),
+  admin: z.object({
+    name: z.string().min(2).max(255),
+    email: z.email(),
+    password: z.string().min(8),
+  }),
+});
+
+export type RegisterCompanyInput = z.infer<typeof registerCompanySchema>;

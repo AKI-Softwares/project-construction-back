@@ -35,8 +35,17 @@ export class AuthService {
     };
   }
 
-  // Stub — Task 13 will implement this
-  async registerCompany(_input: RegisterCompanyInput): Promise<never> {
-    throw new HttpError(501, 'Not implemented.');
+  async registerCompany(input: RegisterCompanyInput) {
+    const existingSlug = await this.repo.findCompanyBySlug(input.company.slug);
+    if (existingSlug) throw new HttpError(409, 'Company slug already taken.');
+
+    const existingEmail = await this.repo.findUserByEmail(input.admin.email);
+    if (existingEmail) throw new HttpError(409, 'Email already registered.');
+
+    const passwordHash = await bcrypt.hash(input.admin.password, 12);
+    return this.repo.createCompanyWithAdmin({
+      company: input.company,
+      admin: { name: input.admin.name, email: input.admin.email, passwordHash },
+    });
   }
 }
