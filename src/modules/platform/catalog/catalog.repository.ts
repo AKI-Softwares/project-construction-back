@@ -29,15 +29,15 @@ export class CatalogRepository {
   }
 
   async updateService(id: number, data: UpdateServiceInput) {
-    return prisma.service.update({
-      where: { id },
+    await prisma.service.updateMany({
+      where: { id, companyId: null },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.category !== undefined && { category: data.category }),
       },
-      select: SERVICE_SELECT,
     });
+    return prisma.service.findFirst({ where: { id, companyId: null }, select: SERVICE_SELECT });
   }
 
   async deleteService(id: number) {
@@ -64,14 +64,14 @@ export class CatalogRepository {
   }
 
   async updateApartmentType(id: number, data: UpdateApartmentTypeInput) {
-    return prisma.apartmentType.update({
-      where: { id },
+    await prisma.apartmentType.updateMany({
+      where: { id, companyId: null },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
       },
-      select: APT_TYPE_SELECT,
     });
+    return prisma.apartmentType.findFirst({ where: { id, companyId: null }, select: APT_TYPE_SELECT });
   }
 
   async deleteApartmentType(id: number) {

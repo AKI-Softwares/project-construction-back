@@ -4,7 +4,7 @@ import type { TemplateParams, CreateRoleTemplateInput, UpdateRoleTemplateInput }
 
 export class RoleTemplateController {
   constructor(private service: RoleTemplateService) {}
-  list(_r: FastifyRequest, reply: FastifyReply)  { return reply.send(this.service.list()); }
+  async list(_r: FastifyRequest, reply: FastifyReply) { return reply.send(await this.service.list()); }
   async get(r: FastifyRequest<{ Params: TemplateParams }>, reply: FastifyReply) {
     return reply.send(await this.service.get(r.params.id));
   }

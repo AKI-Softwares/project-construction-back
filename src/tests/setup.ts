@@ -1,5 +1,2 @@
-// vitest global setup: configure Neon WebSocket for Node.js test environment
-import ws from 'ws';
-import { neonConfig } from '@neondatabase/serverless';
-
-neonConfig.webSocketConstructor = ws;
+// Vitest global setup file — reserved for future test setup needs.
+// Neon WebSocket configuration is handled in src/shared/infra/database/prisma.ts.
