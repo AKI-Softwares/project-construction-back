@@ -1,10 +1,18 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
 
 export class NonConformityRepository {
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     return prisma.nonConformity.findUnique({
-      where: { id },
-      select: { id: true, visitItemId: true },
+      where: { id, companyId },
+      select: {
+        id: true,
+        visitItemId: true,
+        visitItem: {
+          select: {
+            visit: { select: { status: true } },
+          },
+        },
+      },
     });
   }
 

@@ -31,7 +31,8 @@ export class NonConformityController {
     request: FastifyRequest<{ Params: PhotoParams }>,
     reply: FastifyReply,
   ) {
-    await this.service.deletePhoto(request.params.id, request.params.photoId);
+    const companyId = getTenantId(request);
+    await this.service.deletePhoto(request.params.id, request.params.photoId, companyId);
     return reply.status(204).send();
   }
 }

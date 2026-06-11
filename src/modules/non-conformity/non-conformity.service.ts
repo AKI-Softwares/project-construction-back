@@ -18,8 +18,11 @@ export class NonConformityService {
   constructor(private repo: NonConformityRepository) {}
 
   async addPhoto(ncId: number, buffer: Buffer, companyId: number) {
-    const nc = await this.repo.findById(ncId);
+    const nc = await this.repo.findById(ncId, companyId);
     if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (nc.visitItem.visit.status === "FINALIZED") {
+      throw new HttpError(403, "Cannot add photos to a finalized visit.");
+    }
     if (buffer.length === 0) {
       throw new HttpError(400, "Uploaded file is empty.");
     }
@@ -41,13 +44,14 @@ export class NonConformityService {
     return this.repo.addPhoto(ncId, secureUrl, publicId, companyId);
   }
 
-  async deletePhoto(ncId: number, photoId: number) {
-    const nc = await this.repo.findById(ncId);
+  async deletePhoto(ncId: number, photoId: number, companyId: number) {
+    const nc = await this.repo.findById(ncId, companyId);
     if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (nc.visitItem.visit.status === "FINALIZED") {
+      throw new HttpError(403, "Cannot delete photos from a finalized visit.");
+    }
     const photo = await this.repo.findPhoto(ncId, photoId);
     if (!photo) throw new HttpError(404, "Photo not found.");
-    // Cloudinary first: if DB delete fails after this, the file is orphaned in storage
-    // but the record stays intact and the client can retry. Accepted trade-off.
     try {
       await deleteCloudinaryPhoto(photo.publicId);
     } catch (err) {
