@@ -65,6 +65,11 @@ export const PERMISSIONS = [
     operation: "create",
   },
   {
+    action: "non-conformities:update",
+    resource: "non-conformities",
+    operation: "update",
+  },
+  {
     action: "non-conformities:delete",
     resource: "non-conformities",
     operation: "delete",
