@@ -1,8 +1,6 @@
 import { Resend } from "resend";
 import { env } from "../config/env.js";
 
-const resend = new Resend(env.RESEND_API_KEY);
-
 export async function sendTempPasswordEmail(
   to: string,
   userName: string,
@@ -10,6 +8,7 @@ export async function sendTempPasswordEmail(
 ): Promise<void> {
   if (env.NODE_ENV === "test") return;
 
+  const resend = new Resend(env.RESEND_API_KEY);
   await resend.emails.send({
     from: env.EMAIL_FROM,
     to,
@@ -34,6 +33,7 @@ export async function sendPasswordResetEmail(
 ): Promise<void> {
   if (env.NODE_ENV === "test") return;
 
+  const resend = new Resend(env.RESEND_API_KEY);
   await resend.emails.send({
     from: env.EMAIL_FROM,
     to,
