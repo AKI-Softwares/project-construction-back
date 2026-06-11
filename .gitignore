@@ -26,6 +26,7 @@ prisma/seed.ts
 # Misc
 commands
 .DS_Store
+insomnia-collection.json
 
 CLAUDE.md
 .claude/
