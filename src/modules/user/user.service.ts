@@ -57,15 +57,10 @@ export class UserService {
       if (emailTaken) throw new HttpError(409, "Email already in use.");
     }
 
-    const passwordHash = input.password
-      ? await bcrypt.hash(input.password, SALT_ROUNDS)
-      : undefined;
-
-    const updateData: UpdateUserInput & { passwordHash?: string } = {};
+    const updateData: UpdateUserInput = {};
     if (input.name !== undefined) updateData.name = input.name;
     if (input.email !== undefined) updateData.email = input.email;
     if (input.roleId !== undefined) updateData.roleId = input.roleId;
-    if (passwordHash !== undefined) updateData.passwordHash = passwordHash;
 
     return this.repo.update(id, updateData);
   }

@@ -6,6 +6,7 @@ export class AuthRepository {
       where: { email },
       select: {
         id: true,
+        name: true,
         passwordHash: true,
         companyId: true,
         isPlatformAdmin: true,

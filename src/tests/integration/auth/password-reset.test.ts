@@ -254,4 +254,30 @@ describe('POST /users/:id/reset-password', () => {
     });
     expect(res.statusCode).toBe(401);
   });
+
+  it('returns 404 when admin tries to reset user from another company', async () => {
+    const otherCompany = await prisma.company.create({
+      data: { name: 'Other Co', slug: `other-co-${Date.now()}`, status: 'ACTIVE' },
+    });
+    const otherUser = await prisma.user.create({
+      data: {
+        name: 'Other User',
+        email: `other-user-${Date.now()}@test.com`,
+        passwordHash: 'irrelevant',
+        companyId: otherCompany.id,
+      },
+    });
+
+    try {
+      const res = await app.inject({
+        method: 'POST',
+        url: `/users/${otherUser.id}/reset-password`,
+        headers: { authorization: `Bearer ${adminToken}` },
+      });
+      expect(res.statusCode).toBe(404);
+    } finally {
+      await prisma.user.delete({ where: { id: otherUser.id } });
+      await prisma.company.delete({ where: { id: otherCompany.id } });
+    }
+  });
 });

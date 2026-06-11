@@ -5,12 +5,7 @@ export const loginSchema = z.object({
   password: z.string().min(6),
 });
 
-export const tokenResponseSchema = z.object({
-  token: z.string(),
-});
-
 export type LoginInput = z.infer<typeof loginSchema>;
-export type TokenResponse = z.infer<typeof tokenResponseSchema>;
 
 export const registerCompanySchema = z.object({
   company: z.object({

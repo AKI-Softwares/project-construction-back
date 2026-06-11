@@ -72,9 +72,7 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.repo.upsertPasswordResetToken(user.id, tokenHash, expiresAt);
-
-    const fullUser = await this.repo.findUserById(user.id);
-    await sendPasswordResetEmail(input.email, fullUser?.name ?? 'Usuário', rawToken);
+    await sendPasswordResetEmail(input.email, user.name, rawToken);
   }
 
   async resetPassword(input: ResetPasswordInput) {

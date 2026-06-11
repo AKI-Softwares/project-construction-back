@@ -39,13 +39,12 @@ export class UserRepository {
     });
   }
 
-  async update(id: number, data: UpdateUserInput & { passwordHash?: string }) {
+  async update(id: number, data: UpdateUserInput) {
     return prisma.user.update({
       where: { id },
       data: {
         ...(data.name && { name: data.name }),
         ...(data.email && { email: data.email }),
-        ...(data.passwordHash && { passwordHash: data.passwordHash }),
         ...(data.roleId && { roleId: data.roleId }),
       },
       select: USER_SELECT,
