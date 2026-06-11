@@ -1,4 +1,5 @@
 import { HttpError } from "../../shared/errors/http-error.js";
+import { deleteCloudinaryPhoto } from "../../shared/storage/cloudinary.js";
 import type { VisitRepository } from "./visit.repository.js";
 import type {
   FinalizeVisitInput,
@@ -68,6 +69,20 @@ function groupByRoom(items: VisitItemRaw[]): GroupedRoom[] {
 
 export class VisitService {
   constructor(private repo: VisitRepository) {}
+
+  private async cleanupNcPhotos(ncId: number) {
+    const photos = await this.repo.findNcPhotos(ncId);
+    for (const photo of photos) {
+      try {
+        await deleteCloudinaryPhoto(photo.publicId);
+      } catch (err) {
+        console.error(
+          `[cleanupNcPhotos] Cloudinary cleanup failed for ${photo.publicId}:`,
+          err,
+        );
+      }
+    }
+  }
 
   async getVisitGrouped(id: number, companyId: number) {
     const visit = await this.repo.findById(id, companyId);
@@ -194,6 +209,19 @@ export class VisitService {
       );
     }
 
+    // VF-7: null = revert item to unevaluated
+    if (input.status === null) {
+      if (item.nonConformity) {
+        await this.cleanupNcPhotos(item.nonConformity.id); // VF-8
+      }
+      return this.repo.revertVisitItem(itemId, item.nonConformity?.id ?? null);
+    }
+
+    // VF-8: cleanup Cloudinary when transitioning NOK → OK (NC cascade-deleted in repo)
+    if (item.status === "NOK" && input.status !== "NOK" && item.nonConformity) {
+      await this.cleanupNcPhotos(item.nonConformity.id);
+    }
+
     return this.repo.updateVisitItemWithNcCleanup(
       itemId,
       input.status,
@@ -243,6 +271,7 @@ export class VisitService {
     if (!item.nonConformity)
       throw new HttpError(404, "No non-conformity found for this item.");
 
+    await this.cleanupNcPhotos(item.nonConformity.id); // VF-8
     return this.repo.deleteNonConformity(item.nonConformity.id);
   }
 }
