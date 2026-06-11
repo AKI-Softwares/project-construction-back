@@ -55,4 +55,21 @@ export class UserRepository {
   async delete(id: number) {
     return prisma.user.delete({ where: { id } });
   }
+
+  async findByIdForPasswordReset(id: number, companyId: number | null) {
+    return prisma.user.findFirst({
+      where: {
+        id,
+        ...(companyId !== null ? { companyId } : {}),
+      },
+      select: { id: true, name: true, email: true, companyId: true },
+    });
+  }
+
+  async updatePasswordAndFlag(id: number, passwordHash: string, mustChangePassword: boolean) {
+    return prisma.user.update({
+      where: { id },
+      data: { passwordHash, mustChangePassword },
+    });
+  }
 }

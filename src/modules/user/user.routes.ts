@@ -3,6 +3,7 @@ import { UserRepository } from "./user.repository.js";
 import { UserService } from "./user.service.js";
 import { UserController } from "./user.controller.js";
 import {
+  adminResetPasswordParamsSchema,
   createUserSchema,
   updateUserSchema,
   userParamsSchema,
@@ -56,5 +57,14 @@ export const userRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: [app.authenticate, checkPermission("users:delete")],
     },
     controller.remove.bind(controller),
+  );
+
+  app.post(
+    "/:id/reset-password",
+    {
+      schema: { params: adminResetPasswordParamsSchema },
+      preHandler: [app.authenticate, checkPermission("users:update")],
+    },
+    controller.adminResetPassword.bind(controller),
   );
 };

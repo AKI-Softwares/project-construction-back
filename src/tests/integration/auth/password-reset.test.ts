@@ -8,6 +8,9 @@ const USER_EMAIL = `reset-test-${Date.now()}@test.com`;
 const PASSWORD = 'Test@1234';
 let app: Awaited<ReturnType<typeof createTestApp>>;
 let userId: number;
+let adminUserId: number;
+let adminToken: string;
+const ADMIN_EMAIL = `admin-reset-test-${Date.now()}@test.com`;
 
 beforeAll(async () => {
   app = await createTestApp();
@@ -16,11 +19,44 @@ beforeAll(async () => {
     data: { name: 'Reset Test User', email: USER_EMAIL, passwordHash },
   });
   userId = user.id;
+
+  const company = await prisma.company.create({
+    data: { name: 'Reset Test Co', slug: `reset-test-co-${Date.now()}`, status: 'ACTIVE' },
+  });
+  const adminRole = await prisma.role.create({
+    data: {
+      name: 'Admin',
+      isCompanyAdmin: true,
+      companyId: company.id,
+    },
+  });
+  const adminUser = await prisma.user.create({
+    data: {
+      name: 'Admin Reset Test',
+      email: ADMIN_EMAIL,
+      passwordHash: await bcrypt.hash(PASSWORD, 12),
+      companyId: company.id,
+      roleId: adminRole.id,
+    },
+  });
+  adminUserId = adminUser.id;
+
+  await prisma.user.update({ where: { id: userId }, data: { companyId: company.id } });
+
+  const adminLoginRes = await app.inject({
+    method: 'POST',
+    url: '/auth/login',
+    payload: { email: ADMIN_EMAIL, password: PASSWORD },
+  });
+  adminToken = (adminLoginRes.json() as { token: string }).token;
 });
 
 afterAll(async () => {
   await prisma.passwordResetToken.deleteMany({ where: { userId } });
+  await prisma.user.delete({ where: { id: adminUserId } });
   await prisma.user.delete({ where: { id: userId } });
+  await prisma.role.deleteMany({ where: { name: 'Admin', isCompanyAdmin: true } });
+  await prisma.company.deleteMany({ where: { name: 'Reset Test Co' } });
   await app.close();
 });
 
@@ -176,6 +212,43 @@ describe('POST /auth/change-password', () => {
       method: 'POST',
       url: '/auth/change-password',
       payload: { currentPassword: PASSWORD, newPassword: 'NewPassword@999' },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+});
+
+describe('POST /users/:id/reset-password', () => {
+  it('sends temp password and sets mustChangePassword', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/users/${userId}/reset-password`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().message).toBe("Temporary password sent to user's email.");
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { mustChangePassword: true },
+    });
+    expect(user!.mustChangePassword).toBe(true);
+
+    await prisma.user.update({ where: { id: userId }, data: { mustChangePassword: false } });
+  });
+
+  it('returns 404 for non-existent user', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/users/999999/reset-password',
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('returns 401 without token', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: `/users/${userId}/reset-password`,
     });
     expect(res.statusCode).toBe(401);
   });

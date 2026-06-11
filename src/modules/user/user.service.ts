@@ -1,5 +1,7 @@
+import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { HttpError } from "../../shared/errors/http-error.js";
+import { sendTempPasswordEmail } from "../../shared/email/email.service.js";
 import type { UserRepository } from "./user.repository.js";
 import type { CreateUserInput, UpdateUserInput } from "./user.schema.js";
 
@@ -72,5 +74,16 @@ export class UserService {
     const user = await this.repo.findById(id);
     if (!user) throw new HttpError(404, "User not found.");
     await this.repo.delete(id);
+  }
+
+  async resetPasswordByAdmin(targetId: number, requesterCompanyId: number | null) {
+    const user = await this.repo.findByIdForPasswordReset(targetId, requesterCompanyId);
+    if (!user) throw new HttpError(404, "User not found.");
+
+    const tempPassword = crypto.randomBytes(9).toString("base64url").slice(0, 12);
+    const passwordHash = await bcrypt.hash(tempPassword, 12);
+
+    await this.repo.updatePasswordAndFlag(user.id, passwordHash, true);
+    await sendTempPasswordEmail(user.email, user.name, tempPassword);
   }
 }
