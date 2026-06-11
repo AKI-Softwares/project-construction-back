@@ -33,6 +33,7 @@ export class AuthService {
       isCompanyAdmin: user.role?.isCompanyAdmin ?? false,
       roleId: user.roleId ?? null,
       permissions,
+      mustChangePassword: user.mustChangePassword,
     };
   }
 

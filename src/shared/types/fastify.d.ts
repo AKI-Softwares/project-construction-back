@@ -10,6 +10,7 @@ declare module "@fastify/jwt" {
       isCompanyAdmin: boolean;
       roleId: number | null;
       permissions: string[];
+      mustChangePassword: boolean;
     };
     user: {
       sub: string;
@@ -18,6 +19,7 @@ declare module "@fastify/jwt" {
       isCompanyAdmin: boolean;
       roleId: number | null;
       permissions: string[];
+      mustChangePassword: boolean;
     };
   }
 }
