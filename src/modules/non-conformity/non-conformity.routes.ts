@@ -2,13 +2,40 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { NonConformityRepository } from "./non-conformity.repository.js";
 import { NonConformityService } from "./non-conformity.service.js";
 import { NonConformityController } from "./non-conformity.controller.js";
-import { ncParamsSchema, photoParamsSchema } from "./non-conformity.schema.js";
+import { createNcSchema, ncParamsSchema, patchNcSchema, photoParamsSchema } from "./non-conformity.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
 
 export const nonConformityRoutes: FastifyPluginAsyncZod = async (app) => {
   const repo = new NonConformityRepository();
   const service = new NonConformityService(repo);
   const controller = new NonConformityController(service);
+
+  app.post(
+    "/",
+    {
+      schema: { body: createNcSchema },
+      preHandler: [app.authenticate, checkPermission("non-conformities:create")],
+    },
+    controller.create.bind(controller),
+  );
+
+  app.patch(
+    "/:id",
+    {
+      schema: { params: ncParamsSchema, body: patchNcSchema },
+      preHandler: [app.authenticate, checkPermission("non-conformities:update")],
+    },
+    controller.patch.bind(controller),
+  );
+
+  app.delete(
+    "/:id",
+    {
+      schema: { params: ncParamsSchema },
+      preHandler: [app.authenticate, checkPermission("non-conformities:delete")],
+    },
+    controller.delete.bind(controller),
+  );
 
   app.post(
     "/:id/photos",

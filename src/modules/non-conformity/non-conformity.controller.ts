@@ -2,7 +2,7 @@ import { HttpError } from "../../shared/errors/http-error.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { NonConformityService } from "./non-conformity.service.js";
-import type { NcParams, PhotoParams } from "./non-conformity.schema.js";
+import type { CreateNcInput, NcParams, PatchNcInput, PhotoParams } from "./non-conformity.schema.js";
 
 export class NonConformityController {
   constructor(private service: NonConformityService) {}
@@ -33,6 +33,41 @@ export class NonConformityController {
   ) {
     const companyId = getTenantId(request);
     await this.service.deletePhoto(request.params.id, request.params.photoId, companyId);
+    return reply.status(204).send();
+  }
+
+  async create(
+    request: FastifyRequest<{ Body: CreateNcInput }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const nc = await this.service.createNc(
+      request.body.visitItemId,
+      request.body.description,
+      companyId,
+    );
+    return reply.status(201).send(nc);
+  }
+
+  async patch(
+    request: FastifyRequest<{ Params: NcParams; Body: PatchNcInput }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const nc = await this.service.patchNc(
+      request.params.id,
+      request.body.description,
+      companyId,
+    );
+    return reply.status(200).send(nc);
+  }
+
+  async delete(
+    request: FastifyRequest<{ Params: NcParams }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    await this.service.deleteNc(request.params.id, companyId);
     return reply.status(204).send();
   }
 }

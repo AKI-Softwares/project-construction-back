@@ -63,4 +63,48 @@ export class NonConformityService {
     }
     await this.repo.deletePhoto(photoId);
   }
+
+  async createNc(visitItemId: number, description: string, companyId: number) {
+    const item = await this.repo.findVisitItemForNc(visitItemId);
+    if (!item) throw new HttpError(404, "Visit item not found.");
+    if (item.visit.status === "FINALIZED") {
+      throw new HttpError(400, "Visit is already finalized.");
+    }
+    if (item.visit.status === "NOT_STARTED") {
+      throw new HttpError(400, "Visit has not been started yet.");
+    }
+    if (item.status !== "NOK") {
+      throw new HttpError(409, "Non-conformity can only be added to NOK items.");
+    }
+    if (item.nonConformity) {
+      throw new HttpError(409, "This item already has a non-conformity.");
+    }
+    return this.repo.create(visitItemId, description, companyId);
+  }
+
+  async patchNc(ncId: number, description: string, companyId: number) {
+    const nc = await this.repo.findById(ncId, companyId);
+    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (nc.visitItem.visit.status === "FINALIZED") {
+      throw new HttpError(400, "Visit is already finalized.");
+    }
+    return this.repo.patch(ncId, description);
+  }
+
+  async deleteNc(ncId: number, companyId: number) {
+    const nc = await this.repo.findById(ncId, companyId);
+    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (nc.visitItem.visit.status === "FINALIZED") {
+      throw new HttpError(400, "Visit is already finalized.");
+    }
+    const photos = await this.repo.findPhotosByNcId(ncId);
+    for (const photo of photos) {
+      try {
+        await deleteCloudinaryPhoto(photo.publicId);
+      } catch (err) {
+        console.error(`[deleteNc] Cloudinary cleanup failed for ${photo.publicId}:`, err);
+      }
+    }
+    return this.repo.deleteById(ncId);
+  }
 }
