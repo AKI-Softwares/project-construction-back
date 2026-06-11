@@ -22,7 +22,10 @@
         "token": ""
       },
       "dataPropertyOrder": {
-        "&": ["baseUrl", "token"]
+        "&": [
+          "baseUrl",
+          "token"
+        ]
       },
       "color": null,
       "isPrivate": false,
@@ -38,7 +41,10 @@
         "token": ""
       },
       "dataPropertyOrder": {
-        "&": ["baseUrl", "token"]
+        "&": [
+          "baseUrl",
+          "token"
+        ]
       },
       "color": "#7d69cb",
       "isPrivate": false,
@@ -54,7 +60,10 @@
         "token": ""
       },
       "dataPropertyOrder": {
-        "&": ["baseUrl", "token"]
+        "&": [
+          "baseUrl",
+          "token"
+        ]
       },
       "color": "#3eb7e0",
       "isPrivate": false,
@@ -70,7 +79,10 @@
         "token": ""
       },
       "dataPropertyOrder": {
-        "&": ["baseUrl", "token"]
+        "&": [
+          "baseUrl",
+          "token"
+        ]
       },
       "color": "#e05050",
       "isPrivate": false,
@@ -114,7 +126,7 @@
       "_type": "request",
       "parentId": "fld_auth",
       "name": "POST /auth/login",
-      "description": "Autentica e retorna { token }. Copie o token para a env var 'token'. Payload do JWT: { sub, roleId, permissions: string[] }. TTL: 1d.",
+      "description": "Autentica e retorna { token }. Copie o token para a env var 'token'. Payload do JWT: { sub, companyId, isPlatformAdmin, isCompanyAdmin, roleId, permissions: string[], mustChangePassword }. TTL: 1d. Se mustChangePassword=true, redirecionar para troca de senha antes de qualquer outra acao.",
       "method": "POST",
       "url": "{{ _.baseUrl }}/auth/login",
       "body": {
@@ -122,7 +134,10 @@
         "text": "{\n  \"email\": \"<email>\",\n  \"password\": \"<password>\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "authentication": {},
       "metaSortKey": 1
@@ -198,7 +213,10 @@
         "text": "{\n  \"name\": \"Joao Silva\",\n  \"email\": \"joao@example.com\",\n  \"password\": \"senha123\",\n  \"roleId\": 1\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "authentication": {
         "type": "bearer",
@@ -219,7 +237,10 @@
         "text": "{\n  \"name\": \"Novo Nome\"\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "authentication": {
         "type": "bearer",
@@ -324,7 +345,10 @@
         "text": "{\n  \"name\": \"Inspector\",\n  \"description\": \"Read-only access to checklists.\",\n  \"permissionIds\": [29, 32]\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "authentication": {
         "type": "bearer",
@@ -345,7 +369,10 @@
         "text": "{\n  \"permissionIds\": [29, 30, 32]\n}"
       },
       "headers": [
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "authentication": {
         "type": "bearer",
@@ -369,7 +396,6 @@
       },
       "metaSortKey": 5
     },
-
     {
       "_id": "fld_buildings",
       "_type": "request_group",
@@ -390,7 +416,10 @@
       "url": "{{ _.baseUrl }}/buildings",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 1
     },
     {
@@ -403,7 +432,10 @@
       "url": "{{ _.baseUrl }}/buildings/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 2
     },
     {
@@ -418,8 +450,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Residencial Alfa\",\n  \"address\": \"Rua das Flores, 100, São Paulo, SP\",\n  \"latitude\": -23.5505,\n  \"longitude\": -46.6333\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 3
     },
     {
@@ -434,8 +474,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Residencial Alfa II\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 4
     },
     {
@@ -448,10 +496,12 @@
       "url": "{{ _.baseUrl }}/buildings/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 5
     },
-
     {
       "_id": "fld_apartment_types",
       "_type": "request_group",
@@ -472,7 +522,10 @@
       "url": "{{ _.baseUrl }}/apartment-types",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 1
     },
     {
@@ -485,7 +538,10 @@
       "url": "{{ _.baseUrl }}/apartment-types/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 2
     },
     {
@@ -500,8 +556,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"2 Quartos Padrão\",\n  \"description\": \"Dois quartos, sala, cozinha, 1 banheiro\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 3
     },
     {
@@ -516,8 +580,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"description\": \"Dois quartos, sala ampla, cozinha americana, 1 banheiro\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 4
     },
     {
@@ -530,7 +602,10 @@
       "url": "{{ _.baseUrl }}/apartment-types/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 5
     },
     {
@@ -545,8 +620,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Quarto 1\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 6
     },
     {
@@ -559,10 +642,12 @@
       "url": "{{ _.baseUrl }}/apartment-types/1/rooms/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 7
     },
-
     {
       "_id": "fld_apartments",
       "_type": "request_group",
@@ -583,7 +668,10 @@
       "url": "{{ _.baseUrl }}/apartments?buildingId=1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 1
     },
     {
@@ -596,7 +684,10 @@
       "url": "{{ _.baseUrl }}/apartments/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 2
     },
     {
@@ -611,8 +702,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"buildingId\": 1,\n  \"apartmentTypeId\": 1,\n  \"identifier\": \"101\",\n  \"floor\": 1,\n  \"block\": \"A\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 3
     },
     {
@@ -627,8 +726,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"identifier\": \"101A\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 4
     },
     {
@@ -641,7 +748,10 @@
       "url": "{{ _.baseUrl }}/apartments/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 5
     },
     {
@@ -656,8 +766,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"Suite Master\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 6
     },
     {
@@ -672,8 +790,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"serviceId\": 1\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 7
     },
     {
@@ -686,10 +812,12 @@
       "url": "{{ _.baseUrl }}/apartments/1/rooms/1/services/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 8
     },
-
     {
       "_id": "req_apt_types_room_services_list",
       "_type": "request",
@@ -700,7 +828,10 @@
       "url": "{{ _.baseUrl }}/apartment-types/1/rooms/1/services",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 8
     },
     {
@@ -715,8 +846,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"serviceId\": 1\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 9
     },
     {
@@ -729,10 +868,12 @@
       "url": "{{ _.baseUrl }}/apartment-types/1/rooms/1/services/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 10
     },
-
     {
       "_id": "fld_services",
       "_type": "request_group",
@@ -753,7 +894,10 @@
       "url": "{{ _.baseUrl }}/services?category=",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 1
     },
     {
@@ -766,7 +910,10 @@
       "url": "{{ _.baseUrl }}/services/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 2
     },
     {
@@ -781,8 +928,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"category\": \"\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 3
     },
     {
@@ -797,8 +952,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"name\": \"\",\n  \"description\": \"\",\n  \"category\": \"\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 4
     },
     {
@@ -811,10 +974,12 @@
       "url": "{{ _.baseUrl }}/services/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 5
     },
-
     {
       "_id": "fld_checklists",
       "_type": "request_group",
@@ -835,7 +1000,10 @@
       "url": "{{ _.baseUrl }}/checklists",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 1
     },
     {
@@ -848,7 +1016,10 @@
       "url": "{{ _.baseUrl }}/checklists?apartmentId=1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 2
     },
     {
@@ -861,7 +1032,10 @@
       "url": "{{ _.baseUrl }}/checklists/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 3
     },
     {
@@ -876,8 +1050,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"title\": \"Pré-entrega Apto 101\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 4
     },
     {
@@ -892,8 +1074,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"status\": \"FINALIZED\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 5
     },
     {
@@ -908,8 +1098,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"status\": \"PENDING\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 6
     },
     {
@@ -924,8 +1122,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"inspectorId\": 2\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 7
     },
     {
@@ -938,10 +1144,12 @@
       "url": "{{ _.baseUrl }}/checklists/1/visits",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 8
     },
-
     {
       "_id": "fld_visits",
       "_type": "request_group",
@@ -962,7 +1170,10 @@
       "url": "{{ _.baseUrl }}/visits/mine",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "parameters": [
         {
           "id": "param_status_filter",
@@ -984,7 +1195,10 @@
       "url": "{{ _.baseUrl }}/visits/1/start",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 2
     },
     {
@@ -997,7 +1211,10 @@
       "url": "{{ _.baseUrl }}/visits/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 3
     },
     {
@@ -1012,8 +1229,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"status\": \"FINALIZED\",\n  \"observations\": \"Tudo conforme\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 4
     },
     {
@@ -1028,8 +1253,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"status\": \"OK\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 5
     },
     {
@@ -1044,8 +1277,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"status\": \"NOK\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 6
     },
     {
@@ -1060,8 +1301,16 @@
         "mimeType": "application/json",
         "text": "{\n  \"description\": \"Pintura com manchas visíveis\"\n}"
       },
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 7
     },
     {
@@ -1074,10 +1323,12 @@
       "url": "{{ _.baseUrl }}/visits/1/items/1/non-conformities",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 8
     },
-
     {
       "_id": "fld_non_conformities",
       "_type": "request_group",
@@ -1110,7 +1361,10 @@
         ]
       },
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 1
     },
     {
@@ -1123,8 +1377,93 @@
       "url": "{{ _.baseUrl }}/non-conformities/1/photos/1",
       "body": {},
       "headers": [],
-      "authentication": { "type": "bearer", "token": "{{ _.token }}" },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
       "metaSortKey": 2
+    },
+    {
+      "_id": "req_auth_forgot_password",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/forgot-password",
+      "description": "Solicita reset de senha por email. Sempre retorna 200 (nao revela se email existe). Se o email for cadastrado, envia token valido por 1h para o inbox do usuario.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/forgot-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"user@example.com\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3
+    },
+    {
+      "_id": "req_auth_reset_password",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/reset-password",
+      "description": "Redefine senha com token recebido por email. Token de uso unico — deletado apos uso. Erro 400 se token invalido ou expirado.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/reset-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"token\": \"<token do email>\",\n  \"newPassword\": \"min8chars\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4
+    },
+    {
+      "_id": "req_auth_change_password",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "POST /auth/change-password",
+      "description": "Troca senha do usuario logado. Requer Bearer. Usar para troca voluntaria e para troca forcada quando mustChangePassword=true no JWT. Erro 401 se senha atual incorreta.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/change-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"currentPassword\": \"<senha atual ou temporaria>\",\n  \"newPassword\": \"min8chars\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 5
+    },
+    {
+      "_id": "req_users_admin_reset_password",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "POST /users/:id/reset-password",
+      "description": "Admin reseta senha de um usuario. Requer permissao users:update. Gera senha temporaria, envia por email ao usuario e seta mustChangePassword=true. Tenant isolation: admin so pode resetar usuarios da propria empresa.",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/users/1/reset-password",
+      "body": {},
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "metaSortKey": 6
     }
   ]
 }

@@ -222,10 +222,25 @@ JWT Bearer token. Flow:
 
 JWT payload:
 ```ts
-{ sub: string,  // user id
-  role: string  // ADMIN | MANAGER | INSPECTOR
+{
+  sub: string;              // user id
+  companyId: number | null; // null for platform admins
+  isPlatformAdmin: boolean;
+  isCompanyAdmin: boolean;
+  roleId: number | null;
+  permissions: string[];    // e.g. ["users:read", "users:create", ...]
+  mustChangePassword: boolean; // true = force password change before continuing
 }
 ```
+
+### `mustChangePassword` flow
+
+When an admin resets a user's password via `POST /users/:id/reset-password`, the flag `mustChangePassword` is set to `true` in the JWT returned on the next login. The frontend must:
+
+1. After `POST /auth/login`, decode the token and check `mustChangePassword`.
+2. If `true`, redirect immediately to the change-password screen.
+3. Call `POST /auth/change-password` with the temporary password and a new password chosen by the user.
+4. On success, the flag is cleared — issue a new login or redirect to the main screen.
 
 ---
 
@@ -242,7 +257,10 @@ JWT payload:
 | Method | Path | Auth | Body | Returns |
 |---|---|---|---|---|
 | POST | `/auth/login` | public | `{ email, password }` | `{ token }` |
-| GET | `/auth/me` | Bearer | — | current user payload |
+| GET | `/auth/me` | Bearer | — | current user object |
+| POST | `/auth/forgot-password` | public | `{ email }` | `{ message }` (always 200) |
+| POST | `/auth/reset-password` | public | `{ token, newPassword }` | `{ message }` |
+| POST | `/auth/change-password` | Bearer | `{ currentPassword, newPassword }` | `{ message }` |
 
 **Login body**
 ```json
@@ -252,17 +270,39 @@ JWT payload:
 }
 ```
 
+**`POST /auth/forgot-password`** — always returns 200 (prevents user enumeration). If the email is registered, a reset token (valid 1 hour) is sent to the user's inbox.
+```json
+{ "email": "user@example.com" }
+```
+
+**`POST /auth/reset-password`** — token is the plain string received in the email. Deletes the token after use (one-time only).
+```json
+{
+  "token": "<token from email>",
+  "newPassword": "min 8 chars"
+}
+```
+
+**`POST /auth/change-password`** — requires Bearer token. Used for voluntary change and for forced change when `mustChangePassword: true`.
+```json
+{
+  "currentPassword": "<current or temporary password>",
+  "newPassword": "min 8 chars"
+}
+```
+
 ### Users — `/users`
 
-All routes require `Authorization: Bearer <token>`. Some require a specific role.
+All routes require `Authorization: Bearer <token>`.
 
-| Method | Path | Required role | Body / Params | Notes |
+| Method | Path | Permission | Body / Params | Notes |
 |---|---|---|---|---|
-| GET | `/users` | ADMIN, MANAGER | — | List all users |
-| GET | `/users/:id` | any authenticated | `id` (number) | Service checks ownership / ADMIN |
-| POST | `/users` | ADMIN | `{ name, email, password, roleId }` | Create user |
-| PATCH | `/users/:id` | any authenticated | partial of create body | Service checks permission |
-| DELETE | `/users/:id` | ADMIN | `id` (number) | Remove user |
+| GET | `/users` | `users:read` | — | List all users |
+| GET | `/users/:id` | authenticated | `id` (number) | Self or `users:read` |
+| POST | `/users` | `users:create` | `{ name, email, password, roleId }` | Create user |
+| PATCH | `/users/:id` | authenticated | `{ name?, email?, roleId? }` | Self or `users:update`. Changing `roleId` requires `users:update`. |
+| DELETE | `/users/:id` | `users:delete` | `id` (number) | Remove user |
+| POST | `/users/:id/reset-password` | `users:update` | — (empty body) | Admin-initiated reset: generates temp password, emails user, sets `mustChangePassword: true` |
 
 **Create user body**
 ```json
@@ -274,6 +314,15 @@ All routes require `Authorization: Bearer <token>`. Some require a specific role
 }
 ```
 
+**Update user body** — `password` is not accepted here; use `POST /auth/change-password` instead.
+```json
+{
+  "name": "Novo Nome",
+  "email": "novo@example.com",
+  "roleId": 2
+}
+```
+
 **User response**
 ```json
 {
@@ -281,7 +330,7 @@ All routes require `Authorization: Bearer <token>`. Some require a specific role
   "name": "...",
   "email": "...",
   "roleId": 1,
-  "role": { "id": 1, "name": "ADMIN" },
+  "role": { "id": 1, "name": "Inspector" },
   "createdAt": "2026-01-01T00:00:00.000Z"
 }
 ```
@@ -357,6 +406,8 @@ Required env vars (request values from team lead — never commit them):
 DATABASE_URL=
 JWT_SECRET=
 NODE_ENV=development
+RESEND_API_KEY=          # Email sending (Resend). Not required for local dev if you don't need emails.
+EMAIL_FROM=              # Sender address, e.g. noreply@akisuporte.com.br
 ```
 
 ---
