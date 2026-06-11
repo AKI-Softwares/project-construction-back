@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AuthService } from './auth.service.js';
-import type { LoginInput, RegisterCompanyInput } from './auth.schema.js';
+import type { LoginInput, RegisterCompanyInput, ForgotPasswordInput, ResetPasswordInput } from './auth.schema.js';
 
 export class AuthController {
   constructor(
@@ -29,5 +29,21 @@ export class AuthController {
   ) {
     const result = await this.service.registerCompany(request.body);
     return reply.status(201).send(result);
+  }
+
+  async forgotPassword(
+    request: FastifyRequest<{ Body: ForgotPasswordInput }>,
+    reply: FastifyReply,
+  ) {
+    await this.service.forgotPassword(request.body);
+    return reply.send({ message: 'If this email is registered, a reset link will be sent.' });
+  }
+
+  async resetPassword(
+    request: FastifyRequest<{ Body: ResetPasswordInput }>,
+    reply: FastifyReply,
+  ) {
+    await this.service.resetPassword(request.body);
+    return reply.send({ message: 'Password updated successfully.' });
   }
 }

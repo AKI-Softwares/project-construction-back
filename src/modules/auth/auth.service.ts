@@ -1,8 +1,10 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { Prisma } from '../../../generated/prisma/client.js';
 import { HttpError } from '../../shared/errors/http-error.js';
+import { sendPasswordResetEmail } from '../../shared/email/email.service.js';
 import type { AuthRepository } from './auth.repository.js';
-import type { LoginInput, RegisterCompanyInput } from './auth.schema.js';
+import type { LoginInput, RegisterCompanyInput, ForgotPasswordInput, ResetPasswordInput } from './auth.schema.js';
 
 export class AuthService {
   constructor(private readonly repo: AuthRepository) {}
@@ -59,5 +61,28 @@ export class AuthService {
       }
       throw err;
     }
+  }
+
+  async forgotPassword(input: ForgotPasswordInput) {
+    const user = await this.repo.findUserByEmail(input.email);
+    if (!user) return;
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await this.repo.upsertPasswordResetToken(user.id, tokenHash, expiresAt);
+
+    const fullUser = await this.repo.findUserById(user.id);
+    await sendPasswordResetEmail(input.email, fullUser?.name ?? 'Usuário', rawToken);
+  }
+
+  async resetPassword(input: ResetPasswordInput) {
+    const tokenHash = crypto.createHash('sha256').update(input.token).digest('hex');
+    const tokenRecord = await this.repo.findValidResetToken(tokenHash);
+    if (!tokenRecord) throw new HttpError(400, 'Invalid or expired token.');
+
+    const passwordHash = await bcrypt.hash(input.newPassword, 12);
+    await this.repo.resetUserPassword(tokenRecord.userId, passwordHash);
   }
 }
