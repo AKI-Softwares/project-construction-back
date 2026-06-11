@@ -149,6 +149,7 @@ describe('POST /auth/change-password', () => {
       payload: { currentPassword: PASSWORD, newPassword: 'NewPassword@999' },
     });
     expect(res.statusCode).toBe(200);
+    expect(res.json().message).toBe('Password updated successfully.');
 
     const loginRes = await app.inject({
       method: 'POST',
