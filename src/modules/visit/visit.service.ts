@@ -69,8 +69,8 @@ function groupByRoom(items: VisitItemRaw[]): GroupedRoom[] {
 export class VisitService {
   constructor(private repo: VisitRepository) {}
 
-  async getVisitGrouped(id: number) {
-    const visit = await this.repo.findById(id);
+  async getVisitGrouped(id: number, companyId: number) {
+    const visit = await this.repo.findById(id, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     const { items, checklist, ...rest } = visit;
     return {
@@ -80,16 +80,16 @@ export class VisitService {
     };
   }
 
-  async getMyVisits(inspectorId: number, status?: VisitMineQuery["status"]) {
-    const visits = await this.repo.findByInspectorId(inspectorId, status);
+  async getMyVisits(inspectorId: number, companyId: number, status?: VisitMineQuery["status"]) {
+    const visits = await this.repo.findByInspectorId(inspectorId, companyId, status);
     return visits.map(({ checklist, ...rest }) => ({
       ...rest,
       apartment: checklist.apartment,
     }));
   }
 
-  async startVisit(visitId: number) {
-    const visit = await this.repo.findById(visitId);
+  async startVisit(visitId: number, companyId: number) {
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status !== "NOT_STARTED") {
       throw new HttpError(409, "Visit has already been started or finalized.");
@@ -99,8 +99,8 @@ export class VisitService {
     return { ...rest, apartment: checklist.apartment };
   }
 
-  async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number) {
-    const visit = await this.repo.findById(id);
+  async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number, companyId: number) {
+    const visit = await this.repo.findById(id, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");
@@ -139,15 +139,16 @@ export class VisitService {
       userId,
     );
     if (!result) throw new Error("Visit not found after finalization.");
-    return this.getVisitGrouped(visit.id);
+    return this.getVisitGrouped(visit.id, companyId);
   }
 
   async updateVisitItem(
     visitId: number,
     itemId: number,
     input: UpdateVisitItemInput,
+    companyId: number,
   ) {
-    const visit = await this.repo.findById(visitId);
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");
@@ -207,7 +208,7 @@ export class VisitService {
     input: AddNonConformityInput,
     companyId: number,
   ) {
-    const visit = await this.repo.findById(visitId);
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");
@@ -229,8 +230,8 @@ export class VisitService {
     return this.repo.createNonConformity(itemId, input.description, companyId);
   }
 
-  async deleteNonConformity(visitId: number, itemId: number) {
-    const visit = await this.repo.findById(visitId);
+  async deleteNonConformity(visitId: number, itemId: number, companyId: number) {
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");

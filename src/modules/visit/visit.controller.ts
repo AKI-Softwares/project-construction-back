@@ -17,7 +17,8 @@ export class VisitController {
     request: FastifyRequest<{ Params: VisitParams }>,
     reply: FastifyReply,
   ) {
-    const visit = await this.service.getVisitGrouped(request.params.id);
+    const companyId = getTenantId(request);
+    const visit = await this.service.getVisitGrouped(request.params.id, companyId);
     return reply.status(200).send(visit);
   }
 
@@ -26,8 +27,10 @@ export class VisitController {
     reply: FastifyReply,
   ) {
     const inspectorId = Number(request.user.sub);
+    const companyId = getTenantId(request);
     const visits = await this.service.getMyVisits(
       inspectorId,
+      companyId,
       request.query.status,
     );
     return reply.status(200).send(visits);
@@ -37,7 +40,8 @@ export class VisitController {
     request: FastifyRequest<{ Params: VisitParams }>,
     reply: FastifyReply,
   ) {
-    const visit = await this.service.startVisit(request.params.id);
+    const companyId = getTenantId(request);
+    const visit = await this.service.startVisit(request.params.id, companyId);
     return reply.status(200).send(visit);
   }
 
@@ -46,10 +50,12 @@ export class VisitController {
     reply: FastifyReply,
   ) {
     const userId = Number(request.user.sub);
+    const companyId = getTenantId(request);
     const visit = await this.service.finalizeVisit(
       request.params.id,
       request.body,
       userId,
+      companyId,
     );
     return reply.status(200).send(visit);
   }
@@ -61,10 +67,12 @@ export class VisitController {
     }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     const item = await this.service.updateVisitItem(
       request.params.id,
       request.params.itemId,
       request.body,
+      companyId,
     );
     return reply.status(200).send(item);
   }
@@ -90,9 +98,11 @@ export class VisitController {
     request: FastifyRequest<{ Params: VisitItemParams }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     await this.service.deleteNonConformity(
       request.params.id,
       request.params.itemId,
+      companyId,
     );
     return reply.status(204).send();
   }

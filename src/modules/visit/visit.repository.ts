@@ -72,9 +72,9 @@ const VISIT_DETAIL_SELECT = {
 } as const;
 
 export class VisitRepository {
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     return prisma.visit.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: VISIT_DETAIL_SELECT,
     });
   }
@@ -172,11 +172,13 @@ export class VisitRepository {
 
   async findByInspectorId(
     inspectorId: number,
+    companyId: number,
     status?: Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">,
   ) {
     return prisma.visit.findMany({
       where: {
         inspectorId,
+        companyId,
         ...(status !== undefined &&
           status.length > 0 && { status: { in: status } }),
       },
