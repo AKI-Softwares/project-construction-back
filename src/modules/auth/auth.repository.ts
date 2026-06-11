@@ -6,9 +6,11 @@ export class AuthRepository {
       where: { email },
       select: {
         id: true,
+        name: true,
         passwordHash: true,
         companyId: true,
         isPlatformAdmin: true,
+        mustChangePassword: true,
         roleId: true,
         company: { select: { status: true } },
         role: {
@@ -32,6 +34,13 @@ export class AuthRepository {
         company: { select: { id: true, name: true, status: true } },
         role: { select: { id: true, name: true, isCompanyAdmin: true } },
       },
+    });
+  }
+
+  async findUserByIdWithPassword(id: number) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: { id: true, passwordHash: true },
     });
   }
 
@@ -71,6 +80,38 @@ export class AuthRepository {
       });
 
       return { company, admin: user };
+    });
+  }
+
+  async upsertPasswordResetToken(userId: number, tokenHash: string, expiresAt: Date) {
+    return prisma.passwordResetToken.upsert({
+      where: { userId },
+      create: { userId, tokenHash, expiresAt },
+      update: { tokenHash, expiresAt },
+    });
+  }
+
+  async findValidResetToken(tokenHash: string) {
+    return prisma.passwordResetToken.findFirst({
+      where: { tokenHash, expiresAt: { gt: new Date() } },
+      select: { userId: true },
+    });
+  }
+
+  async resetUserPassword(userId: number, passwordHash: string) {
+    return prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { passwordHash, mustChangePassword: false },
+      });
+      await tx.passwordResetToken.delete({ where: { userId } });
+    });
+  }
+
+  async updatePassword(userId: number, passwordHash: string) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash, mustChangePassword: false },
     });
   }
 }

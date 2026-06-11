@@ -53,4 +53,13 @@ export class UserController {
     await this.service.deleteUser(request.params.id);
     return reply.status(204).send();
   }
+
+  async adminResetPassword(
+    request: FastifyRequest<{ Params: UserParams }>,
+    reply: FastifyReply,
+  ) {
+    const requesterCompanyId = request.user.companyId;
+    await this.service.resetPasswordByAdmin(request.params.id, requesterCompanyId);
+    return reply.send({ message: "Temporary password sent to user's email." });
+  }
 }

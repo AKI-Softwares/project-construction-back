@@ -57,4 +57,13 @@ export const userRoutes: FastifyPluginAsyncZod = async (app) => {
     },
     controller.remove.bind(controller),
   );
+
+  app.post(
+    "/:id/reset-password",
+    {
+      schema: { params: userParamsSchema },
+      preHandler: [app.authenticate, checkPermission("users:update")],
+    },
+    controller.adminResetPassword.bind(controller),
+  );
 };

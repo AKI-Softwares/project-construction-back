@@ -1,8 +1,14 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, RouteHandlerMethod } from 'fastify';
 import { AuthRepository } from './auth.repository.js';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
-import { loginSchema, registerCompanySchema } from './auth.schema.js';
+import {
+  loginSchema,
+  registerCompanySchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
+} from './auth.schema.js';
 
 export async function authRoutes(app: FastifyInstance) {
   const repo = new AuthRepository();
@@ -25,5 +31,26 @@ export async function authRoutes(app: FastifyInstance) {
     '/register-company',
     { schema: { body: registerCompanySchema } },
     controller.registerCompany.bind(controller),
+  );
+
+  app.post(
+    '/forgot-password',
+    { schema: { body: forgotPasswordSchema } },
+    controller.forgotPassword.bind(controller),
+  );
+
+  app.post(
+    '/reset-password',
+    { schema: { body: resetPasswordSchema } },
+    controller.resetPassword.bind(controller),
+  );
+
+  app.post(
+    '/change-password',
+    {
+      schema: { body: changePasswordSchema },
+      preHandler: [app.authenticate],
+    },
+    controller.changePassword.bind(controller) as RouteHandlerMethod,
   );
 }

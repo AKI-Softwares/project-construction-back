@@ -39,13 +39,12 @@ export class UserRepository {
     });
   }
 
-  async update(id: number, data: UpdateUserInput & { passwordHash?: string }) {
+  async update(id: number, data: UpdateUserInput) {
     return prisma.user.update({
       where: { id },
       data: {
         ...(data.name && { name: data.name }),
         ...(data.email && { email: data.email }),
-        ...(data.passwordHash && { passwordHash: data.passwordHash }),
         ...(data.roleId && { roleId: data.roleId }),
       },
       select: USER_SELECT,
@@ -54,5 +53,22 @@ export class UserRepository {
 
   async delete(id: number) {
     return prisma.user.delete({ where: { id } });
+  }
+
+  async findByIdForPasswordReset(id: number, companyId: number | null) {
+    return prisma.user.findFirst({
+      where: {
+        id,
+        ...(companyId !== null ? { companyId } : {}),
+      },
+      select: { id: true, name: true, email: true, companyId: true },
+    });
+  }
+
+  async updatePasswordAndFlag(id: number, passwordHash: string, mustChangePassword: boolean) {
+    return prisma.user.update({
+      where: { id },
+      data: { passwordHash, mustChangePassword },
+    });
   }
 }
