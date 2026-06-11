@@ -69,7 +69,7 @@ export class NonConformityService {
   }
 
   async createNc(visitItemId: number, description: string, companyId: number) {
-    const item = await this.repo.findVisitItemForNc(visitItemId);
+    const item = await this.repo.findVisitItemForNc(visitItemId, companyId);
     if (!item) throw new HttpError(404, "Visit item not found.");
     if (item.visit.status === "FINALIZED") {
       throw new HttpError(400, "Visit is already finalized.");

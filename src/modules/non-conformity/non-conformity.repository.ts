@@ -34,9 +34,9 @@ export class NonConformityRepository {
     await prisma.photo.delete({ where: { id: photoId } });
   }
 
-  async findVisitItemForNc(visitItemId: number) {
-    return prisma.visitItem.findUnique({
-      where: { id: visitItemId },
+  async findVisitItemForNc(visitItemId: number, companyId: number) {
+    return prisma.visitItem.findFirst({
+      where: { id: visitItemId, visit: { companyId } },
       select: {
         id: true,
         status: true,
