@@ -11,7 +11,7 @@ let userId: number;
 
 beforeAll(async () => {
   app = await createTestApp();
-  const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  const passwordHash = await bcrypt.hash(PASSWORD, 12);
   const user = await prisma.user.create({
     data: { name: 'Reset Test User', email: USER_EMAIL, passwordHash },
   });
@@ -95,7 +95,7 @@ describe('POST /auth/reset-password', () => {
     });
     expect(loginRes.statusCode).toBe(200);
 
-    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(PASSWORD, 10) } });
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(PASSWORD, 12) } });
   });
 
   it('returns 400 for invalid token', async () => {
@@ -158,7 +158,7 @@ describe('POST /auth/change-password', () => {
     });
     expect(loginRes.statusCode).toBe(200);
 
-    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(PASSWORD, 10) } });
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(PASSWORD, 12) } });
   });
 
   it('returns 401 for wrong current password', async () => {
