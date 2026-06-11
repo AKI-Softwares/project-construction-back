@@ -23,6 +23,10 @@ export class NonConformityService {
     if (nc.visitItem.visit.status === "FINALIZED") {
       throw new HttpError(403, "Cannot add photos to a finalized visit.");
     }
+    const photoCount = await this.repo.countPhotos(ncId);
+    if (photoCount >= 5) {
+      throw new HttpError(422, "Maximum of 5 photos per non-conformity.");
+    }
     if (buffer.length === 0) {
       throw new HttpError(400, "Uploaded file is empty.");
     }

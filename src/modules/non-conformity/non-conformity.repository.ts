@@ -79,4 +79,8 @@ export class NonConformityRepository {
       select: { publicId: true },
     });
   }
+
+  async countPhotos(ncId: number): Promise<number> {
+    return prisma.photo.count({ where: { nonConformityId: ncId } });
+  }
 }
