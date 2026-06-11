@@ -128,3 +128,54 @@ describe('POST /auth/reset-password', () => {
     await prisma.passwordResetToken.deleteMany({ where: { userId } });
   });
 });
+
+describe('POST /auth/change-password', () => {
+  let userToken: string;
+
+  beforeAll(async () => {
+    const loginRes = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { email: USER_EMAIL, password: PASSWORD },
+    });
+    userToken = (loginRes.json() as { token: string }).token;
+  });
+
+  it('changes password with valid current password', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/auth/change-password',
+      headers: { authorization: `Bearer ${userToken}` },
+      payload: { currentPassword: PASSWORD, newPassword: 'NewPassword@999' },
+    });
+    expect(res.statusCode).toBe(200);
+
+    const loginRes = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { email: USER_EMAIL, password: 'NewPassword@999' },
+    });
+    expect(loginRes.statusCode).toBe(200);
+
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await bcrypt.hash(PASSWORD, 10) } });
+  });
+
+  it('returns 401 for wrong current password', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/auth/change-password',
+      headers: { authorization: `Bearer ${userToken}` },
+      payload: { currentPassword: 'wrongpassword', newPassword: 'NewPassword@999' },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('returns 401 without auth token', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/auth/change-password',
+      payload: { currentPassword: PASSWORD, newPassword: 'NewPassword@999' },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+});
