@@ -26,7 +26,7 @@ export const finalizeVisitSchema = z.object({
 });
 
 export const updateVisitItemSchema = z.object({
-  status: z.enum(["OK", "NOK"]),
+  status: z.enum(["OK", "NOK"]).nullable(),
 });
 
 export const addNonConformitySchema = z.object({

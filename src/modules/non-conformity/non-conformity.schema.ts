@@ -11,3 +11,15 @@ export const photoParamsSchema = z.object({
 
 export type NcParams = z.infer<typeof ncParamsSchema>;
 export type PhotoParams = z.infer<typeof photoParamsSchema>;
+
+export const createNcSchema = z.object({
+  visitItemId: z.number().int().positive(),
+  description: z.string().min(1),
+});
+
+export const patchNcSchema = z.object({
+  description: z.string().min(1),
+});
+
+export type CreateNcInput = z.infer<typeof createNcSchema>;
+export type PatchNcInput = z.infer<typeof patchNcSchema>;

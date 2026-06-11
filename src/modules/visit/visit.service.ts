@@ -1,4 +1,5 @@
 import { HttpError } from "../../shared/errors/http-error.js";
+import { deleteCloudinaryPhoto } from "../../shared/storage/cloudinary.js";
 import type { VisitRepository } from "./visit.repository.js";
 import type {
   FinalizeVisitInput,
@@ -69,8 +70,22 @@ function groupByRoom(items: VisitItemRaw[]): GroupedRoom[] {
 export class VisitService {
   constructor(private repo: VisitRepository) {}
 
-  async getVisitGrouped(id: number) {
-    const visit = await this.repo.findById(id);
+  private async cleanupNcPhotos(ncId: number) {
+    const photos = await this.repo.findNcPhotos(ncId);
+    for (const photo of photos) {
+      try {
+        await deleteCloudinaryPhoto(photo.publicId);
+      } catch (err) {
+        console.error(
+          `[cleanupNcPhotos] Cloudinary cleanup failed for ${photo.publicId}:`,
+          err,
+        );
+      }
+    }
+  }
+
+  async getVisitGrouped(id: number, companyId: number) {
+    const visit = await this.repo.findById(id, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     const { items, checklist, ...rest } = visit;
     return {
@@ -80,16 +95,16 @@ export class VisitService {
     };
   }
 
-  async getMyVisits(inspectorId: number, status?: VisitMineQuery["status"]) {
-    const visits = await this.repo.findByInspectorId(inspectorId, status);
+  async getMyVisits(inspectorId: number, companyId: number, status?: VisitMineQuery["status"]) {
+    const visits = await this.repo.findByInspectorId(inspectorId, companyId, status);
     return visits.map(({ checklist, ...rest }) => ({
       ...rest,
       apartment: checklist.apartment,
     }));
   }
 
-  async startVisit(visitId: number) {
-    const visit = await this.repo.findById(visitId);
+  async startVisit(visitId: number, companyId: number) {
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status !== "NOT_STARTED") {
       throw new HttpError(409, "Visit has already been started or finalized.");
@@ -99,8 +114,8 @@ export class VisitService {
     return { ...rest, apartment: checklist.apartment };
   }
 
-  async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number) {
-    const visit = await this.repo.findById(id);
+  async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number, companyId: number) {
+    const visit = await this.repo.findById(id, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");
@@ -139,15 +154,16 @@ export class VisitService {
       userId,
     );
     if (!result) throw new Error("Visit not found after finalization.");
-    return this.getVisitGrouped(visit.id);
+    return this.getVisitGrouped(visit.id, companyId);
   }
 
   async updateVisitItem(
     visitId: number,
     itemId: number,
     input: UpdateVisitItemInput,
+    companyId: number,
   ) {
-    const visit = await this.repo.findById(visitId);
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");
@@ -156,6 +172,14 @@ export class VisitService {
 
     const item = visit.items.find((i) => i.id === itemId);
     if (!item) throw new HttpError(404, "Visit item not found.");
+
+    // VF-7/VF-14: revert always allowed — bypasses all room guards
+    if (input.status === null) {
+      if (item.nonConformity) {
+        await this.cleanupNcPhotos(item.nonConformity.id); // VF-8
+      }
+      return this.repo.revertVisitItem(itemId, item.nonConformity?.id ?? null);
+    }
 
     const targetRoomId =
       item.checklistItem.apartmentRoomService.apartmentRoom.id;
@@ -180,17 +204,22 @@ export class VisitService {
       }
     }
 
-    // Guard 2: block evaluating next item while current room has NOK items without NC
-    const roomItems = roomMap.get(targetRoomId) ?? [];
-    // i.id !== itemId: re-evaluating the current NOK item (e.g., NOK → OK) is always allowed
-    const nokWithoutNc = roomItems.filter(
+    // Guard 2 (visit-wide): block any evaluation while any visit item is NOK without NC.
+    // Covers cross-room scenarios — not just within the current room.
+    // Exemption: the item being evaluated itself (NOK → OK always allowed).
+    const anyNokWithoutNc = visit.items.filter(
       (i) => i.id !== itemId && i.status === "NOK" && !i.nonConformity,
     );
-    if (nokWithoutNc.length > 0) {
+    if (anyNokWithoutNc.length > 0) {
       throw new HttpError(
         409,
         "Record non-conformity for all NOK items before proceeding.",
       );
+    }
+
+    // VF-8: cleanup Cloudinary when transitioning NOK → OK (NC cascade-deleted in repo)
+    if (item.status === "NOK" && input.status !== "NOK" && item.nonConformity) {
+      await this.cleanupNcPhotos(item.nonConformity.id);
     }
 
     return this.repo.updateVisitItemWithNcCleanup(
@@ -207,7 +236,7 @@ export class VisitService {
     input: AddNonConformityInput,
     companyId: number,
   ) {
-    const visit = await this.repo.findById(visitId);
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");
@@ -229,8 +258,8 @@ export class VisitService {
     return this.repo.createNonConformity(itemId, input.description, companyId);
   }
 
-  async deleteNonConformity(visitId: number, itemId: number) {
-    const visit = await this.repo.findById(visitId);
+  async deleteNonConformity(visitId: number, itemId: number, companyId: number) {
+    const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status === "FINALIZED")
       throw new HttpError(400, "Visit is already finalized.");
@@ -242,6 +271,7 @@ export class VisitService {
     if (!item.nonConformity)
       throw new HttpError(404, "No non-conformity found for this item.");
 
+    await this.cleanupNcPhotos(item.nonConformity.id); // VF-8
     return this.repo.deleteNonConformity(item.nonConformity.id);
   }
 }

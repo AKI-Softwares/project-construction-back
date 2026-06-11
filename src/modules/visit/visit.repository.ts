@@ -72,9 +72,9 @@ const VISIT_DETAIL_SELECT = {
 } as const;
 
 export class VisitRepository {
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     return prisma.visit.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: VISIT_DETAIL_SELECT,
     });
   }
@@ -172,11 +172,13 @@ export class VisitRepository {
 
   async findByInspectorId(
     inspectorId: number,
+    companyId: number,
     status?: Array<"NOT_STARTED" | "ONGOING" | "FINALIZED">,
   ) {
     return prisma.visit.findMany({
       where: {
         inspectorId,
+        companyId,
         ...(status !== undefined &&
           status.length > 0 && { status: { in: status } }),
       },
@@ -190,6 +192,31 @@ export class VisitRepository {
       where: { id: visitId },
       data: { status },
       select: VISIT_MINE_SELECT,
+    });
+  }
+
+  async findNcPhotos(ncId: number): Promise<{ publicId: string }[]> {
+    return prisma.photo.findMany({
+      where: { nonConformityId: ncId },
+      select: { publicId: true },
+    });
+  }
+
+  async revertVisitItem(itemId: number, ncId: number | null) {
+    if (ncId !== null) {
+      return prisma.$transaction(async (tx) => {
+        await tx.nonConformity.delete({ where: { id: ncId } });
+        return tx.visitItem.update({
+          where: { id: itemId },
+          data: { status: null },
+          select: { id: true, status: true, visitId: true, checklistItemId: true },
+        });
+      });
+    }
+    return prisma.visitItem.update({
+      where: { id: itemId },
+      data: { status: null },
+      select: { id: true, status: true, visitId: true, checklistItemId: true },
     });
   }
 }
