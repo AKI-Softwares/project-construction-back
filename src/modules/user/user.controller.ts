@@ -1,7 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { UserService } from "./user.service.js";
 import type {
-  AdminResetPasswordParams,
   CreateUserInput,
   UpdateUserInput,
   UserParams,
@@ -56,7 +55,7 @@ export class UserController {
   }
 
   async adminResetPassword(
-    request: FastifyRequest<{ Params: AdminResetPasswordParams }>,
+    request: FastifyRequest<{ Params: UserParams }>,
     reply: FastifyReply,
   ) {
     const requesterCompanyId = request.user.companyId;

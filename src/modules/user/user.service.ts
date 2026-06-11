@@ -5,7 +5,7 @@ import { sendTempPasswordEmail } from "../../shared/email/email.service.js";
 import type { UserRepository } from "./user.repository.js";
 import type { CreateUserInput, UpdateUserInput } from "./user.schema.js";
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12;
 
 export class UserService {
   constructor(private readonly repo: UserRepository) {}
@@ -81,7 +81,7 @@ export class UserService {
     if (!user) throw new HttpError(404, "User not found.");
 
     const tempPassword = crypto.randomBytes(9).toString("base64url").slice(0, 12);
-    const passwordHash = await bcrypt.hash(tempPassword, 12);
+    const passwordHash = await bcrypt.hash(tempPassword, SALT_ROUNDS);
 
     await this.repo.updatePasswordAndFlag(user.id, passwordHash, true);
     await sendTempPasswordEmail(user.email, user.name, tempPassword);

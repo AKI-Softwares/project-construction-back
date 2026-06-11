@@ -31,8 +31,3 @@ export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type UserParams = z.infer<typeof userParamsSchema>;
 
-export const adminResetPasswordParamsSchema = z.object({
-  id: z.coerce.number().int().positive(),
-});
-
-export type AdminResetPasswordParams = z.infer<typeof adminResetPasswordParamsSchema>;

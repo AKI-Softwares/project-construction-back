@@ -9,6 +9,7 @@ const PASSWORD = 'Test@1234';
 let app: Awaited<ReturnType<typeof createTestApp>>;
 let userId: number;
 let adminUserId: number;
+let adminRoleId: number;
 let adminToken: string;
 const ADMIN_EMAIL = `admin-reset-test-${Date.now()}@test.com`;
 
@@ -30,6 +31,7 @@ beforeAll(async () => {
       companyId: company.id,
     },
   });
+  adminRoleId = adminRole.id;
   const adminUser = await prisma.user.create({
     data: {
       name: 'Admin Reset Test',
@@ -55,7 +57,7 @@ afterAll(async () => {
   await prisma.passwordResetToken.deleteMany({ where: { userId } });
   await prisma.user.delete({ where: { id: adminUserId } });
   await prisma.user.delete({ where: { id: userId } });
-  await prisma.role.deleteMany({ where: { name: 'Admin', isCompanyAdmin: true } });
+  await prisma.role.delete({ where: { id: adminRoleId } });
   await prisma.company.deleteMany({ where: { name: 'Reset Test Co' } });
   await app.close();
 });
