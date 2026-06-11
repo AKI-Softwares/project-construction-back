@@ -173,6 +173,14 @@ export class VisitService {
     const item = visit.items.find((i) => i.id === itemId);
     if (!item) throw new HttpError(404, "Visit item not found.");
 
+    // VF-7/VF-14: revert always allowed — bypasses all room guards
+    if (input.status === null) {
+      if (item.nonConformity) {
+        await this.cleanupNcPhotos(item.nonConformity.id); // VF-8
+      }
+      return this.repo.revertVisitItem(itemId, item.nonConformity?.id ?? null);
+    }
+
     const targetRoomId =
       item.checklistItem.apartmentRoomService.apartmentRoom.id;
 
@@ -196,25 +204,17 @@ export class VisitService {
       }
     }
 
-    // Guard 2: block evaluating next item while current room has NOK items without NC
-    const roomItems = roomMap.get(targetRoomId) ?? [];
-    // i.id !== itemId: re-evaluating the current NOK item (e.g., NOK → OK) is always allowed
-    const nokWithoutNc = roomItems.filter(
+    // Guard 2 (visit-wide): block any evaluation while any visit item is NOK without NC.
+    // Covers cross-room scenarios — not just within the current room.
+    // Exemption: the item being evaluated itself (NOK → OK always allowed).
+    const anyNokWithoutNc = visit.items.filter(
       (i) => i.id !== itemId && i.status === "NOK" && !i.nonConformity,
     );
-    if (nokWithoutNc.length > 0) {
+    if (anyNokWithoutNc.length > 0) {
       throw new HttpError(
         409,
         "Record non-conformity for all NOK items before proceeding.",
       );
-    }
-
-    // VF-7: null = revert item to unevaluated
-    if (input.status === null) {
-      if (item.nonConformity) {
-        await this.cleanupNcPhotos(item.nonConformity.id); // VF-8
-      }
-      return this.repo.revertVisitItem(itemId, item.nonConformity?.id ?? null);
     }
 
     // VF-8: cleanup Cloudinary when transitioning NOK → OK (NC cascade-deleted in repo)
