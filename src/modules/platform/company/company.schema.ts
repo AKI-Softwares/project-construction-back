@@ -22,8 +22,16 @@ export const listCompaniesQuerySchema = z.object({
   status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED']).optional(),
 });
 
+export const createCompanyUserSchema = z.object({
+  name: z.string().min(2),
+  email: z.email(),
+  password: z.string().min(6),
+  roleId: z.number().int().positive(),
+});
+
 export type CompanyParams            = z.infer<typeof companyParamsSchema>;
 export type CreateCompanyInput       = z.infer<typeof createCompanySchema>;
 export type UpdateCompanyInput       = z.infer<typeof updateCompanySchema>;
 export type UpdateCompanyStatusInput = z.infer<typeof updateCompanyStatusSchema>;
 export type ListCompaniesQuery       = z.infer<typeof listCompaniesQuerySchema>;
+export type CreateCompanyUserInput   = z.infer<typeof createCompanyUserSchema>;

@@ -39,6 +39,19 @@ export class UserRepository {
     });
   }
 
+  async createWithCompany(data: CreateUserInput & { passwordHash: string; companyId: number }) {
+    return prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        passwordHash: data.passwordHash,
+        roleId: data.roleId,
+        companyId: data.companyId,
+      },
+      select: USER_SELECT,
+    });
+  }
+
   async update(id: number, data: UpdateUserInput) {
     return prisma.user.update({
       where: { id },

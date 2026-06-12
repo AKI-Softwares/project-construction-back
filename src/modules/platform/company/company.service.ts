@@ -1,11 +1,16 @@
+import bcrypt from 'bcrypt';
 import { HttpError } from '../../../shared/errors/http-error.js';
+import { UserRepository } from '../../user/user.repository.js';
 import type { CompanyRepository } from './company.repository.js';
 import type {
   CreateCompanyInput,
   UpdateCompanyInput,
   UpdateCompanyStatusInput,
   ListCompaniesQuery,
+  CreateCompanyUserInput,
 } from './company.schema.js';
+
+const SALT_ROUNDS = 12;
 
 export class CompanyService {
   constructor(private repo: CompanyRepository) {}
@@ -75,5 +80,17 @@ export class CompanyService {
     }
 
     return this.repo.updateStatus(id, input.status);
+  }
+
+  async createUser(companyId: number, input: CreateCompanyUserInput) {
+    const company = await this.repo.findById(companyId);
+    if (!company) throw new HttpError(404, 'Company not found.');
+
+    const userRepo = new UserRepository();
+    const existing = await userRepo.findByEmail(input.email);
+    if (existing) throw new HttpError(409, 'Email already registered.');
+
+    const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
+    return userRepo.createWithCompany({ ...input, passwordHash, companyId });
   }
 }

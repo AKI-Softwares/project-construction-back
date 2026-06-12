@@ -6,6 +6,7 @@ import type {
   UpdateCompanyInput,
   UpdateCompanyStatusInput,
   ListCompaniesQuery,
+  CreateCompanyUserInput,
 } from './company.schema.js';
 
 export class CompanyController {
@@ -29,5 +30,9 @@ export class CompanyController {
 
   async updateStatus(request: FastifyRequest<{ Params: CompanyParams; Body: UpdateCompanyStatusInput }>, reply: FastifyReply) {
     return reply.send(await this.service.updateStatus(request.params.id, request.body));
+  }
+
+  async createUser(request: FastifyRequest<{ Params: CompanyParams; Body: CreateCompanyUserInput }>, reply: FastifyReply) {
+    return reply.status(201).send(await this.service.createUser(request.params.id, request.body));
   }
 }

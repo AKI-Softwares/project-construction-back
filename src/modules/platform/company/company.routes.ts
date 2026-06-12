@@ -8,6 +8,7 @@ import {
   updateCompanySchema,
   updateCompanyStatusSchema,
   listCompaniesQuerySchema,
+  createCompanyUserSchema,
 } from './company.schema.js';
 
 export const companyPlatformRoutes: FastifyPluginAsyncZod = async (app) => {
@@ -29,4 +30,7 @@ export const companyPlatformRoutes: FastifyPluginAsyncZod = async (app) => {
 
   app.patch('/:id/status', { schema: { params: companyParamsSchema, body: updateCompanyStatusSchema } },
     controller.updateStatus.bind(controller));
+
+  app.post('/:id/users', { schema: { params: companyParamsSchema, body: createCompanyUserSchema } },
+    controller.createUser.bind(controller));
 };
