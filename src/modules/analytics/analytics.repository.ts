@@ -9,13 +9,14 @@ export class AnalyticsRepository {
       visitsPending,
       nokCount,
       evaluatedCount,
-      openNonConformities,
+      totalNonConformities,
       totalInspectors,
     ] = await Promise.all([
       prisma.apartment.count({ where: { companyId } }),
       prisma.visit.count({
         where: { companyId, status: "FINALIZED", finalizedAt: { gte: from, lte: to } },
       }),
+      // current backlog: all pending visits regardless of period (gauge, not counter)
       prisma.visit.count({
         where: { companyId, status: { in: ["NOT_STARTED", "ONGOING"] } },
       }),
@@ -29,7 +30,11 @@ export class AnalyticsRepository {
         },
       }),
       prisma.nonConformity.count({ where: { companyId } }),
-      prisma.user.count({ where: { companyId } }),
+      prisma.visit.findMany({
+        where: { companyId, status: "FINALIZED", finalizedAt: { gte: from, lte: to } },
+        select: { inspectorId: true },
+        distinct: ["inspectorId"],
+      }).then(rows => rows.length),
     ]);
     return {
       totalApartments,
@@ -37,7 +42,7 @@ export class AnalyticsRepository {
       visitsPending,
       nokCount,
       evaluatedCount,
-      openNonConformities,
+      totalNonConformities,
       totalInspectors,
     };
   }

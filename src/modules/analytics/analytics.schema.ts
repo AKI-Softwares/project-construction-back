@@ -42,3 +42,21 @@ export function parseDateRange(query: AnalyticsQuery): { from: Date; to: Date } 
 export function isShortRange(from: Date, to: Date): boolean {
   return to.getTime() - from.getTime() <= 30 * 24 * 60 * 60 * 1000;
 }
+
+export type CompanySnapshotData = {
+  totalApartments: number;
+  visitsFinalized: number;
+  visitsPending: number;
+  nokCount: number;
+  evaluatedCount: number;
+  totalNonConformities: number;
+  totalInspectors: number;
+};
+
+export type PlatformSnapshotData = {
+  activeCompanies: number;
+  suspendedCompanies: number;
+  totalUsers: number;
+  visitsCreatedToday: number;
+  inspectionsFinalized: number;
+};

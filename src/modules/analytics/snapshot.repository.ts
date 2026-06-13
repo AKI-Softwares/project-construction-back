@@ -33,17 +33,33 @@ export class SnapshotRepository {
     type: SnapshotType,
     data: object,
   ) {
-    const existing = await prisma.metricsSnapshot.findFirst({
-      where: { companyId, snapshotDate: date, type },
-    });
-    if (existing) {
-      return prisma.metricsSnapshot.update({
-        where: { id: existing.id },
-        data: { data },
+    try {
+      const existing = await prisma.metricsSnapshot.findFirst({
+        where: { companyId, snapshotDate: date, type },
       });
+      if (existing) {
+        return await prisma.metricsSnapshot.update({
+          where: { id: existing.id },
+          data: { data },
+        });
+      }
+      return await prisma.metricsSnapshot.create({
+        data: { companyId, snapshotDate: date, type, data },
+      });
+    } catch (e: unknown) {
+      // P2002: unique constraint violation — concurrent insert; update the existing row
+      if ((e as { code?: string }).code === "P2002") {
+        const existing = await prisma.metricsSnapshot.findFirst({
+          where: { companyId, snapshotDate: date, type },
+        });
+        if (existing) {
+          return prisma.metricsSnapshot.update({
+            where: { id: existing.id },
+            data: { data },
+          });
+        }
+      }
+      throw e;
     }
-    return prisma.metricsSnapshot.create({
-      data: { companyId, snapshotDate: date, type, data },
-    });
   }
 }
