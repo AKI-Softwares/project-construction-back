@@ -80,7 +80,16 @@ export class PlatformAnalyticsService {
   }
 
   async getGrowth() {
+    const to = new Date();
+    const from = new Date();
+    from.setUTCMonth(from.getUTCMonth() - 12);
+    from.setUTCDate(1);
+    from.setUTCHours(0, 0, 0, 0);
     const data = await this.repo.getGrowth();
-    return { data };
+    return {
+      period: { from: from.toISOString(), to: to.toISOString() },
+      dataSource: "realtime" as const,
+      data,
+    };
   }
 }

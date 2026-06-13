@@ -30,11 +30,7 @@ export class AnalyticsRepository {
         },
       }),
       prisma.nonConformity.count({ where: { companyId } }),
-      prisma.visit.findMany({
-        where: { companyId, status: "FINALIZED", finalizedAt: { gte: from, lte: to } },
-        select: { inspectorId: true },
-        distinct: ["inspectorId"],
-      }).then(rows => rows.length),
+      prisma.user.count({ where: { companyId } }),
     ]);
     return {
       totalApartments,

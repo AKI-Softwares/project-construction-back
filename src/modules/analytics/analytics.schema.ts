@@ -34,8 +34,8 @@ export function parseDateRange(query: AnalyticsQuery): { from: Date; to: Date } 
   const days = query.period === "7d" ? 7 : query.period === "90d" ? 90 : 30;
   const to = new Date();
   const from = new Date();
-  from.setDate(from.getDate() - days);
-  from.setHours(0, 0, 0, 0);
+  from.setUTCDate(from.getUTCDate() - days);
+  from.setUTCHours(0, 0, 0, 0);
   return { from, to };
 }
 

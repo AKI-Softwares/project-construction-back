@@ -11,11 +11,11 @@ export class CronService {
 
   async runDailySnapshot(): Promise<{ processed: number; date: string }> {
     const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+    yesterday.setUTCHours(0, 0, 0, 0);
 
     const yesterdayEnd = new Date(yesterday);
-    yesterdayEnd.setHours(23, 59, 59, 999);
+    yesterdayEnd.setUTCHours(23, 59, 59, 999);
 
     const dateStr = yesterday.toISOString().split("T")[0]!;
 
