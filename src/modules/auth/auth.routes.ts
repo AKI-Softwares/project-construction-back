@@ -17,7 +17,7 @@ export async function authRoutes(app: FastifyInstance) {
 
   app.post(
     '/login',
-    { schema: { body: loginSchema } },
+    { schema: { body: loginSchema }, config: { rateLimit: { max: 10, timeWindow: '1 minute' } } },
     controller.login.bind(controller),
   );
 
@@ -35,13 +35,13 @@ export async function authRoutes(app: FastifyInstance) {
 
   app.post(
     '/forgot-password',
-    { schema: { body: forgotPasswordSchema } },
+    { schema: { body: forgotPasswordSchema }, config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
     controller.forgotPassword.bind(controller),
   );
 
   app.post(
     '/reset-password',
-    { schema: { body: resetPasswordSchema } },
+    { schema: { body: resetPasswordSchema }, config: { rateLimit: { max: 5, timeWindow: '1 minute' } } },
     controller.resetPassword.bind(controller),
   );
 

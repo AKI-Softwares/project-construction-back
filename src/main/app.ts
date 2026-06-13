@@ -9,6 +9,7 @@ import { env } from "../shared/config/env.js";
 import { registerCors } from "../shared/plugins/cors.js";
 import { registerJwt } from "../shared/plugins/jwt.js";
 import { registerMultipart } from "../shared/plugins/multipart.js";
+import { registerRateLimit } from "../shared/plugins/rate-limit.js";
 import { HttpError } from "../shared/errors/http-error.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
 import { userRoutes } from "../modules/user/user.routes.js";
@@ -42,6 +43,7 @@ export async function buildApp() {
   app.setSerializerCompiler(serializerCompiler);
 
   // Plugins
+  await registerRateLimit(app);
   await registerCors(app);
   await registerJwt(app);
   await registerMultipart(app);
