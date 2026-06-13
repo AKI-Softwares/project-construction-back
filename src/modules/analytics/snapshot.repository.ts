@@ -1,0 +1,49 @@
+// src/modules/analytics/snapshot.repository.ts
+import { prisma } from "../../shared/infra/database/prisma.js";
+import type { SnapshotType } from "../../../generated/prisma/enums.js";
+
+export class SnapshotRepository {
+  async findCompanySnapshots(companyId: number, from: Date, to: Date) {
+    return prisma.metricsSnapshot.findMany({
+      where: {
+        companyId,
+        type: "COMPANY_DAILY",
+        snapshotDate: { gte: from, lte: to },
+      },
+      orderBy: { snapshotDate: "asc" },
+    });
+  }
+
+  async findPlatformSnapshots(from: Date, to: Date) {
+    return prisma.metricsSnapshot.findMany({
+      where: {
+        companyId: null,
+        type: "PLATFORM_DAILY",
+        snapshotDate: { gte: from, lte: to },
+      },
+      orderBy: { snapshotDate: "asc" },
+    });
+  }
+
+  // Uses findFirst + update/create because SQL unique constraints treat NULL != NULL,
+  // making upsert by compound key unreliable when companyId is null (platform snapshots).
+  async upsertSnapshot(
+    companyId: number | null,
+    date: Date,
+    type: SnapshotType,
+    data: object,
+  ) {
+    const existing = await prisma.metricsSnapshot.findFirst({
+      where: { companyId, snapshotDate: date, type },
+    });
+    if (existing) {
+      return prisma.metricsSnapshot.update({
+        where: { id: existing.id },
+        data: { data },
+      });
+    }
+    return prisma.metricsSnapshot.create({
+      data: { companyId, snapshotDate: date, type, data },
+    });
+  }
+}
