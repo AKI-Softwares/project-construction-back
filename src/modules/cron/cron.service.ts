@@ -1,4 +1,5 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
+import { HttpError } from "../../shared/errors/http-error.js";
 import { AnalyticsRepository } from "../analytics/analytics.repository.js";
 import { PlatformAnalyticsRepository } from "../platform/analytics/platform-analytics.repository.js";
 import { SnapshotRepository } from "../analytics/snapshot.repository.js";
@@ -23,21 +24,30 @@ export class CronService {
       select: { id: true },
     });
 
+    const errors: string[] = [];
     for (const company of companies) {
-      const raw = await this.analyticsRepo.getOverviewRealtime(
-        company.id,
-        yesterday,
-        yesterdayEnd,
-      );
-      await this.snapshotRepo.upsertSnapshot(company.id, yesterday, "COMPANY_DAILY", {
-        totalApartments:      raw.totalApartments,
-        visitsFinalized:      raw.visitsFinalized,
-        visitsPending:        raw.visitsPending,
-        nokCount:             raw.nokCount,
-        evaluatedCount:       raw.evaluatedCount,
-        totalNonConformities: raw.totalNonConformities,
-        totalInspectors:      raw.totalInspectors,
-      });
+      try {
+        const raw = await this.analyticsRepo.getOverviewRealtime(
+          company.id,
+          yesterday,
+          yesterdayEnd,
+        );
+        await this.snapshotRepo.upsertSnapshot(company.id, yesterday, "COMPANY_DAILY", {
+          totalApartments:      raw.totalApartments,
+          visitsFinalized:      raw.visitsFinalized,
+          visitsPending:        raw.visitsPending,
+          nokCount:             raw.nokCount,
+          evaluatedCount:       raw.evaluatedCount,
+          totalNonConformities: raw.totalNonConformities,
+          totalInspectors:      raw.totalInspectors,
+        });
+      } catch (e) {
+        errors.push(`company ${company.id}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new HttpError(500, `Snapshot failed for ${errors.length} of ${companies.length} companies: ${errors.join("; ")}`);
     }
 
     const platformRaw = await this.platformRepo.getOverviewRealtime(yesterday, yesterdayEnd);
