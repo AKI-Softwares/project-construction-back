@@ -37,6 +37,11 @@ enum CompanyStatus {
   SUSPENDED
 }
 
+enum SnapshotType {
+  COMPANY_DAILY
+  PLATFORM_DAILY
+}
+
 model Company {
   id               Int             @id @default(autoincrement())
   name             String          @db.VarChar(255)
@@ -54,6 +59,7 @@ model Company {
   visits           Visit[]
   nonConformities  NonConformity[]
   photos           Photo[]
+  metricsSnapshots MetricsSnapshot[]
 
   @@map("Company")
 }
@@ -352,4 +358,18 @@ model Photo {
   @@index([nonConformityId])
   @@index([companyId])
   @@map("Photo")
+}
+
+model MetricsSnapshot {
+  id           Int          @id @default(autoincrement())
+  companyId    Int?         @map("company_id")
+  snapshotDate DateTime     @map("snapshot_date") @db.Date
+  type         SnapshotType
+  data         Json
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  company      Company?     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, snapshotDate, type])
+  @@index([companyId, snapshotDate])
+  @@map("MetricsSnapshot")
 }

@@ -22,6 +22,8 @@ import { checklistRoutes } from "../modules/checklist/checklist.routes.js";
 import { visitRoutes } from "../modules/visit/visit.routes.js";
 import { nonConformityRoutes } from "../modules/non-conformity/non-conformity.routes.js";
 import { platformRoutes } from "../modules/platform/platform.routes.js";
+import { analyticsRoutes } from "../modules/analytics/analytics.routes.js";
+import { cronRoutes } from "../modules/cron/cron.routes.js";
 
 export async function buildApp() {
   const app = Fastify({
@@ -60,6 +62,8 @@ export async function buildApp() {
   await app.register(visitRoutes, { prefix: "/visits" });
   await app.register(nonConformityRoutes, { prefix: "/non-conformities" });
   await app.register(platformRoutes, { prefix: "/platform" });
+  await app.register(analyticsRoutes, { prefix: "/analytics" });
+  await app.register(cronRoutes, { prefix: "/cron" });
 
   // Error handler global
   app.setErrorHandler((error, _request, reply) => {

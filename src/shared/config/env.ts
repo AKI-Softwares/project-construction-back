@@ -13,6 +13,7 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1),
   RESEND_API_KEY: z.string().default(''),
   EMAIL_FROM: z.string().default(''),
+  CRON_SECRET: z.string().min(16),
 });
 
 export const env = envSchema.parse(process.env);
