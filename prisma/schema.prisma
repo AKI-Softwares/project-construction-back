@@ -308,6 +308,7 @@ model Visit {
   type          VisitType   @default(INITIAL)
   parentVisitId Int?        @map("parent_visit_id")
   scheduledFor  DateTime?   @map("scheduled_for") @db.Timestamptz
+  signatureUrl  String?     @map("signature_url") @db.VarChar(500)
   finalizedAt   DateTime?   @map("finalized_at") @db.Timestamptz
   companyId     Int         @map("company_id")
   company       Company     @relation(fields: [companyId], references: [id])

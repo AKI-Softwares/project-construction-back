@@ -261,6 +261,57 @@ export class VisitRepository {
     });
   }
 
+  async getReportData(visitId: number, companyId: number) {
+    return prisma.visit.findFirst({
+      where: { id: visitId, companyId },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        finalizedAt: true,
+        signatureUrl: true,
+        inspector: { select: { name: true } },
+        checklist: {
+          select: {
+            apartment: {
+              select: {
+                identifier: true,
+                floor: true,
+                block: true,
+                building: { select: { name: true } },
+              },
+            },
+          },
+        },
+        items: {
+          select: {
+            status: true,
+            checklistItem: {
+              select: {
+                apartmentRoomService: {
+                  select: {
+                    service: { select: { name: true } },
+                    apartmentRoom: { select: { name: true } },
+                  },
+                },
+              },
+            },
+            nonConformity: { select: { description: true } },
+          },
+          orderBy: { id: "asc" as const },
+        },
+      },
+    });
+  }
+
+  async saveSignatureUrl(visitId: number, companyId: number, signatureUrl: string) {
+    return prisma.visit.update({
+      where: { id: visitId, companyId },
+      data: { signatureUrl },
+      select: { id: true, signatureUrl: true },
+    });
+  }
+
   async claimReinspection(visitId: number, companyId: number, inspectorId: number) {
     return prisma.visit.update({
       where: { id: visitId, companyId },

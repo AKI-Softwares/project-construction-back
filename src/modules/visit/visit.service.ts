@@ -1,7 +1,8 @@
 import { HttpError } from "../../shared/errors/http-error.js";
-import { deleteCloudinaryPhoto } from "../../shared/storage/cloudinary.js";
+import { deleteCloudinaryPhoto, uploadSignature } from "../../shared/storage/cloudinary.js";
 import { logAudit } from "../../shared/audit/audit-log.js";
 import { sendPushToUsers, sendPushToCompanyInspectors } from "../../shared/push/push-notification.js";
+import { generateVisitReport, type VisitReportData } from "../../shared/pdf/visit-report.js";
 import type { VisitRepository } from "./visit.repository.js";
 import type {
   FinalizeVisitInput,
@@ -319,6 +320,52 @@ export class VisitService {
     void logAudit({ companyId, userId: inspectorId, entityType: "Visit", entityId: visitId, action: "CLAIMED", after: { inspectorId } });
     const { checklist, ...rest } = updated;
     return { ...rest, apartment: checklist.apartment };
+  }
+
+  async generateReport(visitId: number, companyId: number): Promise<Buffer> {
+    const visit = await this.repo.getReportData(visitId, companyId);
+    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (visit.status !== "FINALIZED")
+      throw new HttpError(400, "Report is only available for finalized visits.");
+
+    // Group items by room
+    const roomMap = new Map<string, VisitReportData["rooms"][number]>();
+    for (const item of visit.items) {
+      const roomName = item.checklistItem.apartmentRoomService.apartmentRoom.name;
+      if (!roomMap.has(roomName)) roomMap.set(roomName, { name: roomName, items: [] });
+      roomMap.get(roomName)!.items.push({
+        serviceName: item.checklistItem.apartmentRoomService.service.name,
+        status: item.status,
+        nonConformity: item.nonConformity ? { description: item.nonConformity.description } : null,
+      });
+    }
+
+    return generateVisitReport({
+      id: visit.id,
+      type: visit.type,
+      buildingName: visit.checklist.apartment.building.name,
+      apartmentIdentifier: visit.checklist.apartment.identifier,
+      floor: visit.checklist.apartment.floor,
+      block: visit.checklist.apartment.block,
+      inspectorName: visit.inspector?.name ?? null,
+      finalizedAt: visit.finalizedAt,
+      signatureUrl: visit.signatureUrl,
+      rooms: Array.from(roomMap.values()),
+    });
+  }
+
+  async saveSignature(visitId: number, companyId: number, imageBase64: string, userId: number) {
+    const visit = await this.repo.findById(visitId, companyId);
+    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (visit.status !== "FINALIZED")
+      throw new HttpError(400, "Signature is only allowed for finalized visits.");
+
+    const buffer = Buffer.from(imageBase64, "base64");
+    if (!buffer.length) throw new HttpError(400, "Invalid signature image.");
+    const { secureUrl } = await uploadSignature(buffer);
+    const result = await this.repo.saveSignatureUrl(visitId, companyId, secureUrl);
+    void logAudit({ companyId, userId, entityType: "Visit", entityId: visitId, action: "SIGNED", after: { signatureUrl: secureUrl } });
+    return result;
   }
 
   async deleteNonConformity(visitId: number, itemId: number, companyId: number) {

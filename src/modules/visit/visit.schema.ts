@@ -38,6 +38,10 @@ export const createReinspectionSchema = z.object({
   scheduledFor: z.string().datetime({ offset: true }).optional(),
 });
 
+export const saveSignatureSchema = z.object({
+  imageBase64: z.string().min(100),
+});
+
 export type VisitParams = z.infer<typeof visitParamsSchema>;
 export type VisitItemParams = z.infer<typeof visitItemParamsSchema>;
 export type VisitMineQuery = z.infer<typeof visitMineQuerySchema>;
@@ -45,3 +49,4 @@ export type FinalizeVisitInput = z.infer<typeof finalizeVisitSchema>;
 export type UpdateVisitItemInput = z.infer<typeof updateVisitItemSchema>;
 export type AddNonConformityInput = z.infer<typeof addNonConformitySchema>;
 export type CreateReinspectionInput = z.infer<typeof createReinspectionSchema>;
+export type SaveSignatureInput = z.infer<typeof saveSignatureSchema>;

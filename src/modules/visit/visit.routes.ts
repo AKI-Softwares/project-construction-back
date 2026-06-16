@@ -10,6 +10,7 @@ import {
   updateVisitItemSchema,
   addNonConformitySchema,
   createReinspectionSchema,
+  saveSignatureSchema,
 } from "./visit.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
 import { requireCompanyAdmin } from "../../shared/rbac/require-company-admin.js";
@@ -114,5 +115,23 @@ export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: [app.authenticate, checkPermission("visits:update")],
     },
     controller.claimReinspection.bind(controller),
+  );
+
+  app.get(
+    "/:id/report",
+    {
+      schema: { params: visitParamsSchema },
+      preHandler: [app.authenticate, checkPermission("visits:read")],
+    },
+    controller.getReport.bind(controller),
+  );
+
+  app.post(
+    "/:id/signature",
+    {
+      schema: { params: visitParamsSchema, body: saveSignatureSchema },
+      preHandler: [app.authenticate, checkPermission("visits:update")],
+    },
+    controller.saveSignature.bind(controller),
   );
 };

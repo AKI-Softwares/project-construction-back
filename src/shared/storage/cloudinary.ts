@@ -31,6 +31,25 @@ export async function uploadPhoto(
   });
 }
 
+export async function uploadSignature(
+  buffer: Buffer,
+): Promise<{ secureUrl: string; publicId: string }> {
+  if (!buffer.length) throw new Error("Signature buffer is empty.");
+
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: "home/checkobra/signatures", resource_type: "image" },
+      (error, result) => {
+        if (error || !result)
+          return reject(error ?? new Error("Cloudinary upload failed."));
+        resolve({ secureUrl: result.secure_url, publicId: result.public_id });
+      },
+    );
+    stream.on("error", reject);
+    stream.end(buffer);
+  });
+}
+
 export async function deleteCloudinaryPhoto(publicId: string): Promise<void> {
   if (!publicId) throw new Error("publicId is required for deletion.");
   const result = await cloudinary.uploader.destroy(publicId);

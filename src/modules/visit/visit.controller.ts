@@ -9,6 +9,7 @@ import type {
   UpdateVisitItemInput,
   AddNonConformityInput,
   CreateReinspectionInput,
+  SaveSignatureInput,
 } from "./visit.schema.js";
 
 export class VisitController {
@@ -141,5 +142,30 @@ export class VisitController {
     const inspectorId = Number(request.user.sub);
     const visit = await this.service.claimReinspection(request.params.id, companyId, inspectorId);
     return reply.status(200).send(visit);
+  }
+
+  async getReport(request: FastifyRequest<{ Params: VisitParams }>, reply: FastifyReply) {
+    const companyId = getTenantId(request);
+    const buffer = await this.service.generateReport(request.params.id, companyId);
+    return reply
+      .header("Content-Type", "application/pdf")
+      .header("Content-Disposition", `attachment; filename="vistoria-${request.params.id}.pdf"`)
+      .status(200)
+      .send(buffer);
+  }
+
+  async saveSignature(
+    request: FastifyRequest<{ Params: VisitParams; Body: SaveSignatureInput }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const userId = Number(request.user.sub);
+    const result = await this.service.saveSignature(
+      request.params.id,
+      companyId,
+      request.body.imageBase64,
+      userId,
+    );
+    return reply.status(200).send(result);
   }
 }
