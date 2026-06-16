@@ -35,6 +35,7 @@ export const addNonConformitySchema = z.object({
 
 export const createReinspectionSchema = z.object({
   inspectorId: z.number().int().positive().optional(),
+  scheduledFor: z.string().datetime({ offset: true }).optional(),
 });
 
 export type VisitParams = z.infer<typeof visitParamsSchema>;

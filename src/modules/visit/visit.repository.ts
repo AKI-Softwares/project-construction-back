@@ -7,6 +7,7 @@ const VISIT_MINE_SELECT = {
   status: true,
   inspectorId: true,
   parentVisitId: true,
+  scheduledFor: true,
   createdAt: true,
   checklist: {
     select: {
@@ -29,6 +30,7 @@ const VISIT_DETAIL_SELECT = {
   checklistId: true,
   observations: true,
   status: true,
+  scheduledFor: true,
   finalizedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -232,6 +234,7 @@ export class VisitRepository {
           type: "REINSPECTION",
           parentVisitId: parentVisit.id,
           ...(input.inspectorId !== undefined && { inspectorId: input.inspectorId }),
+          ...(input.scheduledFor !== undefined && { scheduledFor: new Date(input.scheduledFor) }),
         },
         select: VISIT_MINE_SELECT,
       });

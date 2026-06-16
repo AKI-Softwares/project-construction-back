@@ -306,6 +306,7 @@ model Visit {
   status        VisitStatus @default(NOT_STARTED)
   type          VisitType   @default(INITIAL)
   parentVisitId Int?        @map("parent_visit_id")
+  scheduledFor  DateTime?   @map("scheduled_for") @db.Timestamptz
   finalizedAt   DateTime?   @map("finalized_at") @db.Timestamptz
   companyId     Int         @map("company_id")
   company       Company     @relation(fields: [companyId], references: [id])
