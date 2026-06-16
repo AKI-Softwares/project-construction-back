@@ -4,6 +4,7 @@ import type {
   CreateUserInput,
   UpdateUserInput,
   UserParams,
+  SavePushTokenInput,
 } from "./user.schema.js";
 
 export class UserController {
@@ -61,5 +62,20 @@ export class UserController {
     const requesterCompanyId = request.user.companyId;
     await this.service.resetPasswordByAdmin(request.params.id, requesterCompanyId);
     return reply.send({ message: "Temporary password sent to user's email." });
+  }
+
+  async savePushToken(
+    request: FastifyRequest<{ Body: SavePushTokenInput }>,
+    reply: FastifyReply,
+  ) {
+    const userId = Number(request.user.sub);
+    const result = await this.service.savePushToken(userId, request.body.token, request.body.platform);
+    return reply.status(201).send(result);
+  }
+
+  async removePushToken(request: FastifyRequest, reply: FastifyReply) {
+    const userId = Number(request.user.sub);
+    await this.service.removePushToken(userId);
+    return reply.status(204).send();
   }
 }

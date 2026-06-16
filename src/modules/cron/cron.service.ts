@@ -1,5 +1,6 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
 import { HttpError } from "../../shared/errors/http-error.js";
+import { sendPushToUsers } from "../../shared/push/push-notification.js";
 import { AnalyticsRepository } from "../analytics/analytics.repository.js";
 import { PlatformAnalyticsRepository } from "../platform/analytics/platform-analytics.repository.js";
 import { SnapshotRepository } from "../analytics/snapshot.repository.js";
@@ -60,5 +61,35 @@ export class CronService {
     });
 
     return { processed: companies.length, date: dateStr };
+  }
+
+  async runSlaAlerts(): Promise<{ notified: number }> {
+    const now = new Date();
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    const atRisk = await prisma.visit.findMany({
+      where: {
+        scheduledFor: { gte: now, lte: in24h },
+        status: { in: ["NOT_STARTED", "ONGOING"] },
+        inspectorId: { not: null },
+      },
+      select: {
+        id: true,
+        inspectorId: true,
+        checklist: { select: { apartment: { select: { identifier: true, building: { select: { name: true } } } } } },
+      },
+    });
+
+    for (const visit of atRisk) {
+      if (visit.inspectorId) {
+        void sendPushToUsers([visit.inspectorId], {
+          title: "Vistoria próxima do prazo",
+          body: `Apt ${visit.checklist.apartment.identifier} — ${visit.checklist.apartment.building.name}`,
+          data: { visitId: visit.id },
+        });
+      }
+    }
+
+    return { notified: atRisk.length };
   }
 }

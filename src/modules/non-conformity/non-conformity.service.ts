@@ -1,9 +1,8 @@
 import { fileTypeFromBuffer } from "file-type";
 import { HttpError } from "../../shared/errors/http-error.js";
-import {
-  uploadPhoto,
-  deleteCloudinaryPhoto,
-} from "../../shared/storage/cloudinary.js";
+import { uploadPhoto, deleteCloudinaryPhoto } from "../../shared/storage/cloudinary.js";
+import { logAudit } from "../../shared/audit/audit-log.js";
+import { sendPushToUsers } from "../../shared/push/push-notification.js";
 import type { NonConformityRepository } from "./non-conformity.repository.js";
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -68,7 +67,7 @@ export class NonConformityService {
     await this.repo.deletePhoto(photoId);
   }
 
-  async createNc(visitItemId: number, description: string, companyId: number) {
+  async createNc(visitItemId: number, description: string, companyId: number, userId: number) {
     const item = await this.repo.findVisitItemForNc(visitItemId, companyId);
     if (!item) throw new HttpError(404, "Visit item not found.");
     if (item.visit.status === "FINALIZED") {
@@ -83,7 +82,9 @@ export class NonConformityService {
     if (item.nonConformity) {
       throw new HttpError(409, "This item already has a non-conformity.");
     }
-    return this.repo.create(visitItemId, description, companyId);
+    const nc = await this.repo.create(visitItemId, description, companyId);
+    void logAudit({ companyId, userId, entityType: "NonConformity", entityId: nc.id, action: "CREATED", after: { visitItemId, description } });
+    return nc;
   }
 
   async patchNc(ncId: number, description: string, companyId: number) {
@@ -95,7 +96,7 @@ export class NonConformityService {
     return this.repo.patch(ncId, description);
   }
 
-  async deleteNc(ncId: number, companyId: number) {
+  async deleteNc(ncId: number, companyId: number, userId: number) {
     const nc = await this.repo.findById(ncId, companyId);
     if (!nc) throw new HttpError(404, "Non-conformity not found.");
     if (nc.visitItem.visit.status === "FINALIZED") {
@@ -109,12 +110,19 @@ export class NonConformityService {
         console.error(`[deleteNc] Cloudinary cleanup failed for ${photo.publicId}:`, err);
       }
     }
-    return this.repo.deleteById(ncId);
+    const result = await this.repo.deleteById(ncId);
+    void logAudit({ companyId, userId, entityType: "NonConformity", entityId: ncId, action: "DELETED" });
+    return result;
   }
 
   async resolveNc(ncId: number, companyId: number, resolvedById: number) {
-    const nc = await this.repo.findById(ncId, companyId);
+    const nc = await this.repo.findByIdWithInspector(ncId, companyId);
     if (!nc) throw new HttpError(404, "Non-conformity not found.");
-    return this.repo.resolve(ncId, resolvedById);
+    const result = await this.repo.resolve(ncId, resolvedById);
+    void logAudit({ companyId, userId: resolvedById, entityType: "NonConformity", entityId: ncId, action: "RESOLVED", after: { resolvedById } });
+    if (nc.visitItem.visit.inspectorId) {
+      void sendPushToUsers([nc.visitItem.visit.inspectorId], { title: "NC resolvida", body: "O gestor aprovou a correção de uma não conformidade.", data: { ncId } });
+    }
+    return result;
   }
 }

@@ -7,4 +7,5 @@ export const cronRoutes: FastifyPluginAsyncZod = async (app) => {
   const controller = new CronController(service);
 
   app.get("/metrics-snapshot", controller.runSnapshot.bind(controller));
+  app.get("/sla-alerts", controller.runSlaAlerts.bind(controller));
 };

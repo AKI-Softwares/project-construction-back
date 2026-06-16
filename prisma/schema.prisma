@@ -85,6 +85,7 @@ model User {
   visitsCreated            Visit[]          @relation("VisitCreatedBy")
   resolvedNonConformities  NonConformity[]  @relation("NCResolvedBy")
   passwordResetToken       PasswordResetToken?
+  pushTokens               PushToken[]
   createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -373,6 +374,36 @@ model Photo {
   @@index([nonConformityId])
   @@index([companyId])
   @@map("Photo")
+}
+
+model PushToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(500)
+  platform  String   @db.VarChar(10)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("PushToken")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  companyId  Int?     @map("company_id")
+  userId     Int      @map("user_id")
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   Int      @map("entity_id")
+  action     String   @db.VarChar(50)
+  before     Json?    @map("before_json")
+  after      Json?    @map("after_json")
+  ip         String?  @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([companyId, entityType, entityId])
+  @@index([userId])
+  @@map("AuditLog")
 }
 
 model MetricsSnapshot {

@@ -71,6 +71,14 @@ export class UserService {
     await this.repo.delete(id);
   }
 
+  async savePushToken(userId: number, token: string, platform: string) {
+    return this.repo.upsertPushToken(userId, token, platform);
+  }
+
+  async removePushToken(userId: number) {
+    return this.repo.deletePushTokensByUser(userId);
+  }
+
   async resetPasswordByAdmin(targetId: number, requesterCompanyId: number | null) {
     const user = await this.repo.findByIdForPasswordReset(targetId, requesterCompanyId);
     if (!user) throw new HttpError(404, "User not found.");

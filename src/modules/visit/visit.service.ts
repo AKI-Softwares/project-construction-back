@@ -1,5 +1,7 @@
 import { HttpError } from "../../shared/errors/http-error.js";
 import { deleteCloudinaryPhoto } from "../../shared/storage/cloudinary.js";
+import { logAudit } from "../../shared/audit/audit-log.js";
+import { sendPushToUsers, sendPushToCompanyInspectors } from "../../shared/push/push-notification.js";
 import type { VisitRepository } from "./visit.repository.js";
 import type {
   FinalizeVisitInput,
@@ -108,13 +110,14 @@ export class VisitService {
     }));
   }
 
-  async startVisit(visitId: number, companyId: number) {
+  async startVisit(visitId: number, companyId: number, userId: number) {
     const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
     if (visit.status !== "NOT_STARTED") {
       throw new HttpError(409, "Visit has already been started or finalized.");
     }
     const updated = await this.repo.updateStatus(visitId, "ONGOING");
+    void logAudit({ companyId, userId, entityType: "Visit", entityId: visitId, action: "STARTED", after: { status: "ONGOING" } });
     const { checklist, ...rest } = updated;
     return { ...rest, apartment: checklist.apartment };
   }
@@ -159,6 +162,7 @@ export class VisitService {
       userId,
     );
     if (!result) throw new Error("Visit not found after finalization.");
+    void logAudit({ companyId, userId, entityType: "Visit", entityId: id, action: "FINALIZED", after: { status: "FINALIZED", observations: input.observations } });
     return this.getVisitGrouped(visit.id, companyId);
   }
 
@@ -287,6 +291,12 @@ export class VisitService {
       ncItemIds,
       input,
     );
+    void logAudit({ companyId, userId: createdById, entityType: "Visit", entityId: visit.id, action: "REINSPECTION_CREATED", after: { parentVisitId, inspectorId: input.inspectorId ?? null } });
+    if (input.inspectorId !== undefined) {
+      void sendPushToUsers([input.inspectorId], { title: "Nova re-inspeção atribuída", body: `Apt ${visit.checklist.apartment.identifier} — ${visit.checklist.apartment.building.name}`, data: { visitId: visit.id } });
+    } else {
+      void sendPushToCompanyInspectors(companyId, { title: "Re-inspeção disponível", body: `Apt ${visit.checklist.apartment.identifier} — ${visit.checklist.apartment.building.name}`, data: { visitId: visit.id } });
+    }
     const { checklist, ...rest } = visit;
     return { ...rest, apartment: checklist.apartment };
   }
@@ -306,6 +316,7 @@ export class VisitService {
       throw new HttpError(409, "This reinspection is already assigned to an inspector.");
     }
     const updated = await this.repo.claimReinspection(visitId, companyId, inspectorId);
+    void logAudit({ companyId, userId: inspectorId, entityType: "Visit", entityId: visitId, action: "CLAIMED", after: { inspectorId } });
     const { checklist, ...rest } = updated;
     return { ...rest, apartment: checklist.apartment };
   }

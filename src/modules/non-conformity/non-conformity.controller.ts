@@ -41,10 +41,12 @@ export class NonConformityController {
     reply: FastifyReply,
   ) {
     const companyId = getTenantId(request);
+    const userId = Number(request.user.sub);
     const nc = await this.service.createNc(
       request.body.visitItemId,
       request.body.description,
       companyId,
+      userId,
     );
     return reply.status(201).send(nc);
   }
@@ -67,7 +69,8 @@ export class NonConformityController {
     reply: FastifyReply,
   ) {
     const companyId = getTenantId(request);
-    await this.service.deleteNc(request.params.id, companyId);
+    const userId = Number(request.user.sub);
+    await this.service.deleteNc(request.params.id, companyId, userId);
     return reply.status(204).send();
   }
 

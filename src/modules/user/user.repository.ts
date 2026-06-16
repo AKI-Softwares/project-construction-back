@@ -84,4 +84,17 @@ export class UserRepository {
       data: { passwordHash, mustChangePassword },
     });
   }
+
+  async upsertPushToken(userId: number, token: string, platform: string) {
+    return prisma.pushToken.upsert({
+      where: { token },
+      create: { userId, token, platform },
+      update: { userId, platform },
+      select: { id: true, token: true, platform: true },
+    });
+  }
+
+  async deletePushTokensByUser(userId: number) {
+    return prisma.pushToken.deleteMany({ where: { userId } });
+  }
 }

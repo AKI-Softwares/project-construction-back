@@ -6,6 +6,7 @@ import {
   createUserSchema,
   updateUserSchema,
   userParamsSchema,
+  savePushTokenSchema,
 } from "./user.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
 
@@ -65,5 +66,20 @@ export const userRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: [app.authenticate, checkPermission("users:update")],
     },
     controller.adminResetPassword.bind(controller),
+  );
+
+  app.post(
+    "/me/push-token",
+    {
+      schema: { body: savePushTokenSchema },
+      preHandler: [app.authenticate],
+    },
+    controller.savePushToken.bind(controller),
+  );
+
+  app.delete(
+    "/me/push-token",
+    { preHandler: [app.authenticate] },
+    controller.removePushToken.bind(controller),
   );
 };

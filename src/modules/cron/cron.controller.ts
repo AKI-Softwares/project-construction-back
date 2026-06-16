@@ -7,14 +7,22 @@ import type { CronService } from "./cron.service.js";
 export class CronController {
   constructor(private readonly service: CronService) {}
 
-  async runSnapshot(request: FastifyRequest, reply: FastifyReply) {
+  private authorize(request: FastifyRequest) {
     const auth = request.headers.authorization ?? "";
     const expected = Buffer.from(`Bearer ${env.CRON_SECRET}`);
     const actual = Buffer.from(auth);
-    const valid = actual.length === expected.length && timingSafeEqual(actual, expected);
-    if (!valid) {
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
       throw new HttpError(401, "Unauthorized.");
     }
+  }
+
+  async runSnapshot(request: FastifyRequest, reply: FastifyReply) {
+    this.authorize(request);
     return reply.send(await this.service.runDailySnapshot());
+  }
+
+  async runSlaAlerts(request: FastifyRequest, reply: FastifyReply) {
+    this.authorize(request);
+    return reply.send(await this.service.runSlaAlerts());
   }
 }

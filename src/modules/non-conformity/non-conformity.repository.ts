@@ -16,6 +16,21 @@ export class NonConformityRepository {
     });
   }
 
+  async findByIdWithInspector(id: number, companyId: number) {
+    return prisma.nonConformity.findUnique({
+      where: { id, companyId },
+      select: {
+        id: true,
+        visitItemId: true,
+        visitItem: {
+          select: {
+            visit: { select: { status: true, inspectorId: true } },
+          },
+        },
+      },
+    });
+  }
+
   async findPhoto(ncId: number, photoId: number) {
     return prisma.photo.findFirst({
       where: { id: photoId, nonConformityId: ncId },

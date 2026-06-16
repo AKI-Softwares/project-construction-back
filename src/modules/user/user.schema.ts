@@ -17,7 +17,13 @@ export const userParamsSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
+export const savePushTokenSchema = z.object({
+  token: z.string().min(10),
+  platform: z.enum(["android", "ios"]),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type UserParams = z.infer<typeof userParamsSchema>;
+export type SavePushTokenInput = z.infer<typeof savePushTokenSchema>;
 

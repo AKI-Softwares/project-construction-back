@@ -42,7 +42,8 @@ export class VisitController {
     reply: FastifyReply,
   ) {
     const companyId = getTenantId(request);
-    const visit = await this.service.startVisit(request.params.id, companyId);
+    const userId = Number(request.user.sub);
+    const visit = await this.service.startVisit(request.params.id, companyId, userId);
     return reply.status(200).send(visit);
   }
 
