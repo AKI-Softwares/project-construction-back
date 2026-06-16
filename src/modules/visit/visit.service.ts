@@ -6,6 +6,7 @@ import type {
   UpdateVisitItemInput,
   AddNonConformityInput,
   VisitMineQuery,
+  CreateReinspectionInput,
 } from "./visit.schema.js";
 
 type GroupedItem = {
@@ -16,6 +17,8 @@ type GroupedItem = {
   nonConformity: {
     id: number;
     description: string;
+    resolvedAt: Date | null;
+    resolvedById: number | null;
     createdAt: Date;
     photos: { id: number; url: string; uploadedAt: Date }[];
   } | null;
@@ -57,6 +60,8 @@ function groupByRoom(items: VisitItemRaw[]): GroupedRoom[] {
         ? {
             id: item.nonConformity.id,
             description: item.nonConformity.description,
+            resolvedAt: item.nonConformity.resolvedAt,
+            resolvedById: item.nonConformity.resolvedById,
             createdAt: item.nonConformity.createdAt,
             photos: item.nonConformity.photos,
           }
@@ -256,6 +261,53 @@ export class VisitService {
     }
 
     return this.repo.createNonConformity(itemId, input.description, companyId);
+  }
+
+  async createReinspection(
+    parentVisitId: number,
+    companyId: number,
+    input: CreateReinspectionInput,
+    createdById: number,
+  ) {
+    const parent = await this.repo.findById(parentVisitId, companyId);
+    if (!parent) throw new HttpError(404, "Visit not found.");
+    if (parent.type !== "INITIAL") {
+      throw new HttpError(400, "Cannot create a reinspection of a reinspection.");
+    }
+    if (parent.status !== "FINALIZED") {
+      throw new HttpError(400, "Parent visit must be finalized before creating a reinspection.");
+    }
+    const ncItemIds = await this.repo.findNcItemIdsByVisitId(parentVisitId);
+    if (ncItemIds.length === 0) {
+      throw new HttpError(400, "Parent visit has no open non-conformities to reinspect.");
+    }
+    const visit = await this.repo.createReinspection(
+      { id: parent.id, checklistId: parent.checklistId, companyId },
+      createdById,
+      ncItemIds,
+      input,
+    );
+    const { checklist, ...rest } = visit;
+    return { ...rest, apartment: checklist.apartment };
+  }
+
+  async getAvailableReinspections(companyId: number) {
+    const visits = await this.repo.findAvailableReinspections(companyId);
+    return visits.map(({ checklist, ...rest }) => ({ ...rest, apartment: checklist.apartment }));
+  }
+
+  async claimReinspection(visitId: number, companyId: number, inspectorId: number) {
+    const visit = await this.repo.findById(visitId, companyId);
+    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (visit.type !== "REINSPECTION") {
+      throw new HttpError(400, "Only reinspection visits can be claimed.");
+    }
+    if (visit.inspector !== null) {
+      throw new HttpError(409, "This reinspection is already assigned to an inspector.");
+    }
+    const updated = await this.repo.claimReinspection(visitId, companyId, inspectorId);
+    const { checklist, ...rest } = updated;
+    return { ...rest, apartment: checklist.apartment };
   }
 
   async deleteNonConformity(visitId: number, itemId: number, companyId: number) {

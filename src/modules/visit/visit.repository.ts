@@ -1,9 +1,12 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
-import type { FinalizeVisitInput } from "./visit.schema.js";
+import type { FinalizeVisitInput, CreateReinspectionInput } from "./visit.schema.js";
 
 const VISIT_MINE_SELECT = {
   id: true,
+  type: true,
   status: true,
+  inspectorId: true,
+  parentVisitId: true,
   createdAt: true,
   checklist: {
     select: {
@@ -21,6 +24,8 @@ const VISIT_MINE_SELECT = {
 
 const VISIT_DETAIL_SELECT = {
   id: true,
+  type: true,
+  parentVisitId: true,
   checklistId: true,
   observations: true,
   status: true,
@@ -62,6 +67,8 @@ const VISIT_DETAIL_SELECT = {
         select: {
           id: true,
           description: true,
+          resolvedAt: true,
+          resolvedById: true,
           createdAt: true,
           photos: { select: { id: true, url: true, uploadedAt: true } },
         },
@@ -199,6 +206,63 @@ export class VisitRepository {
     return prisma.photo.findMany({
       where: { nonConformityId: ncId },
       select: { publicId: true },
+    });
+  }
+
+  async findNcItemIdsByVisitId(visitId: number): Promise<number[]> {
+    const items = await prisma.visitItem.findMany({
+      where: { visitId, nonConformity: { isNot: null } },
+      select: { checklistItemId: true },
+    });
+    return items.map((i) => i.checklistItemId);
+  }
+
+  async createReinspection(
+    parentVisit: { id: number; checklistId: number; companyId: number },
+    createdById: number,
+    ncChecklistItemIds: number[],
+    input: CreateReinspectionInput,
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const visit = await tx.visit.create({
+        data: {
+          checklistId: parentVisit.checklistId,
+          companyId: parentVisit.companyId,
+          createdById,
+          type: "REINSPECTION",
+          parentVisitId: parentVisit.id,
+          ...(input.inspectorId !== undefined && { inspectorId: input.inspectorId }),
+        },
+        select: VISIT_MINE_SELECT,
+      });
+      await tx.visitItem.createMany({
+        data: ncChecklistItemIds.map((checklistItemId) => ({
+          visitId: visit.id,
+          checklistItemId,
+        })),
+      });
+      return visit;
+    });
+  }
+
+  async findAvailableReinspections(companyId: number) {
+    return prisma.visit.findMany({
+      where: {
+        companyId,
+        type: "REINSPECTION",
+        inspectorId: null,
+        status: { in: ["NOT_STARTED", "ONGOING"] },
+      },
+      select: VISIT_MINE_SELECT,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async claimReinspection(visitId: number, companyId: number, inspectorId: number) {
+    return prisma.visit.update({
+      where: { id: visitId, companyId },
+      data: { inspectorId },
+      select: VISIT_MINE_SELECT,
     });
   }
 

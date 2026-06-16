@@ -25,6 +25,11 @@ enum VisitStatus {
   FINALIZED
 }
 
+enum VisitType {
+  INITIAL
+  REINSPECTION
+}
+
 // Inspector's in-field evaluation for a VisitItem; null = not yet evaluated
 enum EvaluationStatus {
   OK
@@ -75,10 +80,11 @@ model User {
   mustChangePassword  Boolean     @default(false) @map("must_change_password")
   role                Role?       @relation(fields: [roleId], references: [id])
   company             Company?    @relation(fields: [companyId], references: [id])
-  checklistsFinalized Checklist[] @relation("ChecklistFinalizedBy")
-  visitsAsInspector   Visit[]     @relation("VisitInspector")
-  visitsCreated       Visit[]     @relation("VisitCreatedBy")
-  passwordResetToken  PasswordResetToken?
+  checklistsFinalized      Checklist[]      @relation("ChecklistFinalizedBy")
+  visitsAsInspector        Visit[]          @relation("VisitInspector")
+  visitsCreated            Visit[]          @relation("VisitCreatedBy")
+  resolvedNonConformities  NonConformity[]  @relation("NCResolvedBy")
+  passwordResetToken       PasswordResetToken?
   createdAt           DateTime    @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -292,25 +298,30 @@ model ChecklistItem {
 }
 
 model Visit {
-  id           Int         @id @default(autoincrement())
-  checklistId  Int         @map("checklist_id")
-  inspectorId  Int         @map("inspector_id")
-  createdById  Int         @map("created_by_id")
-  observations String?     @db.Text
-  status       VisitStatus @default(NOT_STARTED)
-  finalizedAt  DateTime?   @map("finalized_at") @db.Timestamptz
-  companyId    Int         @map("company_id")
-  company      Company     @relation(fields: [companyId], references: [id])
-  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  checklist    Checklist   @relation(fields: [checklistId], references: [id], onDelete: Restrict)
-  inspector    User        @relation("VisitInspector", fields: [inspectorId], references: [id])
-  createdBy    User        @relation("VisitCreatedBy", fields: [createdById], references: [id])
-  items        VisitItem[]
+  id            Int         @id @default(autoincrement())
+  checklistId   Int         @map("checklist_id")
+  inspectorId   Int?        @map("inspector_id")
+  createdById   Int         @map("created_by_id")
+  observations  String?     @db.Text
+  status        VisitStatus @default(NOT_STARTED)
+  type          VisitType   @default(INITIAL)
+  parentVisitId Int?        @map("parent_visit_id")
+  finalizedAt   DateTime?   @map("finalized_at") @db.Timestamptz
+  companyId     Int         @map("company_id")
+  company       Company     @relation(fields: [companyId], references: [id])
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  checklist     Checklist   @relation(fields: [checklistId], references: [id], onDelete: Restrict)
+  inspector     User?       @relation("VisitInspector", fields: [inspectorId], references: [id])
+  createdBy     User        @relation("VisitCreatedBy", fields: [createdById], references: [id])
+  parentVisit   Visit?      @relation("ReinspectionOf", fields: [parentVisitId], references: [id])
+  reinspections Visit[]     @relation("ReinspectionOf")
+  items         VisitItem[]
 
   @@index([checklistId])
   @@index([inspectorId])
   @@index([companyId])
+  @@index([parentVisitId])
   @@map("Visit")
 }
 
@@ -331,15 +342,18 @@ model VisitItem {
 }
 
 model NonConformity {
-  id          Int       @id @default(autoincrement())
-  visitItemId Int       @unique @map("visit_item_id")
-  description String    @db.Text
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  companyId   Int       @map("company_id")
-  company     Company   @relation(fields: [companyId], references: [id])
-  visitItem   VisitItem @relation(fields: [visitItemId], references: [id], onDelete: Cascade)
-  photos      Photo[]
+  id           Int       @id @default(autoincrement())
+  visitItemId  Int       @unique @map("visit_item_id")
+  description  String    @db.Text
+  resolvedAt   DateTime? @map("resolved_at") @db.Timestamptz
+  resolvedById Int?      @map("resolved_by_id")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  companyId    Int       @map("company_id")
+  company      Company   @relation(fields: [companyId], references: [id])
+  visitItem    VisitItem @relation(fields: [visitItemId], references: [id], onDelete: Cascade)
+  resolvedBy   User?     @relation("NCResolvedBy", fields: [resolvedById], references: [id])
+  photos       Photo[]
 
   @@index([companyId])
   @@map("NonConformity")

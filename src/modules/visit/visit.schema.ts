@@ -33,9 +33,14 @@ export const addNonConformitySchema = z.object({
   description: z.string().min(1),
 });
 
+export const createReinspectionSchema = z.object({
+  inspectorId: z.number().int().positive().optional(),
+});
+
 export type VisitParams = z.infer<typeof visitParamsSchema>;
 export type VisitItemParams = z.infer<typeof visitItemParamsSchema>;
 export type VisitMineQuery = z.infer<typeof visitMineQuerySchema>;
 export type FinalizeVisitInput = z.infer<typeof finalizeVisitSchema>;
 export type UpdateVisitItemInput = z.infer<typeof updateVisitItemSchema>;
 export type AddNonConformityInput = z.infer<typeof addNonConformitySchema>;
+export type CreateReinspectionInput = z.infer<typeof createReinspectionSchema>;

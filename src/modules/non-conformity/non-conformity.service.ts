@@ -111,4 +111,10 @@ export class NonConformityService {
     }
     return this.repo.deleteById(ncId);
   }
+
+  async resolveNc(ncId: number, companyId: number, resolvedById: number) {
+    const nc = await this.repo.findById(ncId, companyId);
+    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    return this.repo.resolve(ncId, resolvedById);
+  }
 }

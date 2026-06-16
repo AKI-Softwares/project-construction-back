@@ -8,6 +8,7 @@ import type {
   FinalizeVisitInput,
   UpdateVisitItemInput,
   AddNonConformityInput,
+  CreateReinspectionInput,
 } from "./visit.schema.js";
 
 export class VisitController {
@@ -105,5 +106,39 @@ export class VisitController {
       companyId,
     );
     return reply.status(204).send();
+  }
+
+  async createReinspection(
+    request: FastifyRequest<{ Params: VisitParams; Body: CreateReinspectionInput }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const createdById = Number(request.user.sub);
+    const visit = await this.service.createReinspection(
+      request.params.id,
+      companyId,
+      request.body,
+      createdById,
+    );
+    return reply.status(201).send(visit);
+  }
+
+  async listAvailableReinspections(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const visits = await this.service.getAvailableReinspections(companyId);
+    return reply.status(200).send(visits);
+  }
+
+  async claimReinspection(
+    request: FastifyRequest<{ Params: VisitParams }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const inspectorId = Number(request.user.sub);
+    const visit = await this.service.claimReinspection(request.params.id, companyId, inspectorId);
+    return reply.status(200).send(visit);
   }
 }

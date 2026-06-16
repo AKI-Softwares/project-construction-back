@@ -70,4 +70,14 @@ export class NonConformityController {
     await this.service.deleteNc(request.params.id, companyId);
     return reply.status(204).send();
   }
+
+  async resolve(
+    request: FastifyRequest<{ Params: NcParams }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const resolvedById = Number(request.user.sub);
+    const nc = await this.service.resolveNc(request.params.id, companyId, resolvedById);
+    return reply.status(200).send(nc);
+  }
 }

@@ -9,8 +9,10 @@ import {
   finalizeVisitSchema,
   updateVisitItemSchema,
   addNonConformitySchema,
+  createReinspectionSchema,
 } from "./visit.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
+import { requireCompanyAdmin } from "../../shared/rbac/require-company-admin.js";
 
 export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
   const repo = new VisitRepository();
@@ -86,5 +88,31 @@ export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
       ],
     },
     controller.deleteNonConformity.bind(controller),
+  );
+
+  app.get(
+    "/available-reinspections",
+    {
+      preHandler: [app.authenticate, checkPermission("visits:read")],
+    },
+    controller.listAvailableReinspections.bind(controller),
+  );
+
+  app.post(
+    "/:id/reinspection",
+    {
+      schema: { params: visitParamsSchema, body: createReinspectionSchema },
+      preHandler: [app.authenticate, requireCompanyAdmin],
+    },
+    controller.createReinspection.bind(controller),
+  );
+
+  app.patch(
+    "/:id/claim",
+    {
+      schema: { params: visitParamsSchema },
+      preHandler: [app.authenticate, checkPermission("visits:update")],
+    },
+    controller.claimReinspection.bind(controller),
   );
 };
