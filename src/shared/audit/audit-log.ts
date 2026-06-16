@@ -20,8 +20,8 @@ export async function logAudit(params: AuditParams): Promise<void> {
         entityType: params.entityType,
         entityId: params.entityId,
         action: params.action,
-        before: params.before ?? undefined,
-        after: params.after ?? undefined,
+        ...(params.before !== undefined && { before: params.before }),
+        ...(params.after !== undefined && { after: params.after }),
         ip: params.ip,
       },
     });
