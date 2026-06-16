@@ -13,6 +13,7 @@ interface AuditParams {
 
 export async function logAudit(params: AuditParams): Promise<void> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await prisma.auditLog.create({
       data: {
         companyId: params.companyId,
@@ -20,10 +21,10 @@ export async function logAudit(params: AuditParams): Promise<void> {
         entityType: params.entityType,
         entityId: params.entityId,
         action: params.action,
-        ...(params.before !== undefined && { before: params.before }),
-        ...(params.after !== undefined && { after: params.after }),
+        before: params.before ?? null,
+        after: params.after ?? null,
         ip: params.ip,
-      },
+      } as any,
     });
   } catch (err) {
     // Audit failures must never break the main flow
