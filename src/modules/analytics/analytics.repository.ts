@@ -140,4 +140,171 @@ export class AnalyticsRepository {
         : null,
     }));
   }
+
+  async getNcResolution(companyId: number, from: Date, to: Date) {
+    const [openNcs, resolvedInPeriod, createdInPeriod, avgRow] = await Promise.all([
+      prisma.nonConformity.count({ where: { companyId, resolvedAt: null } }),
+      prisma.nonConformity.count({ where: { companyId, resolvedAt: { gte: from, lte: to } } }),
+      prisma.nonConformity.count({ where: { companyId, createdAt: { gte: from, lte: to } } }),
+      prisma.$queryRaw<[{ avgSeconds: number | null }]>`
+        SELECT AVG(EXTRACT(EPOCH FROM (resolved_at - created_at))) AS "avgSeconds"
+        FROM "NonConformity"
+        WHERE company_id = ${companyId}
+          AND resolved_at >= ${from}
+          AND resolved_at <= ${to}
+      `,
+    ]);
+    return {
+      openNcs,
+      resolvedInPeriod,
+      createdInPeriod,
+      avgResolutionSeconds: avgRow[0].avgSeconds ? Math.round(avgRow[0].avgSeconds) : null,
+    };
+  }
+
+  async getSla(companyId: number, from: Date, to: Date) {
+    type SlaRow = { withSchedule: bigint; onTime: bigint; overdue: bigint };
+    const [slaRow, currentlyOverdue] = await Promise.all([
+      prisma.$queryRaw<[SlaRow]>`
+        SELECT
+          COUNT(*) FILTER (WHERE scheduled_for IS NOT NULL)                                   AS "withSchedule",
+          COUNT(*) FILTER (WHERE scheduled_for IS NOT NULL AND finalized_at <= scheduled_for) AS "onTime",
+          COUNT(*) FILTER (WHERE scheduled_for IS NOT NULL AND finalized_at  > scheduled_for) AS "overdue"
+        FROM "Visit"
+        WHERE company_id    = ${companyId}
+          AND status        = 'FINALIZED'
+          AND finalized_at >= ${from}
+          AND finalized_at <= ${to}
+      `,
+      prisma.visit.count({
+        where: { companyId, status: { in: ["NOT_STARTED", "ONGOING"] }, scheduledFor: { lt: new Date() } },
+      }),
+    ]);
+    const withSchedule = Number(slaRow[0].withSchedule);
+    const onTime = Number(slaRow[0].onTime);
+    const overdue = Number(slaRow[0].overdue);
+    return {
+      withSchedule,
+      onTime,
+      overdue,
+      slaComplianceRate: withSchedule === 0 ? null : onTime / withSchedule,
+      currentlyOverdue,
+    };
+  }
+
+  async getReinspectionRate(companyId: number, from: Date, to: Date) {
+    const [initialVisits, reinspections] = await Promise.all([
+      prisma.visit.count({ where: { companyId, type: "INITIAL", status: "FINALIZED", finalizedAt: { gte: from, lte: to } } }),
+      prisma.visit.count({ where: { companyId, type: "REINSPECTION", status: "FINALIZED", finalizedAt: { gte: from, lte: to } } }),
+    ]);
+    const total = initialVisits + reinspections;
+    return {
+      initialVisits,
+      reinspections,
+      reinspectionRate: total === 0 ? null : reinspections / total,
+    };
+  }
+
+  async getTimelineRaw(companyId: number, from: Date, to: Date) {
+    const [visits, ncs] = await Promise.all([
+      prisma.visit.findMany({
+        where: { companyId, status: "FINALIZED", finalizedAt: { gte: from, lte: to } },
+        select: { finalizedAt: true },
+      }),
+      prisma.nonConformity.findMany({
+        where: { companyId, createdAt: { gte: from, lte: to } },
+        select: { createdAt: true },
+      }),
+    ]);
+    return {
+      visitDates: visits.map((v) => v.finalizedAt!),
+      ncDates: ncs.map((n) => n.createdAt),
+    };
+  }
+
+  async getInspectorRanking(companyId: number, from: Date, to: Date) {
+    type RankRow = {
+      inspectorId: bigint;
+      inspectorName: string;
+      visitCount: bigint;
+      avgDurationSeconds: number | null;
+      nokCount: bigint;
+      evaluatedCount: bigint;
+    };
+    const rows = await prisma.$queryRaw<RankRow[]>`
+      SELECT
+        u.id                                                                  AS "inspectorId",
+        u.name                                                                AS "inspectorName",
+        COUNT(DISTINCT v.id)                                                  AS "visitCount",
+        AVG(EXTRACT(EPOCH FROM (v.finalized_at - v.created_at)))             AS "avgDurationSeconds",
+        COUNT(vi.id) FILTER (WHERE vi.status = 'NOK')                        AS "nokCount",
+        COUNT(vi.id) FILTER (WHERE vi.status IN ('OK', 'NOK'))               AS "evaluatedCount"
+      FROM "Visit" v
+      JOIN "User" u ON u.id = v.inspector_id
+      LEFT JOIN "VisitItem" vi ON vi.visit_id = v.id
+      WHERE v.company_id    = ${companyId}
+        AND v.finalized_at >= ${from}
+        AND v.finalized_at <= ${to}
+        AND v.status        = 'FINALIZED'
+      GROUP BY u.id, u.name
+      ORDER BY "visitCount" DESC
+    `;
+    return rows.map((r, i) => {
+      const nokCount = Number(r.nokCount);
+      const evaluatedCount = Number(r.evaluatedCount);
+      return {
+        rank: i + 1,
+        inspectorId: Number(r.inspectorId),
+        inspectorName: r.inspectorName,
+        visitCount: Number(r.visitCount),
+        avgDurationSeconds: r.avgDurationSeconds ? Math.round(r.avgDurationSeconds) : null,
+        nokRate: evaluatedCount === 0 ? 0 : nokCount / evaluatedCount,
+      };
+    });
+  }
+
+  async getBuildingRanking(companyId: number, from: Date, to: Date) {
+    type BuildingRow = {
+      buildingId: bigint;
+      buildingName: string;
+      totalApartments: bigint;
+      finalizedApartments: bigint;
+      nokCount: bigint;
+      evaluatedCount: bigint;
+    };
+    const rows = await prisma.$queryRaw<BuildingRow[]>`
+      SELECT
+        b.id                                                                              AS "buildingId",
+        b.name                                                                            AS "buildingName",
+        COUNT(DISTINCT a.id)                                                              AS "totalApartments",
+        COUNT(DISTINCT a.id) FILTER (WHERE i.status = 'FINALIZED')                       AS "finalizedApartments",
+        COUNT(vi.id) FILTER (WHERE vi.status = 'NOK'
+          AND v.finalized_at >= ${from} AND v.finalized_at <= ${to})                     AS "nokCount",
+        COUNT(vi.id) FILTER (WHERE vi.status IN ('OK', 'NOK')
+          AND v.finalized_at >= ${from} AND v.finalized_at <= ${to})                     AS "evaluatedCount"
+      FROM "Building" b
+      JOIN "Apartment" a ON a.building_id = b.id
+      LEFT JOIN "Inspection" i ON i.apartment_id = a.id
+      LEFT JOIN "Visit" v ON v.checklist_id = i.id AND v.status = 'FINALIZED'
+      LEFT JOIN "VisitItem" vi ON vi.visit_id = v.id
+      WHERE b.company_id = ${companyId}
+      GROUP BY b.id, b.name
+      ORDER BY "finalizedApartments" DESC, "nokCount" ASC
+    `;
+    return rows.map((r, i) => {
+      const total = Number(r.totalApartments);
+      const finalized = Number(r.finalizedApartments);
+      const nokCount = Number(r.nokCount);
+      const evaluatedCount = Number(r.evaluatedCount);
+      return {
+        rank: i + 1,
+        buildingId: Number(r.buildingId),
+        buildingName: r.buildingName,
+        totalApartments: total,
+        finalizedApartments: finalized,
+        progressPercent: total === 0 ? 0 : Math.round((finalized / total) * 100),
+        nokRate: evaluatedCount === 0 ? 0 : nokCount / evaluatedCount,
+      };
+    });
+  }
 }

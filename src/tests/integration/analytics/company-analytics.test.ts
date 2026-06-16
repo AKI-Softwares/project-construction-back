@@ -154,3 +154,134 @@ describe("GET /analytics/inspectors", () => {
     expect(Array.isArray(body.data)).toBe(true);
   });
 });
+
+describe("GET /analytics/nc-resolution", () => {
+  it("returns 200 with nc resolution data for company admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/nc-resolution",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ data: Record<string, unknown> }>();
+    expect(body.data).toHaveProperty("openNcs");
+    expect(body.data).toHaveProperty("resolvedInPeriod");
+    expect(body.data).toHaveProperty("createdInPeriod");
+    expect(body.data).toHaveProperty("avgResolutionSeconds");
+  });
+
+  it("returns 403 for non-admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/nc-resolution",
+      headers: { authorization: `Bearer ${regularToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("GET /analytics/sla", () => {
+  it("returns 200 with sla data for company admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/sla",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ data: Record<string, unknown> }>();
+    expect(body.data).toHaveProperty("withSchedule");
+    expect(body.data).toHaveProperty("onTime");
+    expect(body.data).toHaveProperty("overdue");
+    expect(body.data).toHaveProperty("currentlyOverdue");
+  });
+
+  it("returns 403 for non-admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/sla",
+      headers: { authorization: `Bearer ${regularToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("GET /analytics/reinspection-rate", () => {
+  it("returns 200 with reinspection data for company admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/reinspection-rate",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ data: Record<string, unknown> }>();
+    expect(body.data).toHaveProperty("initialVisits");
+    expect(body.data).toHaveProperty("reinspections");
+    expect(body.data).toHaveProperty("reinspectionRate");
+  });
+
+  it("returns 403 for non-admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/reinspection-rate",
+      headers: { authorization: `Bearer ${regularToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("GET /analytics/timeline", () => {
+  it("returns 200 with timeline data for company admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/timeline",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ data: { granularity: string; points: unknown[] } }>();
+    expect(body.data).toHaveProperty("granularity");
+    expect(body.data).toHaveProperty("points");
+    expect(["day", "week", "month"]).toContain(body.data.granularity);
+    expect(Array.isArray(body.data.points)).toBe(true);
+  });
+
+  it("returns 403 for non-admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/timeline",
+      headers: { authorization: `Bearer ${regularToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("GET /analytics/ranking/inspectors", () => {
+  it("returns 200 with ranked inspector array for company admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/ranking/inspectors",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ data: unknown[] }>();
+    expect(Array.isArray(body.data)).toBe(true);
+  });
+
+  it("returns 403 for non-admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/ranking/inspectors",
+      headers: { authorization: `Bearer ${regularToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("GET /analytics/ranking/buildings", () => {
+  it("returns 200 with ranked building array for company admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/ranking/buildings",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json<{ data: unknown[] }>();
+    expect(Array.isArray(body.data)).toBe(true);
+  });
+
+  it("returns 403 for non-admin", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/analytics/ranking/buildings",
+      headers: { authorization: `Bearer ${regularToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});

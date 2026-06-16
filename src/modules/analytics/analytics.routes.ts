@@ -15,8 +15,14 @@ export const analyticsRoutes: FastifyPluginAsyncZod = async (app) => {
   const preHandler = [app.authenticate, requireCompanyAdmin];
   const schema     = { querystring: analyticsQuerySchema };
 
-  app.get("/overview",   { preHandler, schema }, controller.overview.bind(controller));
-  app.get("/progress",   { preHandler, schema }, controller.progress.bind(controller));
-  app.get("/quality",    { preHandler, schema }, controller.quality.bind(controller));
-  app.get("/inspectors", { preHandler, schema }, controller.inspectors.bind(controller));
+  app.get("/overview",            { preHandler, schema }, controller.overview.bind(controller));
+  app.get("/progress",            { preHandler, schema }, controller.progress.bind(controller));
+  app.get("/quality",             { preHandler, schema }, controller.quality.bind(controller));
+  app.get("/inspectors",          { preHandler, schema }, controller.inspectors.bind(controller));
+  app.get("/nc-resolution",       { preHandler, schema }, controller.ncResolution.bind(controller));
+  app.get("/sla",                 { preHandler, schema }, controller.sla.bind(controller));
+  app.get("/reinspection-rate",   { preHandler, schema }, controller.reinspectionRate.bind(controller));
+  app.get("/timeline",            { preHandler, schema }, controller.timeline.bind(controller));
+  app.get("/ranking/inspectors",  { preHandler, schema }, controller.inspectorRanking.bind(controller));
+  app.get("/ranking/buildings",   { preHandler, schema }, controller.buildingRanking.bind(controller));
 };
