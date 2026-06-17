@@ -31,6 +31,7 @@ const VISIT_DETAIL_SELECT = {
   observations: true,
   status: true,
   scheduledFor: true,
+  signatureUrl: true,
   finalizedAt: true,
   createdAt: true,
   updatedAt: true,

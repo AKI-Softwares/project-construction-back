@@ -27,7 +27,17 @@ function formatDate(d: Date): string {
   return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
-export function generateVisitReport(data: VisitReportData): Promise<Buffer> {
+export async function generateVisitReport(data: VisitReportData): Promise<Buffer> {
+  let signatureImageBuffer: Buffer | null = null;
+  if (data.signatureUrl) {
+    try {
+      const res = await fetch(data.signatureUrl);
+      signatureImageBuffer = Buffer.from(await res.arrayBuffer());
+    } catch (err) {
+      console.error("[pdf] failed to fetch signature image", err);
+    }
+  }
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: "A4" });
     const chunks: Buffer[] = [];
@@ -140,23 +150,29 @@ export function generateVisitReport(data: VisitReportData): Promise<Buffer> {
 
     // ── Signature ────────────────────────────────────────────────────────────
     doc.moveDown(1.5);
-    const sigY = doc.y;
-    doc
-      .moveTo(50 + W * 0.25, sigY)
-      .lineTo(50 + W * 0.75, sigY)
-      .strokeColor("black")
-      .stroke();
-    doc.moveDown(0.3);
-    doc
-      .fontSize(9)
-      .fillColor(gray)
-      .text(
-        data.signatureUrl
-          ? `Assinatura digital capturada — ${data.inspectorName ?? ""}`
-          : "Assinatura do inspetor",
-        { align: "center" },
-      )
-      .fillColor("black");
+    if (signatureImageBuffer) {
+      const imgWidth = W * 0.4;
+      doc.image(signatureImageBuffer, 50 + (W - imgWidth) / 2, doc.y, { width: imgWidth });
+      doc.moveDown(0.3);
+      doc
+        .fontSize(9)
+        .fillColor(gray)
+        .text(`Assinado digitalmente por ${data.inspectorName ?? ""}`, { align: "center" })
+        .fillColor("black");
+    } else {
+      const sigY = doc.y;
+      doc
+        .moveTo(50 + W * 0.25, sigY)
+        .lineTo(50 + W * 0.75, sigY)
+        .strokeColor("black")
+        .stroke();
+      doc.moveDown(0.3);
+      doc
+        .fontSize(9)
+        .fillColor(gray)
+        .text("Assinatura do inspetor", { align: "center" })
+        .fillColor("black");
+    }
 
     // ── Footer ───────────────────────────────────────────────────────────────
     doc
