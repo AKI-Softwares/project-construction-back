@@ -20,6 +20,17 @@ export const visitMineQuerySchema = z.object({
     ),
 });
 
+export const visitListQuerySchema = z.object({
+  buildingId: z.coerce.number().int().positive().optional(),
+  inspectorId: z.coerce.number().int().positive().optional(),
+  status: z.enum(["NOT_STARTED", "ONGOING", "FINALIZED"]).optional(),
+  type: z.enum(["INITIAL", "REINSPECTION"]).optional(),
+  from: z.string().datetime({ offset: true }).optional(),
+  to: z.string().datetime({ offset: true }).optional(),
+});
+
+export type VisitListQuery = z.infer<typeof visitListQuerySchema>;
+
 export const finalizeVisitSchema = z.object({
   status: z.literal("FINALIZED"),
   observations: z.string().min(1).optional(),

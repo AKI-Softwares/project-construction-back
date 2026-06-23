@@ -5,6 +5,7 @@ import type {
   VisitParams,
   VisitItemParams,
   VisitMineQuery,
+  VisitListQuery,
   FinalizeVisitInput,
   UpdateVisitItemInput,
   AddNonConformityInput,
@@ -14,6 +15,15 @@ import type {
 
 export class VisitController {
   constructor(private service: VisitService) {}
+
+  async list(
+    request: FastifyRequest<{ Querystring: VisitListQuery }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const visits = await this.service.listAll(companyId, request.query);
+    return reply.status(200).send(visits);
+  }
 
   async getOne(
     request: FastifyRequest<{ Params: VisitParams }>,

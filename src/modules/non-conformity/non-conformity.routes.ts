@@ -2,7 +2,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { NonConformityRepository } from "./non-conformity.repository.js";
 import { NonConformityService } from "./non-conformity.service.js";
 import { NonConformityController } from "./non-conformity.controller.js";
-import { createNcSchema, ncParamsSchema, patchNcSchema, photoParamsSchema } from "./non-conformity.schema.js";
+import { createNcSchema, listNcQuerySchema, ncParamsSchema, patchNcSchema, photoParamsSchema } from "./non-conformity.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
 import { requireCompanyAdmin } from "../../shared/rbac/require-company-admin.js";
 
@@ -10,6 +10,15 @@ export const nonConformityRoutes: FastifyPluginAsyncZod = async (app) => {
   const repo = new NonConformityRepository();
   const service = new NonConformityService(repo);
   const controller = new NonConformityController(service);
+
+  app.get(
+    "/",
+    {
+      schema: { querystring: listNcQuerySchema },
+      preHandler: [app.authenticate, checkPermission("non-conformities:read")],
+    },
+    controller.list.bind(controller),
+  );
 
   app.post(
     "/",

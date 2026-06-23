@@ -2,10 +2,19 @@ import { HttpError } from "../../shared/errors/http-error.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { NonConformityService } from "./non-conformity.service.js";
-import type { CreateNcInput, NcParams, PatchNcInput, PhotoParams } from "./non-conformity.schema.js";
+import type { CreateNcInput, ListNcQuery, NcParams, PatchNcInput, PhotoParams } from "./non-conformity.schema.js";
 
 export class NonConformityController {
   constructor(private service: NonConformityService) {}
+
+  async list(
+    request: FastifyRequest<{ Querystring: ListNcQuery }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const ncs = await this.service.listNcs(companyId, request.query);
+    return reply.status(200).send(ncs);
+  }
 
   async addPhoto(
     request: FastifyRequest<{ Params: NcParams }>,

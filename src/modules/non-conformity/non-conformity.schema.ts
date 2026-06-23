@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const listNcQuerySchema = z.object({
+  buildingId: z.coerce.number().int().positive().optional(),
+  inspectorId: z.coerce.number().int().positive().optional(),
+  status: z.enum(["open", "resolved"]).optional(),
+  from: z.string().datetime({ offset: true }).optional(),
+  to: z.string().datetime({ offset: true }).optional(),
+});
+
+export type ListNcQuery = z.infer<typeof listNcQuerySchema>;
+
 export const ncParamsSchema = z.object({
   id: z.coerce.number().int().positive(),
 });

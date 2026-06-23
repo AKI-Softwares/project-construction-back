@@ -1,5 +1,29 @@
 import { prisma } from "../../shared/infra/database/prisma.js";
-import type { FinalizeVisitInput, CreateReinspectionInput } from "./visit.schema.js";
+import type { FinalizeVisitInput, CreateReinspectionInput, VisitListQuery } from "./visit.schema.js";
+
+const VISIT_LIST_SELECT = {
+  id: true,
+  type: true,
+  status: true,
+  inspectorId: true,
+  parentVisitId: true,
+  scheduledFor: true,
+  finalizedAt: true,
+  createdAt: true,
+  inspector: { select: { id: true, name: true } },
+  checklist: {
+    select: {
+      apartment: {
+        select: {
+          identifier: true,
+          floor: true,
+          block: true,
+          building: { select: { id: true, name: true } },
+        },
+      },
+    },
+  },
+} as const;
 
 const VISIT_MINE_SELECT = {
   id: true,
@@ -82,6 +106,31 @@ const VISIT_DETAIL_SELECT = {
 } as const;
 
 export class VisitRepository {
+  async findAllByCompany(companyId: number, filters: VisitListQuery) {
+    const { buildingId, inspectorId, status, type, from, to } = filters;
+    return prisma.visit.findMany({
+      where: {
+        companyId,
+        ...(status !== undefined && { status }),
+        ...(type !== undefined && { type }),
+        ...(inspectorId !== undefined && { inspectorId }),
+        ...(buildingId !== undefined && {
+          checklist: { apartment: { buildingId } },
+        }),
+        ...(from !== undefined || to !== undefined
+          ? {
+              createdAt: {
+                ...(from !== undefined && { gte: new Date(from) }),
+                ...(to !== undefined && { lte: new Date(to) }),
+              },
+            }
+          : {}),
+      },
+      select: VISIT_LIST_SELECT,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
   async findById(id: number, companyId: number) {
     return prisma.visit.findUnique({
       where: { id, companyId },

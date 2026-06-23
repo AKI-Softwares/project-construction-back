@@ -4,6 +4,7 @@ import { uploadPhoto, deleteCloudinaryPhoto } from "../../shared/storage/cloudin
 import { logAudit } from "../../shared/audit/audit-log.js";
 import { sendPushToUsers } from "../../shared/push/push-notification.js";
 import type { NonConformityRepository } from "./non-conformity.repository.js";
+import type { ListNcQuery } from "./non-conformity.schema.js";
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
@@ -15,6 +16,10 @@ const ALLOWED_MIME_TYPES = new Set([
 
 export class NonConformityService {
   constructor(private repo: NonConformityRepository) {}
+
+  async listNcs(companyId: number, filters: ListNcQuery) {
+    return this.repo.findAll(companyId, filters);
+  }
 
   async addPhoto(ncId: number, buffer: Buffer, companyId: number) {
     const nc = await this.repo.findById(ncId, companyId);

@@ -12,6 +12,7 @@ import { registerMultipart } from "../shared/plugins/multipart.js";
 import { registerRateLimit } from "../shared/plugins/rate-limit.js";
 import { HttpError } from "../shared/errors/http-error.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
+import { companyRoutes } from "../modules/company/company.routes.js";
 import { userRoutes } from "../modules/user/user.routes.js";
 import { roleRoutes } from "../modules/role/role.routes.js";
 import { permissionRoutes } from "../modules/permission/permission.routes.js";
@@ -53,6 +54,7 @@ export async function buildApp() {
 
   // Módulos
   await app.register(authRoutes, { prefix: "/auth" });
+  await app.register(companyRoutes, { prefix: "/companies" });
   await app.register(userRoutes, { prefix: "/users" });
   await app.register(roleRoutes, { prefix: "/roles" });
   await app.register(permissionRoutes, { prefix: "/permissions" });

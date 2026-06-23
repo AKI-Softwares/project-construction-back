@@ -9,6 +9,7 @@ import type {
   UpdateVisitItemInput,
   AddNonConformityInput,
   VisitMineQuery,
+  VisitListQuery,
   CreateReinspectionInput,
 } from "./visit.schema.js";
 
@@ -101,6 +102,14 @@ export class VisitService {
       apartment: checklist.apartment,
       rooms: groupByRoom(items),
     };
+  }
+
+  async listAll(companyId: number, filters: VisitListQuery) {
+    const visits = await this.repo.findAllByCompany(companyId, filters);
+    return visits.map(({ checklist, ...rest }) => ({
+      ...rest,
+      apartment: checklist.apartment,
+    }));
   }
 
   async getMyVisits(inspectorId: number, companyId: number, status?: VisitMineQuery["status"]) {

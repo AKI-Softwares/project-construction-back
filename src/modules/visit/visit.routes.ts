@@ -6,6 +6,7 @@ import {
   visitParamsSchema,
   visitItemParamsSchema,
   visitMineQuerySchema,
+  visitListQuerySchema,
   finalizeVisitSchema,
   updateVisitItemSchema,
   addNonConformitySchema,
@@ -19,6 +20,15 @@ export const visitRoutes: FastifyPluginAsyncZod = async (app) => {
   const repo = new VisitRepository();
   const service = new VisitService(repo);
   const controller = new VisitController(service);
+
+  app.get(
+    "/",
+    {
+      schema: { querystring: visitListQuerySchema },
+      preHandler: [app.authenticate, checkPermission("visits:read")],
+    },
+    controller.list.bind(controller),
+  );
 
   // GET /mine must be registered before GET /:id to prevent Fastify
   // from capturing "mine" as an :id parameter value.
