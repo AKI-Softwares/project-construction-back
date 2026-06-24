@@ -181,6 +181,7 @@ export class VisitService {
     itemId: number,
     input: UpdateVisitItemInput,
     companyId: number,
+    userId: number,
   ) {
     const visit = await this.repo.findById(visitId, companyId);
     if (!visit) throw new HttpError(404, "Visit not found.");
@@ -241,12 +242,21 @@ export class VisitService {
       await this.cleanupNcPhotos(item.nonConformity.id);
     }
 
-    return this.repo.updateVisitItemWithNcCleanup(
+    const result = await this.repo.updateVisitItemWithNcCleanup(
       itemId,
       input.status,
       item.status,
       item.nonConformity?.id ?? null,
     );
+
+    if (visit.type === "REINSPECTION" && visit.parentVisitId !== null && input.status === "OK") {
+      const ncId = await this.repo.resolveParentNc(visit.parentVisitId, item.checklistItemId, userId);
+      if (ncId !== null) {
+        void logAudit({ companyId, userId, entityType: "NonConformity", entityId: ncId, action: "NC_RESOLVED", after: { resolvedViaReinspection: visitId } });
+      }
+    }
+
+    return result;
   }
 
   async addNonConformity(

@@ -387,4 +387,22 @@ export class VisitRepository {
       select: { id: true, status: true, visitId: true, checklistItemId: true },
     });
   }
+
+  async resolveParentNc(
+    parentVisitId: number,
+    checklistItemId: number,
+    resolvedById: number,
+  ): Promise<number | null> {
+    const parentItem = await prisma.visitItem.findFirst({
+      where: { visitId: parentVisitId, checklistItemId },
+      select: { nonConformity: { select: { id: true, resolvedAt: true } } },
+    });
+    if (!parentItem?.nonConformity || parentItem.nonConformity.resolvedAt !== null) return null;
+    const updated = await prisma.nonConformity.update({
+      where: { id: parentItem.nonConformity.id },
+      data: { resolvedAt: new Date(), resolvedById },
+      select: { id: true },
+    });
+    return updated.id;
+  }
 }

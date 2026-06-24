@@ -48,6 +48,18 @@ const CHECKLIST_DETAIL_SELECT = {
           apartmentRoom: { select: { id: true, name: true } },
         },
       },
+      visitItems: {
+        where: { nonConformity: { isNot: null } },
+        select: {
+          nonConformity: {
+            select: {
+              id: true,
+              description: true,
+              resolvedAt: true,
+            },
+          },
+        },
+      },
     },
     orderBy: { id: "asc" as const },
   },

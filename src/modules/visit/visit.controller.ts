@@ -81,11 +81,13 @@ export class VisitController {
     reply: FastifyReply,
   ) {
     const companyId = getTenantId(request);
+    const userId = Number(request.user.sub);
     const item = await this.service.updateVisitItem(
       request.params.id,
       request.params.itemId,
       request.body,
       companyId,
+      userId,
     );
     return reply.status(200).send(item);
   }
