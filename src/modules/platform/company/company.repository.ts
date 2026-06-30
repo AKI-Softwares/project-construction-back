@@ -55,14 +55,18 @@ export class CompanyRepository {
     templateApartmentTypes: { name: string; description: string | null }[],
   ) {
     return prisma.$transaction(async (tx) => {
-      const adminRole = await tx.role.create({
-        data: { name: 'Company Admin', isSystem: true, isCompanyAdmin: true, companyId },
+      const adminRole = await tx.role.upsert({
+        where: { companyId_name: { companyId, name: 'Company Admin' } },
+        update: {},
+        create: { name: 'Company Admin', isSystem: true, isCompanyAdmin: true, companyId },
         select: { id: true },
       });
 
       for (const tpl of templateRoles) {
-        await tx.role.create({
-          data: {
+        await tx.role.upsert({
+          where: { companyId_name: { companyId, name: tpl.name } },
+          update: {},
+          create: {
             name: tpl.name,
             description: tpl.description,
             isSystem: false,
