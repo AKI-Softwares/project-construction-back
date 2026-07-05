@@ -21,13 +21,13 @@ export class NonConformityController {
     reply: FastifyReply,
   ) {
     const data = await request.file();
-    if (!data) throw new HttpError(400, "No file uploaded.");
+    if (!data) throw new HttpError(400, "Nenhum arquivo enviado.");
     let buffer: Buffer;
     try {
       buffer = await data.toBuffer();
     } catch (err: unknown) {
       if ((err as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE") {
-        throw new HttpError(413, "File too large. Maximum size is 10 MB.");
+        throw new HttpError(413, "Arquivo muito grande. Tamanho máximo: 10 MB.");
       }
       throw err;
     }

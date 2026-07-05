@@ -23,22 +23,22 @@ export class NonConformityService {
 
   async addPhoto(ncId: number, buffer: Buffer, companyId: number) {
     const nc = await this.repo.findById(ncId, companyId);
-    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (!nc) throw new HttpError(404, "Não conformidade não encontrada.");
     if (nc.visitItem.visit.status === "FINALIZED") {
-      throw new HttpError(403, "Cannot add photos to a finalized visit.");
+      throw new HttpError(403, "Não é possível adicionar fotos a uma vistoria finalizada.");
     }
     const photoCount = await this.repo.countPhotos(ncId);
     if (photoCount >= 5) {
-      throw new HttpError(422, "Maximum of 5 photos per non-conformity.");
+      throw new HttpError(422, "Máximo de 5 fotos por não conformidade.");
     }
     if (buffer.length === 0) {
-      throw new HttpError(400, "Uploaded file is empty.");
+      throw new HttpError(400, "O arquivo enviado está vazio.");
     }
     const detected = await fileTypeFromBuffer(buffer);
     if (!detected || !ALLOWED_MIME_TYPES.has(detected.mime)) {
       throw new HttpError(
         415,
-        "Unsupported file type. Allowed: JPEG, PNG, WebP, HEIC, HEIF.",
+        "Tipo de arquivo não suportado. Permitidos: JPEG, PNG, WebP, HEIC, HEIF.",
       );
     }
     let secureUrl: string;
@@ -47,16 +47,16 @@ export class NonConformityService {
       ({ secureUrl, publicId } = await uploadPhoto(buffer));
     } catch (err) {
       console.error("[addPhoto] Cloudinary upload failed:", err);
-      throw new HttpError(502, "Photo upload failed. Please try again.");
+      throw new HttpError(502, "Falha ao enviar foto. Tente novamente.");
     }
     return this.repo.addPhoto(ncId, secureUrl, publicId, companyId);
   }
 
   async deletePhoto(ncId: number, photoId: number, companyId: number) {
     const nc = await this.repo.findById(ncId, companyId);
-    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (!nc) throw new HttpError(404, "Não conformidade não encontrada.");
     if (nc.visitItem.visit.status === "FINALIZED") {
-      throw new HttpError(403, "Cannot delete photos from a finalized visit.");
+      throw new HttpError(403, "Não é possível remover fotos de uma vistoria finalizada.");
     }
     const photo = await this.repo.findPhoto(ncId, photoId);
     if (!photo) throw new HttpError(404, "Photo not found.");
@@ -64,28 +64,25 @@ export class NonConformityService {
       await deleteCloudinaryPhoto(photo.publicId);
     } catch (err) {
       console.error("[deletePhoto] Cloudinary delete failed:", err);
-      throw new HttpError(
-        502,
-        "Failed to delete photo from storage. Please try again.",
-      );
+      throw new HttpError(502, "Falha ao remover foto do armazenamento. Tente novamente.");
     }
     await this.repo.deletePhoto(photoId);
   }
 
   async createNc(visitItemId: number, description: string, companyId: number, userId: number) {
     const item = await this.repo.findVisitItemForNc(visitItemId, companyId);
-    if (!item) throw new HttpError(404, "Visit item not found.");
+    if (!item) throw new HttpError(404, "Item de vistoria não encontrado.");
     if (item.visit.status === "FINALIZED") {
-      throw new HttpError(400, "Visit is already finalized.");
+      throw new HttpError(400, "A vistoria já foi finalizada.");
     }
     if (item.visit.status === "NOT_STARTED") {
-      throw new HttpError(400, "Visit has not been started yet.");
+      throw new HttpError(400, "A vistoria ainda não foi iniciada.");
     }
     if (item.status !== "NOK") {
-      throw new HttpError(409, "Non-conformity can only be added to NOK items.");
+      throw new HttpError(409, "Não conformidade só pode ser registrada em itens NOK.");
     }
     if (item.nonConformity) {
-      throw new HttpError(409, "This item already has a non-conformity.");
+      throw new HttpError(409, "Este item já possui uma não conformidade registrada.");
     }
     const nc = await this.repo.create(visitItemId, description, companyId);
     void logAudit({ companyId, userId, entityType: "NonConformity", entityId: nc.id, action: "CREATED", after: { visitItemId, description } });
@@ -94,18 +91,18 @@ export class NonConformityService {
 
   async patchNc(ncId: number, description: string, companyId: number) {
     const nc = await this.repo.findById(ncId, companyId);
-    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (!nc) throw new HttpError(404, "Não conformidade não encontrada.");
     if (nc.visitItem.visit.status === "FINALIZED") {
-      throw new HttpError(400, "Visit is already finalized.");
+      throw new HttpError(400, "A vistoria já foi finalizada.");
     }
     return this.repo.patch(ncId, description);
   }
 
   async deleteNc(ncId: number, companyId: number, userId: number) {
     const nc = await this.repo.findById(ncId, companyId);
-    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (!nc) throw new HttpError(404, "Não conformidade não encontrada.");
     if (nc.visitItem.visit.status === "FINALIZED") {
-      throw new HttpError(400, "Visit is already finalized.");
+      throw new HttpError(400, "A vistoria já foi finalizada.");
     }
     const photos = await this.repo.findPhotosByNcId(ncId);
     for (const photo of photos) {
@@ -122,7 +119,7 @@ export class NonConformityService {
 
   async resolveNc(ncId: number, companyId: number, resolvedById: number) {
     const nc = await this.repo.findByIdWithInspector(ncId, companyId);
-    if (!nc) throw new HttpError(404, "Non-conformity not found.");
+    if (!nc) throw new HttpError(404, "Não conformidade não encontrada.");
     const result = await this.repo.resolve(ncId, resolvedById);
     void logAudit({ companyId, userId: resolvedById, entityType: "NonConformity", entityId: ncId, action: "RESOLVED", after: { resolvedById } });
     if (nc.visitItem.visit.inspectorId) {

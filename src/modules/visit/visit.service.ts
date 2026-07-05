@@ -95,7 +95,7 @@ export class VisitService {
 
   async getVisitGrouped(id: number, companyId: number) {
     const visit = await this.repo.findById(id, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     const { items, checklist, ...rest } = visit;
     return {
       ...rest,
@@ -122,9 +122,9 @@ export class VisitService {
 
   async startVisit(visitId: number, companyId: number, userId: number) {
     const visit = await this.repo.findById(visitId, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.status !== "NOT_STARTED") {
-      throw new HttpError(409, "Visit has already been started or finalized.");
+      throw new HttpError(409, "A vistoria já foi iniciada ou finalizada.");
     }
     const updated = await this.repo.updateStatus(visitId, "ONGOING");
     void logAudit({ companyId, userId, entityType: "Visit", entityId: visitId, action: "STARTED", after: { status: "ONGOING" } });
@@ -134,17 +134,17 @@ export class VisitService {
 
   async finalizeVisit(id: number, input: FinalizeVisitInput, userId: number, companyId: number) {
     const visit = await this.repo.findById(id, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.status === "FINALIZED")
-      throw new HttpError(400, "Visit is already finalized.");
+      throw new HttpError(400, "A vistoria já foi finalizada.");
     if (visit.status === "NOT_STARTED")
-      throw new HttpError(400, "Visit has not been started yet.");
+      throw new HttpError(400, "A vistoria ainda não foi iniciada.");
 
     const unevaluatedItems = visit.items.filter((i) => i.status === null);
     if (unevaluatedItems.length > 0) {
       throw new HttpError(
         400,
-        "All items must be evaluated before finalizing.",
+        "Todos os itens devem ser avaliados antes de finalizar.",
       );
     }
 
@@ -154,7 +154,7 @@ export class VisitService {
     if (nokWithoutNc.length > 0) {
       throw new HttpError(
         400,
-        "All NOK items must have a non-conformity recorded.",
+        "Todos os itens NOK devem ter uma não conformidade registrada.",
       );
     }
 
@@ -184,14 +184,14 @@ export class VisitService {
     userId: number,
   ) {
     const visit = await this.repo.findById(visitId, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.status === "FINALIZED")
-      throw new HttpError(400, "Visit is already finalized.");
+      throw new HttpError(400, "A vistoria já foi finalizada.");
     if (visit.status === "NOT_STARTED")
-      throw new HttpError(400, "Visit has not been started yet.");
+      throw new HttpError(400, "A vistoria ainda não foi iniciada.");
 
     const item = visit.items.find((i) => i.id === itemId);
-    if (!item) throw new HttpError(404, "Visit item not found.");
+    if (!item) throw new HttpError(404, "Item de vistoria não encontrado.");
 
     // VF-7/VF-14: revert always allowed — bypasses all room guards
     if (input.status === null) {
@@ -220,7 +220,7 @@ export class VisitService {
       const hasEvaluated = roomItems.some((i) => i.status !== null);
       const hasUnevaluated = roomItems.some((i) => i.status === null);
       if (hasEvaluated && hasUnevaluated) {
-        throw new HttpError(409, "Finish current room before switching.");
+        throw new HttpError(409, "Finalize o cômodo atual antes de mudar para outro.");
       }
     }
 
@@ -233,7 +233,7 @@ export class VisitService {
     if (anyNokWithoutNc.length > 0) {
       throw new HttpError(
         409,
-        "Record non-conformity for all NOK items before proceeding.",
+        "Registre a NC de todos os itens NOK antes de continuar.",
       );
     }
 
@@ -266,22 +266,22 @@ export class VisitService {
     companyId: number,
   ) {
     const visit = await this.repo.findById(visitId, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.status === "FINALIZED")
-      throw new HttpError(400, "Visit is already finalized.");
+      throw new HttpError(400, "A vistoria já foi finalizada.");
     if (visit.status === "NOT_STARTED")
-      throw new HttpError(400, "Visit has not been started yet.");
+      throw new HttpError(400, "A vistoria ainda não foi iniciada.");
 
     const item = visit.items.find((i) => i.id === itemId);
-    if (!item) throw new HttpError(404, "Visit item not found.");
+    if (!item) throw new HttpError(404, "Item de vistoria não encontrado.");
     if (item.status !== "NOK") {
       throw new HttpError(
         409,
-        "Non-conformity can only be added to NOK items.",
+        "Não conformidade só pode ser registrada em itens NOK.",
       );
     }
     if (item.nonConformity) {
-      throw new HttpError(409, "This item already has a non-conformity.");
+      throw new HttpError(409, "Este item já possui uma não conformidade registrada.");
     }
 
     return this.repo.createNonConformity(itemId, input.description, companyId);
@@ -296,10 +296,10 @@ export class VisitService {
     const parent = await this.repo.findById(parentVisitId, companyId);
     if (!parent) throw new HttpError(404, "Visit not found.");
     if (parent.type !== "INITIAL") {
-      throw new HttpError(400, "Cannot create a reinspection of a reinspection.");
+      throw new HttpError(400, "Não é possível criar uma re-inspeção de outra re-inspeção.");
     }
     if (parent.status !== "FINALIZED") {
-      throw new HttpError(400, "Parent visit must be finalized before creating a reinspection.");
+      throw new HttpError(400, "A vistoria original deve estar finalizada para criar uma re-inspeção.");
     }
     const ncItemIds = await this.repo.findNcItemIdsByVisitId(parentVisitId);
     if (ncItemIds.length === 0) {
@@ -328,12 +328,12 @@ export class VisitService {
 
   async claimReinspection(visitId: number, companyId: number, inspectorId: number) {
     const visit = await this.repo.findById(visitId, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.type !== "REINSPECTION") {
-      throw new HttpError(400, "Only reinspection visits can be claimed.");
+      throw new HttpError(400, "Apenas re-inspeções podem ser assumidas.");
     }
     if (visit.inspector !== null) {
-      throw new HttpError(409, "This reinspection is already assigned to an inspector.");
+      throw new HttpError(409, "Esta re-inspeção já está atribuída a outro inspetor.");
     }
     const updated = await this.repo.claimReinspection(visitId, companyId, inspectorId);
     void logAudit({ companyId, userId: inspectorId, entityType: "Visit", entityId: visitId, action: "CLAIMED", after: { inspectorId } });
@@ -343,9 +343,9 @@ export class VisitService {
 
   async generateReport(visitId: number, companyId: number): Promise<Buffer> {
     const visit = await this.repo.getReportData(visitId, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.status !== "FINALIZED")
-      throw new HttpError(400, "Report is only available for finalized visits.");
+      throw new HttpError(400, "O relatório só está disponível para vistorias finalizadas.");
 
     // Group items by room
     const roomMap = new Map<string, VisitReportData["rooms"][number]>();
@@ -375,12 +375,12 @@ export class VisitService {
 
   async saveSignature(visitId: number, companyId: number, imageBase64: string, userId: number) {
     const visit = await this.repo.findById(visitId, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.status !== "FINALIZED")
-      throw new HttpError(400, "Signature is only allowed for finalized visits.");
+      throw new HttpError(400, "A assinatura só é permitida em vistorias finalizadas.");
 
     const buffer = Buffer.from(imageBase64, "base64");
-    if (!buffer.length) throw new HttpError(400, "Invalid signature image.");
+    if (!buffer.length) throw new HttpError(400, "Imagem de assinatura inválida.");
     const { secureUrl } = await uploadSignature(buffer);
     const result = await this.repo.saveSignatureUrl(visitId, companyId, secureUrl);
     void logAudit({ companyId, userId, entityType: "Visit", entityId: visitId, action: "SIGNED", after: { signatureUrl: secureUrl } });
@@ -389,16 +389,16 @@ export class VisitService {
 
   async deleteNonConformity(visitId: number, itemId: number, companyId: number) {
     const visit = await this.repo.findById(visitId, companyId);
-    if (!visit) throw new HttpError(404, "Visit not found.");
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
     if (visit.status === "FINALIZED")
-      throw new HttpError(400, "Visit is already finalized.");
+      throw new HttpError(400, "A vistoria já foi finalizada.");
     if (visit.status === "NOT_STARTED")
-      throw new HttpError(400, "Visit has not been started yet.");
+      throw new HttpError(400, "A vistoria ainda não foi iniciada.");
 
     const item = visit.items.find((i) => i.id === itemId);
-    if (!item) throw new HttpError(404, "Visit item not found.");
+    if (!item) throw new HttpError(404, "Item de vistoria não encontrado.");
     if (!item.nonConformity)
-      throw new HttpError(404, "No non-conformity found for this item.");
+      throw new HttpError(404, "Nenhuma não conformidade encontrada para este item.");
 
     await this.cleanupNcPhotos(item.nonConformity.id); // VF-8
     return this.repo.deleteNonConformity(item.nonConformity.id);

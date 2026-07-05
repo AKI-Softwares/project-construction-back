@@ -76,7 +76,7 @@ export async function buildApp() {
     if ((error as { code?: string }).code === "FST_REQ_FILE_TOO_LARGE") {
       return reply
         .status(413)
-        .send({ message: "File too large. Maximum size is 10 MB." });
+        .send({ message: "Arquivo muito grande. Tamanho máximo: 10 MB." });
     }
 
     if (error instanceof HttpError) {
@@ -85,7 +85,7 @@ export async function buildApp() {
 
     if ((error as { validation?: unknown }).validation) {
       return reply.status(400).send({
-        message: "Validation error",
+        message: "Erro de validação",
         issues: (error as { validation: unknown }).validation,
       });
     }
@@ -93,7 +93,7 @@ export async function buildApp() {
     return reply.status(500).send({
       message:
         env.NODE_ENV === "production"
-          ? "Internal server error"
+          ? "Erro interno do servidor"
           : error instanceof Error
             ? error.message
             : String(error),
