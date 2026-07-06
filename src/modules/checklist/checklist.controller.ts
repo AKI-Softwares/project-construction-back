@@ -6,6 +6,8 @@ import type {
   ChecklistQuery,
   UpdateChecklistInput,
   CreateVisitInput,
+  ChecklistItemParams,
+  ResolveChecklistItemInput,
 } from "./checklist.schema.js";
 
 export class ChecklistController {
@@ -69,5 +71,24 @@ export class ChecklistController {
   ) {
     const visits = await this.service.listVisits(request.params.id);
     return reply.status(200).send(visits);
+  }
+
+  async resolveItem(
+    request: FastifyRequest<{
+      Params: ChecklistItemParams;
+      Body: ResolveChecklistItemInput;
+    }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const userId = Number(request.user.sub);
+    const item = await this.service.resolveItem(
+      request.params.id,
+      request.params.itemId,
+      companyId,
+      userId,
+      request.body,
+    );
+    return reply.status(200).send(item);
   }
 }

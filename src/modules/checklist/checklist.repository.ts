@@ -162,4 +162,57 @@ export class ChecklistRepository {
       orderBy: { createdAt: "desc" as const },
     });
   }
+
+  async resolveItem(checklistId: number, itemId: number, companyId: number, resolvedById: number) {
+    return prisma.$transaction(async (tx) => {
+      // Verify ownership: item must belong to this checklist, which must belong to this company
+      const item = await tx.checklistItem.findFirst({
+        where: {
+          id: itemId,
+          checklistId,
+          checklist: { companyId },
+        },
+        select: {
+          id: true,
+          status: true,
+          visitItems: {
+            where: { nonConformity: { resolvedAt: null } },
+            select: { nonConformity: { select: { id: true } } },
+            orderBy: { id: "desc" },
+            take: 1,
+          },
+        },
+      });
+      if (!item) return null;
+
+      await tx.checklistItem.update({
+        where: { id: itemId },
+        data: { status: "OK" },
+      });
+
+      const openNc = item.visitItems[0]?.nonConformity;
+      if (openNc) {
+        await tx.nonConformity.update({
+          where: { id: openNc.id },
+          data: { resolvedAt: new Date(), resolvedById },
+        });
+      }
+
+      return tx.checklistItem.findUnique({
+        where: { id: itemId },
+        select: {
+          id: true,
+          checklistId: true,
+          status: true,
+          updatedAt: true,
+          apartmentRoomService: {
+            select: {
+              service: { select: { id: true, name: true } },
+              apartmentRoom: { select: { id: true, name: true } },
+            },
+          },
+        },
+      });
+    });
+  }
 }

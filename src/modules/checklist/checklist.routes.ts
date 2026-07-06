@@ -7,8 +7,11 @@ import {
   checklistQuerySchema,
   updateChecklistSchema,
   createVisitSchema,
+  checklistItemParamsSchema,
+  resolveChecklistItemSchema,
 } from "./checklist.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
+import { requireCompanyAdmin } from "../../shared/rbac/require-company-admin.js";
 
 export const checklistRoutes: FastifyPluginAsyncZod = async (app) => {
   const repo = new ChecklistRepository();
@@ -58,5 +61,14 @@ export const checklistRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: [app.authenticate, checkPermission("visits:read")],
     },
     controller.listVisits.bind(controller),
+  );
+
+  app.patch(
+    "/:id/items/:itemId",
+    {
+      schema: { params: checklistItemParamsSchema, body: resolveChecklistItemSchema },
+      preHandler: [app.authenticate, requireCompanyAdmin],
+    },
+    controller.resolveItem.bind(controller),
   );
 };

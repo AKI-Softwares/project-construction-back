@@ -21,3 +21,15 @@ export type ChecklistParams = z.infer<typeof checklistParamsSchema>;
 export type ChecklistQuery = z.infer<typeof checklistQuerySchema>;
 export type UpdateChecklistInput = z.infer<typeof updateChecklistSchema>;
 export type CreateVisitInput = z.infer<typeof createVisitSchema>;
+
+export const checklistItemParamsSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  itemId: z.coerce.number().int().positive(),
+});
+
+export const resolveChecklistItemSchema = z.object({
+  notes: z.string().min(1).optional(),
+});
+
+export type ChecklistItemParams = z.infer<typeof checklistItemParamsSchema>;
+export type ResolveChecklistItemInput = z.infer<typeof resolveChecklistItemSchema>;

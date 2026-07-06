@@ -4,6 +4,7 @@ import type { ChecklistRepository } from "./checklist.repository.js";
 import type {
   UpdateChecklistInput,
   CreateVisitInput,
+  ResolveChecklistItemInput,
 } from "./checklist.schema.js";
 
 export class ChecklistService {
@@ -100,5 +101,17 @@ export class ChecklistService {
     const checklist = await this.repo.findById(checklistId);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
     return this.repo.findVisits(checklistId);
+  }
+
+  async resolveItem(
+    checklistId: number,
+    itemId: number,
+    companyId: number,
+    userId: number,
+    _input: ResolveChecklistItemInput,
+  ) {
+    const result = await this.repo.resolveItem(checklistId, itemId, companyId, userId);
+    if (!result) throw new HttpError(404, "Checklist item not found or access denied.");
+    return result;
   }
 }
