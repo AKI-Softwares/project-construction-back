@@ -22,6 +22,7 @@ dist/
 
 # Seed contém credencial default do super-admin — não versionar
 prisma/seed.ts
+prisma/scripts/create-*.ts
 
 # Misc
 commands
