@@ -9,21 +9,21 @@ import type {
 export class ServiceService {
   constructor(private readonly repo: ServiceRepository) {}
 
-  async listServices(category?: string) {
-    return this.repo.findAll(category);
+  async listServices(companyId: number, category?: string) {
+    return this.repo.findAll(companyId, category);
   }
 
-  async getService(id: number) {
-    const service = await this.repo.findById(id);
+  async getService(id: number, companyId: number) {
+    const service = await this.repo.findById(id, companyId);
     if (!service) throw new HttpError(404, "Service not found.");
     return service;
   }
 
-  async createService(input: CreateServiceInput) {
-    const existing = await this.repo.findByName(input.name);
+  async createService(input: CreateServiceInput, companyId: number) {
+    const existing = await this.repo.findByName(input.name, companyId);
     if (existing) throw new HttpError(409, "Service name already exists.");
     try {
-      return await this.repo.create(input);
+      return await this.repo.create(input, companyId);
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -35,11 +35,11 @@ export class ServiceService {
     }
   }
 
-  async updateService(id: number, input: UpdateServiceInput) {
-    const service = await this.repo.findById(id);
+  async updateService(id: number, companyId: number, input: UpdateServiceInput) {
+    const service = await this.repo.findById(id, companyId);
     if (!service) throw new HttpError(404, "Service not found.");
     if (input.name !== undefined && input.name !== service.name) {
-      const existing = await this.repo.findByName(input.name);
+      const existing = await this.repo.findByName(input.name, companyId);
       if (existing) throw new HttpError(409, "Service name already exists.");
     }
     try {
@@ -55,8 +55,8 @@ export class ServiceService {
     }
   }
 
-  async deleteService(id: number) {
-    const service = await this.repo.findById(id);
+  async deleteService(id: number, companyId: number) {
+    const service = await this.repo.findById(id, companyId);
     if (!service) throw new HttpError(404, "Service not found.");
     const [instanceCount, defaultCount] = await Promise.all([
       this.repo.countApartmentRoomServices(id),

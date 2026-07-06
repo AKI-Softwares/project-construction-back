@@ -19,8 +19,9 @@ export class ApartmentController {
     request: FastifyRequest<{ Querystring: ApartmentQuery }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     return reply.send(
-      await this.service.listApartments(request.query.buildingId),
+      await this.service.listApartments(companyId, request.query.buildingId),
     );
   }
 
@@ -28,7 +29,8 @@ export class ApartmentController {
     request: FastifyRequest<{ Params: ApartmentParams }>,
     reply: FastifyReply,
   ) {
-    return reply.send(await this.service.getApartment(request.params.id));
+    const companyId = getTenantId(request);
+    return reply.send(await this.service.getApartment(request.params.id, companyId));
   }
 
   async create(
@@ -48,8 +50,9 @@ export class ApartmentController {
     }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     return reply.send(
-      await this.service.updateApartment(request.params.id, request.body),
+      await this.service.updateApartment(request.params.id, companyId, request.body),
     );
   }
 
@@ -57,7 +60,8 @@ export class ApartmentController {
     request: FastifyRequest<{ Params: ApartmentParams }>,
     reply: FastifyReply,
   ) {
-    await this.service.deleteApartment(request.params.id);
+    const companyId = getTenantId(request);
+    await this.service.deleteApartment(request.params.id, companyId);
     return reply.status(204).send();
   }
 
@@ -68,9 +72,11 @@ export class ApartmentController {
     }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     return reply.send(
       await this.service.updateRoomName(
         request.params.id,
+        companyId,
         request.params.roomId,
         request.body,
       ),
@@ -84,11 +90,13 @@ export class ApartmentController {
     }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     return reply
       .status(201)
       .send(
         await this.service.addServiceToRoom(
           request.params.id,
+          companyId,
           request.params.roomId,
           request.body,
         ),
@@ -99,8 +107,10 @@ export class ApartmentController {
     request: FastifyRequest<{ Params: ApartmentRoomServiceParams }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     await this.service.removeServiceFromRoom(
       request.params.id,
+      companyId,
       request.params.roomId,
       request.params.serviceId,
     );

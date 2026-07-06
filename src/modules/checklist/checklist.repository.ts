@@ -88,17 +88,17 @@ const VISIT_SUMMARY_SELECT = {
 } as const;
 
 export class ChecklistRepository {
-  async findAll(apartmentId?: number) {
+  async findAll(companyId: number, apartmentId?: number) {
     return prisma.checklist.findMany({
-      ...(apartmentId !== undefined && { where: { apartmentId } }),
+      where: { companyId, ...(apartmentId !== undefined && { apartmentId }) },
       select: CHECKLIST_LIST_SELECT,
       orderBy: { createdAt: "desc" as const },
     });
   }
 
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     return prisma.checklist.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: CHECKLIST_DETAIL_SELECT,
     });
   }

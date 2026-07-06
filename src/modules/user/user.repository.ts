@@ -24,9 +24,9 @@ export class UserRepository {
     }));
   }
 
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     const u = await prisma.user.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: USER_SELECT,
     });
     if (!u) return null;
@@ -37,13 +37,14 @@ export class UserRepository {
     return prisma.user.findUnique({ where: { email } });
   }
 
-  async create(data: CreateUserInput & { passwordHash: string }) {
+  async create(data: CreateUserInput & { passwordHash: string; companyId: number }) {
     return prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         passwordHash: data.passwordHash,
         roleId: data.roleId,
+        companyId: data.companyId,
       },
       select: USER_SELECT,
     });

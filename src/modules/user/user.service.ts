@@ -14,27 +14,37 @@ export class UserService {
     return this.repo.findAll(companyId);
   }
 
-  async getUser(id: number) {
-    const user = await this.repo.findById(id);
+  async getUser(
+    id: number,
+    companyId: number,
+    requesterId: number,
+    requesterPerms: string[],
+  ) {
+    const isSelf = id === requesterId;
+    if (!isSelf && !requesterPerms.includes("users:read")) {
+      throw new HttpError(403, "Access denied.");
+    }
+    const user = await this.repo.findById(id, companyId);
     if (!user) throw new HttpError(404, "User not found.");
     return user;
   }
 
-  async createUser(input: CreateUserInput) {
+  async createUser(input: CreateUserInput, companyId: number) {
     const existing = await this.repo.findByEmail(input.email);
     if (existing) throw new HttpError(409, "Email already registered.");
 
     const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
-    return this.repo.create({ ...input, passwordHash });
+    return this.repo.create({ ...input, passwordHash, companyId });
   }
 
   async updateUser(
     id: number,
+    companyId: number,
     input: UpdateUserInput,
     requesterId: number,
     requesterPerms: string[],
   ) {
-    const user = await this.repo.findById(id);
+    const user = await this.repo.findById(id, companyId);
     if (!user) throw new HttpError(404, "User not found.");
 
     const isSelf = id === requesterId;
@@ -65,8 +75,8 @@ export class UserService {
     return this.repo.update(id, updateData);
   }
 
-  async deleteUser(id: number) {
-    const user = await this.repo.findById(id);
+  async deleteUser(id: number, companyId: number) {
+    const user = await this.repo.findById(id, companyId);
     if (!user) throw new HttpError(404, "User not found.");
     await this.repo.delete(id);
   }

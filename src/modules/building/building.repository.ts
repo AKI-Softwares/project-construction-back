@@ -30,16 +30,17 @@ const BUILDING_DETAIL_SELECT = {
 } as const;
 
 export class BuildingRepository {
-  async findAll() {
+  async findAll(companyId: number) {
     return prisma.building.findMany({
+      where: { companyId },
       select: BUILDING_LIST_SELECT,
       orderBy: { name: "asc" as const },
     });
   }
 
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     return prisma.building.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: BUILDING_DETAIL_SELECT,
     });
   }

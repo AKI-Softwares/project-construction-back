@@ -8,12 +8,12 @@ import type {
 export class BuildingService {
   constructor(private readonly repo: BuildingRepository) {}
 
-  async listBuildings() {
-    return this.repo.findAll();
+  async listBuildings(companyId: number) {
+    return this.repo.findAll(companyId);
   }
 
-  async getBuilding(id: number) {
-    const building = await this.repo.findById(id);
+  async getBuilding(id: number, companyId: number) {
+    const building = await this.repo.findById(id, companyId);
     if (!building) throw new HttpError(404, "Building not found.");
     return building;
   }
@@ -22,14 +22,14 @@ export class BuildingService {
     return this.repo.create(input, companyId);
   }
 
-  async updateBuilding(id: number, input: UpdateBuildingInput) {
-    const building = await this.repo.findById(id);
+  async updateBuilding(id: number, companyId: number, input: UpdateBuildingInput) {
+    const building = await this.repo.findById(id, companyId);
     if (!building) throw new HttpError(404, "Building not found.");
     return this.repo.update(id, input);
   }
 
-  async deleteBuilding(id: number) {
-    const building = await this.repo.findById(id);
+  async deleteBuilding(id: number, companyId: number) {
+    const building = await this.repo.findById(id, companyId);
     if (!building) throw new HttpError(404, "Building not found.");
     const apartmentCount = await this.repo.countApartments(id);
     if (apartmentCount > 0) {

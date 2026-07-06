@@ -50,17 +50,17 @@ const APARTMENT_DETAIL_SELECT = {
 } as const;
 
 export class ApartmentRepository {
-  async findAll(buildingId?: number) {
+  async findAll(companyId: number, buildingId?: number) {
     return prisma.apartment.findMany({
-      ...(buildingId !== undefined && { where: { buildingId } }),
+      where: { companyId, ...(buildingId !== undefined && { buildingId }) },
       select: APARTMENT_LIST_SELECT,
       orderBy: [{ buildingId: "asc" as const }, { identifier: "asc" as const }],
     });
   }
 
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     return prisma.apartment.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: APARTMENT_DETAIL_SELECT,
     });
   }
@@ -72,13 +72,13 @@ export class ApartmentRepository {
     });
   }
 
-  async findBuildingById(id: number) {
-    return prisma.building.findUnique({ where: { id }, select: { id: true } });
+  async findBuildingById(id: number, companyId: number) {
+    return prisma.building.findUnique({ where: { id, companyId }, select: { id: true } });
   }
 
-  async findApartmentTypeWithRooms(id: number) {
+  async findApartmentTypeWithRooms(id: number, companyId: number) {
     return prisma.apartmentType.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: {
         id: true,
         rooms: {
@@ -205,8 +205,8 @@ export class ApartmentRepository {
     });
   }
 
-  async findService(id: number) {
-    return prisma.service.findUnique({ where: { id }, select: { id: true } });
+  async findService(id: number, companyId: number) {
+    return prisma.service.findUnique({ where: { id, companyId }, select: { id: true } });
   }
 
   async findApartmentRoomService(apartmentRoomId: number, serviceId: number) {

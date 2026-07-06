@@ -10,15 +10,17 @@ import type {
 export class BuildingController {
   constructor(private readonly service: BuildingService) {}
 
-  async list(_request: FastifyRequest, reply: FastifyReply) {
-    return reply.send(await this.service.listBuildings());
+  async list(request: FastifyRequest, reply: FastifyReply) {
+    const companyId = getTenantId(request);
+    return reply.send(await this.service.listBuildings(companyId));
   }
 
   async getOne(
     request: FastifyRequest<{ Params: BuildingParams }>,
     reply: FastifyReply,
   ) {
-    return reply.send(await this.service.getBuilding(request.params.id));
+    const companyId = getTenantId(request);
+    return reply.send(await this.service.getBuilding(request.params.id, companyId));
   }
 
   async create(
@@ -38,8 +40,9 @@ export class BuildingController {
     }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     return reply.send(
-      await this.service.updateBuilding(request.params.id, request.body),
+      await this.service.updateBuilding(request.params.id, companyId, request.body),
     );
   }
 
@@ -47,7 +50,8 @@ export class BuildingController {
     request: FastifyRequest<{ Params: BuildingParams }>,
     reply: FastifyReply,
   ) {
-    await this.service.deleteBuilding(request.params.id);
+    const companyId = getTenantId(request);
+    await this.service.deleteBuilding(request.params.id, companyId);
     return reply.status(204).send();
   }
 }

@@ -9,22 +9,23 @@ import type {
 export class ChecklistService {
   constructor(private repo: ChecklistRepository) {}
 
-  async listChecklists(apartmentId?: number) {
-    return this.repo.findAll(apartmentId);
+  async listChecklists(companyId: number, apartmentId?: number) {
+    return this.repo.findAll(companyId, apartmentId);
   }
 
-  async getChecklist(id: number) {
-    const checklist = await this.repo.findById(id);
+  async getChecklist(id: number, companyId: number) {
+    const checklist = await this.repo.findById(id, companyId);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
     return checklist;
   }
 
   async updateChecklist(
     id: number,
+    companyId: number,
     input: UpdateChecklistInput,
     userId: number,
   ) {
-    const checklist = await this.repo.findById(id);
+    const checklist = await this.repo.findById(id, companyId);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
 
     const updateData: {
@@ -56,7 +57,7 @@ export class ChecklistService {
     createdById: number,
     companyId: number,
   ) {
-    const checklist = await this.repo.findById(checklistId);
+    const checklist = await this.repo.findById(checklistId, companyId);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
     if (checklist.status === "FINALIZED") {
       throw new HttpError(409, "Checklist is already finalized.");
@@ -96,8 +97,8 @@ export class ChecklistService {
     }
   }
 
-  async listVisits(checklistId: number) {
-    const checklist = await this.repo.findById(checklistId);
+  async listVisits(checklistId: number, companyId: number) {
+    const checklist = await this.repo.findById(checklistId, companyId);
     if (!checklist) throw new HttpError(404, "Checklist not found.");
     return this.repo.findVisits(checklistId);
   }

@@ -27,31 +27,33 @@ const ROOM_DEFAULT_SERVICE_SELECT = {
 } as const;
 
 export class ApartmentTypeRepository {
-  async findAll() {
+  async findAll(companyId: number) {
     return prisma.apartmentType.findMany({
+      where: { companyId },
       select: APARTMENT_TYPE_SELECT,
       orderBy: { name: "asc" as const },
     });
   }
 
-  async findById(id: number) {
+  async findById(id: number, companyId: number) {
     return prisma.apartmentType.findUnique({
-      where: { id },
+      where: { id, companyId },
       select: APARTMENT_TYPE_SELECT,
     });
   }
 
-  async findByName(name: string, companyId?: number | null) {
+  async findByName(name: string, companyId: number) {
     return prisma.apartmentType.findFirst({
-      where: companyId !== undefined ? { name, companyId } : { name },
+      where: { name, companyId },
       select: { id: true },
     });
   }
 
-  async create(data: CreateApartmentTypeInput) {
+  async create(data: CreateApartmentTypeInput, companyId: number) {
     return prisma.apartmentType.create({
       data: {
         name: data.name,
+        companyId,
         ...(data.description !== undefined && {
           description: data.description,
         }),
@@ -114,9 +116,9 @@ export class ApartmentTypeRepository {
     });
   }
 
-  async findService(serviceId: number) {
+  async findService(serviceId: number, companyId: number) {
     return prisma.service.findUnique({
-      where: { id: serviceId },
+      where: { id: serviceId, companyId },
       select: { id: true },
     });
   }

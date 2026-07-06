@@ -5,18 +5,18 @@ import type { CreateRoleInput, UpdateRoleInput } from "./role.schema.js";
 export class RoleService {
   constructor(private readonly repo: RoleRepository) {}
 
-  async listRoles() {
-    return this.repo.findAll();
+  async listRoles(companyId: number) {
+    return this.repo.findAll(companyId);
   }
 
-  async getRole(id: number) {
-    const role = await this.repo.findById(id);
+  async getRole(id: number, companyId: number) {
+    const role = await this.repo.findById(id, companyId);
     if (!role) throw new HttpError(404, "Role not found.");
     return role;
   }
 
-  async createRole(input: CreateRoleInput) {
-    const existing = await this.repo.findByName(input.name, null);
+  async createRole(input: CreateRoleInput, companyId: number) {
+    const existing = await this.repo.findByName(input.name, companyId);
     if (existing) throw new HttpError(409, "Role name already exists.");
 
     await this.assertPermissionsExist(input.permissionIds);
@@ -27,15 +27,16 @@ export class RoleService {
         description: input.description,
       }),
       permissionIds: input.permissionIds,
+      companyId,
     });
   }
 
-  async updateRole(id: number, input: UpdateRoleInput) {
-    const role = await this.repo.findById(id);
+  async updateRole(id: number, companyId: number, input: UpdateRoleInput) {
+    const role = await this.repo.findById(id, companyId);
     if (!role) throw new HttpError(404, "Role not found.");
 
     if (input.name && input.name !== role.name) {
-      const taken = await this.repo.findByName(input.name, null);
+      const taken = await this.repo.findByName(input.name, companyId);
       if (taken) throw new HttpError(409, "Role name already exists.");
     }
 
@@ -60,8 +61,8 @@ export class RoleService {
     });
   }
 
-  async deleteRole(id: number) {
-    const role = await this.repo.findById(id);
+  async deleteRole(id: number, companyId: number) {
+    const role = await this.repo.findById(id, companyId);
     if (!role) throw new HttpError(404, "Role not found.");
 
     if (role.isSystem) {

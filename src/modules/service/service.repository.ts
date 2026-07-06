@@ -14,31 +14,35 @@ const SERVICE_SELECT = {
 } as const;
 
 export class ServiceRepository {
-  async findAll(category?: string) {
+  async findAll(companyId: number, category?: string) {
     return prisma.service.findMany({
-      ...(category !== undefined && {
-        where: { category: { equals: category, mode: "insensitive" } },
-      }),
+      where: {
+        companyId,
+        ...(category !== undefined && {
+          category: { equals: category, mode: "insensitive" },
+        }),
+      },
       select: SERVICE_SELECT,
       orderBy: { name: "asc" as const },
     });
   }
 
-  async findById(id: number) {
-    return prisma.service.findUnique({ where: { id }, select: SERVICE_SELECT });
+  async findById(id: number, companyId: number) {
+    return prisma.service.findUnique({ where: { id, companyId }, select: SERVICE_SELECT });
   }
 
-  async findByName(name: string, companyId?: number | null) {
+  async findByName(name: string, companyId: number) {
     return prisma.service.findFirst({
-      where: companyId !== undefined ? { name, companyId } : { name },
+      where: { name, companyId },
       select: { id: true },
     });
   }
 
-  async create(data: CreateServiceInput) {
+  async create(data: CreateServiceInput, companyId: number) {
     return prisma.service.create({
       data: {
         name: data.name,
+        companyId,
         ...(data.description !== undefined && {
           description: data.description,
         }),

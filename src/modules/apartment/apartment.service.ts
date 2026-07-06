@@ -11,22 +11,23 @@ import type {
 export class ApartmentService {
   constructor(private readonly repo: ApartmentRepository) {}
 
-  async listApartments(buildingId?: number) {
-    return this.repo.findAll(buildingId);
+  async listApartments(companyId: number, buildingId?: number) {
+    return this.repo.findAll(companyId, buildingId);
   }
 
-  async getApartment(id: number) {
-    const apartment = await this.repo.findById(id);
+  async getApartment(id: number, companyId: number) {
+    const apartment = await this.repo.findById(id, companyId);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
     return apartment;
   }
 
   async createApartment(input: CreateApartmentInput, companyId: number) {
-    const building = await this.repo.findBuildingById(input.buildingId);
+    const building = await this.repo.findBuildingById(input.buildingId, companyId);
     if (!building) throw new HttpError(404, "Building not found.");
 
     const type = await this.repo.findApartmentTypeWithRooms(
       input.apartmentTypeId,
+      companyId,
     );
     if (!type) throw new HttpError(404, "Apartment type not found.");
 
@@ -57,8 +58,8 @@ export class ApartmentService {
     }
   }
 
-  async updateApartment(id: number, input: UpdateApartmentInput) {
-    const apartment = await this.repo.findById(id);
+  async updateApartment(id: number, companyId: number, input: UpdateApartmentInput) {
+    const apartment = await this.repo.findById(id, companyId);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
 
     if (
@@ -93,8 +94,8 @@ export class ApartmentService {
     }
   }
 
-  async deleteApartment(id: number) {
-    const apartment = await this.repo.findById(id);
+  async deleteApartment(id: number, companyId: number) {
+    const apartment = await this.repo.findById(id, companyId);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
     const checklist = await this.repo.findChecklistByApartmentId(id);
     if (checklist)
@@ -107,10 +108,11 @@ export class ApartmentService {
 
   async updateRoomName(
     apartmentId: number,
+    companyId: number,
     roomId: number,
     input: UpdateApartmentRoomInput,
   ) {
-    const apartment = await this.repo.findById(apartmentId);
+    const apartment = await this.repo.findById(apartmentId, companyId);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
     const room = await this.repo.findApartmentRoom(apartmentId, roomId);
     if (!room) throw new HttpError(404, "Room not found in this apartment.");
@@ -119,14 +121,15 @@ export class ApartmentService {
 
   async addServiceToRoom(
     apartmentId: number,
+    companyId: number,
     roomId: number,
     input: AddRoomServiceInput,
   ) {
-    const apartment = await this.repo.findById(apartmentId);
+    const apartment = await this.repo.findById(apartmentId, companyId);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
     const room = await this.repo.findApartmentRoom(apartmentId, roomId);
     if (!room) throw new HttpError(404, "Room not found in this apartment.");
-    const service = await this.repo.findService(input.serviceId);
+    const service = await this.repo.findService(input.serviceId, companyId);
     if (!service) throw new HttpError(404, "Service not found.");
     const existing = await this.repo.findApartmentRoomService(
       roomId,
@@ -149,10 +152,11 @@ export class ApartmentService {
 
   async removeServiceFromRoom(
     apartmentId: number,
+    companyId: number,
     roomId: number,
     serviceId: number,
   ) {
-    const apartment = await this.repo.findById(apartmentId);
+    const apartment = await this.repo.findById(apartmentId, companyId);
     if (!apartment) throw new HttpError(404, "Apartment not found.");
     const room = await this.repo.findApartmentRoom(apartmentId, roomId);
     if (!room) throw new HttpError(404, "Room not found in this apartment.");

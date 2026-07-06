@@ -11,22 +11,22 @@ import type {
 export class ApartmentTypeService {
   constructor(private readonly repo: ApartmentTypeRepository) {}
 
-  async listApartmentTypes() {
-    return this.repo.findAll();
+  async listApartmentTypes(companyId: number) {
+    return this.repo.findAll(companyId);
   }
 
-  async getApartmentType(id: number) {
-    const type = await this.repo.findById(id);
+  async getApartmentType(id: number, companyId: number) {
+    const type = await this.repo.findById(id, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     return type;
   }
 
-  async createApartmentType(input: CreateApartmentTypeInput) {
-    const existing = await this.repo.findByName(input.name);
+  async createApartmentType(input: CreateApartmentTypeInput, companyId: number) {
+    const existing = await this.repo.findByName(input.name, companyId);
     if (existing)
       throw new HttpError(409, "Apartment type name already exists.");
     try {
-      return await this.repo.create(input);
+      return await this.repo.create(input, companyId);
     } catch (e) {
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
@@ -38,11 +38,11 @@ export class ApartmentTypeService {
     }
   }
 
-  async updateApartmentType(id: number, input: UpdateApartmentTypeInput) {
-    const type = await this.repo.findById(id);
+  async updateApartmentType(id: number, companyId: number, input: UpdateApartmentTypeInput) {
+    const type = await this.repo.findById(id, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     if (input.name !== undefined && input.name !== type.name) {
-      const existing = await this.repo.findByName(input.name);
+      const existing = await this.repo.findByName(input.name, companyId);
       if (existing)
         throw new HttpError(409, "Apartment type name already exists.");
     }
@@ -59,8 +59,8 @@ export class ApartmentTypeService {
     }
   }
 
-  async deleteApartmentType(id: number) {
-    const type = await this.repo.findById(id);
+  async deleteApartmentType(id: number, companyId: number) {
+    const type = await this.repo.findById(id, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     const count = await this.repo.countApartments(id);
     if (count > 0) {
@@ -72,8 +72,8 @@ export class ApartmentTypeService {
     await this.repo.delete(id);
   }
 
-  async addRoom(apartmentTypeId: number, input: CreateRoomInput) {
-    const type = await this.repo.findById(apartmentTypeId);
+  async addRoom(apartmentTypeId: number, companyId: number, input: CreateRoomInput) {
+    const type = await this.repo.findById(apartmentTypeId, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     const existing = await this.repo.findRoomByName(
       apartmentTypeId,
@@ -100,8 +100,8 @@ export class ApartmentTypeService {
     }
   }
 
-  async removeRoom(apartmentTypeId: number, roomId: number) {
-    const type = await this.repo.findById(apartmentTypeId);
+  async removeRoom(apartmentTypeId: number, companyId: number, roomId: number) {
+    const type = await this.repo.findById(apartmentTypeId, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     const room = await this.repo.findRoom(apartmentTypeId, roomId);
     if (!room)
@@ -109,8 +109,8 @@ export class ApartmentTypeService {
     await this.repo.deleteRoom(roomId);
   }
 
-  async listRoomDefaultServices(apartmentTypeId: number, roomId: number) {
-    const type = await this.repo.findById(apartmentTypeId);
+  async listRoomDefaultServices(apartmentTypeId: number, companyId: number, roomId: number) {
+    const type = await this.repo.findById(apartmentTypeId, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     const room = await this.repo.findRoom(apartmentTypeId, roomId);
     if (!room)
@@ -120,15 +120,16 @@ export class ApartmentTypeService {
 
   async addRoomDefaultService(
     apartmentTypeId: number,
+    companyId: number,
     roomId: number,
     input: AddRoomDefaultServiceInput,
   ) {
-    const type = await this.repo.findById(apartmentTypeId);
+    const type = await this.repo.findById(apartmentTypeId, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     const room = await this.repo.findRoom(apartmentTypeId, roomId);
     if (!room)
       throw new HttpError(404, "Room not found in this apartment type.");
-    const service = await this.repo.findService(input.serviceId);
+    const service = await this.repo.findService(input.serviceId, companyId);
     if (!service) throw new HttpError(404, "Service not found.");
     const existing = await this.repo.findRoomDefaultService(
       roomId,
@@ -154,10 +155,11 @@ export class ApartmentTypeService {
 
   async removeRoomDefaultService(
     apartmentTypeId: number,
+    companyId: number,
     roomId: number,
     serviceId: number,
   ) {
-    const type = await this.repo.findById(apartmentTypeId);
+    const type = await this.repo.findById(apartmentTypeId, companyId);
     if (!type) throw new HttpError(404, "Apartment type not found.");
     const room = await this.repo.findRoom(apartmentTypeId, roomId);
     if (!room)

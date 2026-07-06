@@ -16,7 +16,9 @@ export class ChecklistController {
     request: FastifyRequest<{ Querystring: ChecklistQuery }>,
     reply: FastifyReply,
   ) {
+    const companyId = getTenantId(request);
     const checklists = await this.service.listChecklists(
+      companyId,
       request.query.apartmentId,
     );
     return reply.status(200).send(checklists);
@@ -26,7 +28,8 @@ export class ChecklistController {
     request: FastifyRequest<{ Params: ChecklistParams }>,
     reply: FastifyReply,
   ) {
-    const checklist = await this.service.getChecklist(request.params.id);
+    const companyId = getTenantId(request);
+    const checklist = await this.service.getChecklist(request.params.id, companyId);
     return reply.status(200).send(checklist);
   }
 
@@ -38,8 +41,10 @@ export class ChecklistController {
     reply: FastifyReply,
   ) {
     const userId = Number(request.user.sub);
+    const companyId = getTenantId(request);
     const checklist = await this.service.updateChecklist(
       request.params.id,
+      companyId,
       request.body,
       userId,
     );
@@ -68,7 +73,8 @@ export class ChecklistController {
     request: FastifyRequest<{ Params: ChecklistParams }>,
     reply: FastifyReply,
   ) {
-    const visits = await this.service.listVisits(request.params.id);
+    const companyId = getTenantId(request);
+    const visits = await this.service.listVisits(request.params.id, companyId);
     return reply.status(200).send(visits);
   }
 

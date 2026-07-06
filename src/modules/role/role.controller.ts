@@ -1,4 +1,5 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { RoleService } from "./role.service.js";
 import type {
   CreateRoleInput,
@@ -9,8 +10,9 @@ import type {
 export class RoleController {
   constructor(private readonly service: RoleService) {}
 
-  async list(_request: FastifyRequest, reply: FastifyReply) {
-    const roles = await this.service.listRoles();
+  async list(request: FastifyRequest, reply: FastifyReply) {
+    const companyId = getTenantId(request);
+    const roles = await this.service.listRoles(companyId);
     return reply.send(roles);
   }
 
@@ -18,7 +20,8 @@ export class RoleController {
     request: FastifyRequest<{ Params: RoleParams }>,
     reply: FastifyReply,
   ) {
-    const role = await this.service.getRole(request.params.id);
+    const companyId = getTenantId(request);
+    const role = await this.service.getRole(request.params.id, companyId);
     return reply.send(role);
   }
 
@@ -26,7 +29,8 @@ export class RoleController {
     request: FastifyRequest<{ Body: CreateRoleInput }>,
     reply: FastifyReply,
   ) {
-    const role = await this.service.createRole(request.body);
+    const companyId = getTenantId(request);
+    const role = await this.service.createRole(request.body, companyId);
     return reply.status(201).send(role);
   }
 
@@ -34,7 +38,8 @@ export class RoleController {
     request: FastifyRequest<{ Params: RoleParams; Body: UpdateRoleInput }>,
     reply: FastifyReply,
   ) {
-    const role = await this.service.updateRole(request.params.id, request.body);
+    const companyId = getTenantId(request);
+    const role = await this.service.updateRole(request.params.id, companyId, request.body);
     return reply.send(role);
   }
 
@@ -42,7 +47,8 @@ export class RoleController {
     request: FastifyRequest<{ Params: RoleParams }>,
     reply: FastifyReply,
   ) {
-    await this.service.deleteRole(request.params.id);
+    const companyId = getTenantId(request);
+    await this.service.deleteRole(request.params.id, companyId);
     return reply.status(204).send();
   }
 }

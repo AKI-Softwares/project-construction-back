@@ -14,20 +14,21 @@ const ROLE_SELECT = {
 } as const;
 
 export class RoleRepository {
-  async findAll() {
+  async findAll(companyId: number) {
     return prisma.role.findMany({
+      where: { companyId },
       select: ROLE_SELECT,
       orderBy: { name: "asc" },
     });
   }
 
-  async findById(id: number) {
-    return prisma.role.findUnique({ where: { id }, select: ROLE_SELECT });
+  async findById(id: number, companyId: number) {
+    return prisma.role.findUnique({ where: { id, companyId }, select: ROLE_SELECT });
   }
 
-  async findByName(name: string, companyId?: number | null) {
+  async findByName(name: string, companyId: number) {
     return prisma.role.findFirst({
-      where: companyId !== undefined ? { name, companyId } : { name },
+      where: { name, companyId },
     });
   }
 
@@ -35,10 +36,12 @@ export class RoleRepository {
     name: string;
     description?: string;
     permissionIds: number[];
+    companyId: number;
   }) {
     return prisma.role.create({
       data: {
         name: data.name,
+        companyId: data.companyId,
         ...(data.description !== undefined && {
           description: data.description,
         }),
