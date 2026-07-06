@@ -28,7 +28,42 @@ export class CompanyService {
   async create(input: CreateCompanyInput) {
     const existing = await this.repo.findBySlug(input.slug);
     if (existing) throw new HttpError(409, 'Company slug already taken.');
-    return this.repo.create(input);
+
+    const company = await this.repo.create(input);
+
+    const { prisma } = await import('../../../shared/infra/database/prisma.js');
+
+    const [templateRoles, templateServices, templateApartmentTypes] = await Promise.all([
+      prisma.role.findMany({
+        where: { companyId: null, isCompanyAdmin: false },
+        select: {
+          name: true,
+          description: true,
+          permissions: { select: { id: true } },
+        },
+      }),
+      prisma.service.findMany({
+        where: { companyId: null },
+        select: { name: true, description: true, category: true },
+      }),
+      prisma.apartmentType.findMany({
+        where: { companyId: null },
+        select: { name: true, description: true },
+      }),
+    ]);
+
+    await this.repo.seedCompanyOnActivation(
+      company.id,
+      templateRoles.map((r) => ({
+        name: r.name,
+        description: r.description,
+        permissionIds: r.permissions.map((p) => p.id),
+      })),
+      templateServices,
+      templateApartmentTypes,
+    );
+
+    return company;
   }
 
   async update(id: number, input: UpdateCompanyInput) {
