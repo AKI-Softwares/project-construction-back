@@ -10,8 +10,8 @@ const SALT_ROUNDS = 12;
 export class UserService {
   constructor(private readonly repo: UserRepository) {}
 
-  async listUsers() {
-    return this.repo.findAll();
+  async listUsers(companyId: number) {
+    return this.repo.findAll(companyId);
   }
 
   async getUser(id: number) {

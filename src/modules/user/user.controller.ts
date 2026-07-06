@@ -10,8 +10,10 @@ import type {
 export class UserController {
   constructor(private readonly service: UserService) {}
 
-  async list(_request: FastifyRequest, reply: FastifyReply) {
-    const users = await this.service.listUsers();
+  async list(request: FastifyRequest, reply: FastifyReply) {
+    const companyId = request.user.companyId;
+    if (!companyId) return reply.status(400).send({ message: "Company context required." });
+    const users = await this.service.listUsers(companyId);
     return reply.send(users);
   }
 

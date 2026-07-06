@@ -6,21 +6,31 @@ const USER_SELECT = {
   name: true,
   email: true,
   roleId: true,
-  role: { select: { id: true, name: true } },
+  role: { select: { id: true, name: true, isCompanyAdmin: true } },
   createdAt: true,
   updatedAt: true,
 } as const;
 
 export class UserRepository {
-  async findAll() {
-    return prisma.user.findMany({ select: USER_SELECT });
+  async findAll(companyId: number) {
+    const users = await prisma.user.findMany({
+      where: { companyId },
+      select: USER_SELECT,
+      orderBy: { name: 'asc' },
+    });
+    return users.map((u) => ({
+      ...u,
+      isCompanyAdmin: u.role?.isCompanyAdmin ?? false,
+    }));
   }
 
   async findById(id: number) {
-    return prisma.user.findUnique({
+    const u = await prisma.user.findUnique({
       where: { id },
       select: USER_SELECT,
     });
+    if (!u) return null;
+    return { ...u, isCompanyAdmin: u.role?.isCompanyAdmin ?? false };
   }
 
   async findByEmail(email: string) {
