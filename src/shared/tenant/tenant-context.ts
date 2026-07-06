@@ -34,5 +34,8 @@ export function getOptionalTenantId(request: FastifyRequest): number | null {
     }
     return id;
   }
-  return request.user.companyId ?? null;
+  if (!request.user.companyId) {
+    throw new HttpError(403, "No company context.");
+  }
+  return request.user.companyId;
 }
