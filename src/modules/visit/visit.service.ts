@@ -3,6 +3,7 @@ import { deleteCloudinaryPhoto, uploadSignature } from "../../shared/storage/clo
 import { logAudit } from "../../shared/audit/audit-log.js";
 import { sendPushToUsers, sendPushToCompanyInspectors } from "../../shared/push/push-notification.js";
 import { generateVisitReport, type VisitReportData } from "../../shared/pdf/visit-report.js";
+import { prisma } from "../../shared/infra/database/prisma.js";
 import type { VisitRepository } from "./visit.repository.js";
 import type {
   FinalizeVisitInput,
@@ -337,6 +338,24 @@ export class VisitService {
     }
     const updated = await this.repo.claimReinspection(visitId, companyId, inspectorId);
     void logAudit({ companyId, userId: inspectorId, entityType: "Visit", entityId: visitId, action: "CLAIMED", after: { inspectorId } });
+    const { checklist, ...rest } = updated;
+    return { ...rest, apartment: checklist.apartment };
+  }
+
+  async assignInspector(visitId: number, companyId: number, inspectorId: number) {
+    const visit = await this.repo.findById(visitId, companyId);
+    if (!visit) throw new HttpError(404, "Vistoria não encontrada.");
+    if (visit.type !== "REINSPECTION") {
+      throw new HttpError(400, "Apenas re-inspeções podem ter inspetor atribuído por este endpoint.");
+    }
+    if (visit.status === "FINALIZED") {
+      throw new HttpError(400, "Não é possível atribuir inspetor a uma vistoria finalizada.");
+    }
+
+    const inspector = await prisma.user.findFirst({ where: { id: inspectorId, companyId }, select: { id: true } });
+    if (!inspector) throw new HttpError(422, "Inspetor não encontrado nesta empresa.");
+
+    const updated = await this.repo.assignInspector(visitId, companyId, inspectorId);
     const { checklist, ...rest } = updated;
     return { ...rest, apartment: checklist.apartment };
   }

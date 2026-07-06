@@ -370,6 +370,14 @@ export class VisitRepository {
     });
   }
 
+  async assignInspector(visitId: number, companyId: number, inspectorId: number) {
+    return prisma.visit.update({
+      where: { id: visitId, companyId },
+      data: { inspectorId },
+      select: VISIT_LIST_SELECT,
+    });
+  }
+
   async revertVisitItem(itemId: number, ncId: number | null) {
     if (ncId !== null) {
       return prisma.$transaction(async (tx) => {

@@ -11,6 +11,7 @@ import type {
   AddNonConformityInput,
   CreateReinspectionInput,
   SaveSignatureInput,
+  AssignInspectorInput,
 } from "./visit.schema.js";
 
 export class VisitController {
@@ -153,6 +154,19 @@ export class VisitController {
     const companyId = getTenantId(request);
     const inspectorId = Number(request.user.sub);
     const visit = await this.service.claimReinspection(request.params.id, companyId, inspectorId);
+    return reply.status(200).send(visit);
+  }
+
+  async assignInspector(
+    request: FastifyRequest<{ Params: VisitParams; Body: AssignInspectorInput }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const visit = await this.service.assignInspector(
+      request.params.id,
+      companyId,
+      request.body.inspectorId,
+    );
     return reply.status(200).send(visit);
   }
 

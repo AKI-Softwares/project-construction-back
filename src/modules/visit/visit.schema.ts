@@ -53,6 +53,12 @@ export const saveSignatureSchema = z.object({
   imageBase64: z.string().min(100),
 });
 
+export const assignInspectorSchema = z.object({
+  inspectorId: z.number().int().positive(),
+});
+
+export type AssignInspectorInput = z.infer<typeof assignInspectorSchema>;
+
 export type VisitParams = z.infer<typeof visitParamsSchema>;
 export type VisitItemParams = z.infer<typeof visitItemParamsSchema>;
 export type VisitMineQuery = z.infer<typeof visitMineQuerySchema>;
