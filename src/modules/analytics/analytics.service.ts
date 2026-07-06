@@ -45,7 +45,7 @@ export class AnalyticsService {
   }
 
   async getOverview(
-    companyId: number,
+    companyId: number | null,
     query: AnalyticsQuery,
   ): Promise<AnalyticsResponse<OverviewData>> {
     const { from, to } = parseDateRange(query);
@@ -55,36 +55,38 @@ export class AnalyticsService {
       return this.buildOverviewFromRaw(from, to, raw);
     }
 
-    // Long range: aggregate snapshots, fall back to realtime if missing
-    const snapshots = await this.snapshotRepo.findCompanySnapshots(companyId, from, to);
-    if (snapshots.length === 0) {
-      const raw = await this.repo.getOverviewRealtime(companyId, from, to);
-      return this.buildOverviewFromRaw(from, to, raw);
+    // Long range: snapshots only meaningful for a specific company
+    if (companyId !== null) {
+      const snapshots = await this.snapshotRepo.findCompanySnapshots(companyId, from, to);
+      if (snapshots.length > 0) {
+        // Aggregate daily snapshots
+        // snapshots.length > 0 is guaranteed by the guard above
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const last = snapshots.at(-1)!.data as CompanySnapshotData;
+        const totalNok = snapshots.reduce((sum, s) => sum + ((s.data as CompanySnapshotData).nokCount ?? 0), 0);
+        const totalEval = snapshots.reduce((sum, s) => sum + ((s.data as CompanySnapshotData).evaluatedCount ?? 0), 0);
+        const totalFinalized = snapshots.reduce((sum, s) => sum + ((s.data as CompanySnapshotData).visitsFinalized ?? 0), 0);
+
+        return {
+          period: { from: from.toISOString(), to: to.toISOString() },
+          dataSource: "snapshot",
+          data: {
+            totalApartments: last.totalApartments,
+            visitsFinalized: totalFinalized,
+            visitsPending: last.visitsPending,
+            nokRate: totalEval === 0 ? 0 : totalNok / totalEval,
+            totalNonConformities: last.totalNonConformities,
+            totalInspectors: last.totalInspectors,
+          },
+        };
+      }
     }
 
-    // Aggregate daily snapshots
-    // snapshots.length > 0 is guaranteed by the guard above
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const last = snapshots.at(-1)!.data as CompanySnapshotData;
-    const totalNok = snapshots.reduce((sum, s) => sum + ((s.data as CompanySnapshotData).nokCount ?? 0), 0);
-    const totalEval = snapshots.reduce((sum, s) => sum + ((s.data as CompanySnapshotData).evaluatedCount ?? 0), 0);
-    const totalFinalized = snapshots.reduce((sum, s) => sum + ((s.data as CompanySnapshotData).visitsFinalized ?? 0), 0);
-
-    return {
-      period: { from: from.toISOString(), to: to.toISOString() },
-      dataSource: "snapshot",
-      data: {
-        totalApartments: last.totalApartments,
-        visitsFinalized: totalFinalized,
-        visitsPending: last.visitsPending,
-        nokRate: totalEval === 0 ? 0 : totalNok / totalEval,
-        totalNonConformities: last.totalNonConformities,
-        totalInspectors: last.totalInspectors,
-      },
-    };
+    const raw = await this.repo.getOverviewRealtime(companyId, from, to);
+    return this.buildOverviewFromRaw(from, to, raw);
   }
 
-  async getProgress(companyId: number, query: AnalyticsQuery) {
+  async getProgress(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getProgress(companyId);
     return {
@@ -94,7 +96,7 @@ export class AnalyticsService {
     };
   }
 
-  async getQuality(companyId: number, query: AnalyticsQuery) {
+  async getQuality(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getQuality(companyId, from, to);
     return {
@@ -104,7 +106,7 @@ export class AnalyticsService {
     };
   }
 
-  async getInspectors(companyId: number, query: AnalyticsQuery) {
+  async getInspectors(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getInspectors(companyId, from, to);
     return {
@@ -114,25 +116,25 @@ export class AnalyticsService {
     };
   }
 
-  async getNcResolution(companyId: number, query: AnalyticsQuery) {
+  async getNcResolution(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getNcResolution(companyId, from, to);
     return { period: { from: from.toISOString(), to: to.toISOString() }, dataSource: "realtime" as const, data };
   }
 
-  async getSla(companyId: number, query: AnalyticsQuery) {
+  async getSla(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getSla(companyId, from, to);
     return { period: { from: from.toISOString(), to: to.toISOString() }, dataSource: "realtime" as const, data };
   }
 
-  async getReinspectionRate(companyId: number, query: AnalyticsQuery) {
+  async getReinspectionRate(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getReinspectionRate(companyId, from, to);
     return { period: { from: from.toISOString(), to: to.toISOString() }, dataSource: "realtime" as const, data };
   }
 
-  async getTimeline(companyId: number, query: AnalyticsQuery) {
+  async getTimeline(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const { visitDates, ncDates } = await this.repo.getTimelineRaw(companyId, from, to);
 
@@ -177,13 +179,13 @@ export class AnalyticsService {
     };
   }
 
-  async getInspectorRanking(companyId: number, query: AnalyticsQuery) {
+  async getInspectorRanking(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getInspectorRanking(companyId, from, to);
     return { period: { from: from.toISOString(), to: to.toISOString() }, dataSource: "realtime" as const, data };
   }
 
-  async getBuildingRanking(companyId: number, query: AnalyticsQuery) {
+  async getBuildingRanking(companyId: number | null, query: AnalyticsQuery) {
     const { from, to } = parseDateRange(query);
     const data = await this.repo.getBuildingRanking(companyId, from, to);
     return { period: { from: from.toISOString(), to: to.toISOString() }, dataSource: "realtime" as const, data };

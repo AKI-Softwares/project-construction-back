@@ -22,3 +22,17 @@ export function getTenantId(request: FastifyRequest): number {
   }
   return request.user.companyId;
 }
+
+export function getOptionalTenantId(request: FastifyRequest): number | null {
+  if (request.user.isPlatformAdmin) {
+    const override = request.headers["x-company-id"];
+    if (!override) return null;
+    const raw = Array.isArray(override) ? override[0] : override;
+    const id = parseInt(raw as string, 10);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new HttpError(400, 'X-Company-Id must be a positive integer.');
+    }
+    return id;
+  }
+  return request.user.companyId ?? null;
+}
