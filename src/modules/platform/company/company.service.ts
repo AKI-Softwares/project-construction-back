@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { prisma } from '../../../shared/infra/database/prisma.js';
 import { HttpError } from '../../../shared/errors/http-error.js';
 import { UserRepository } from '../../user/user.repository.js';
 import type { CompanyRepository } from './company.repository.js';
@@ -30,8 +31,6 @@ export class CompanyService {
     if (existing) throw new HttpError(409, 'Company slug already taken.');
 
     const company = await this.repo.create(input);
-
-    const { prisma } = await import('../../../shared/infra/database/prisma.js');
 
     const [templateRoles, templateServices, templateApartmentTypes] = await Promise.all([
       prisma.role.findMany({
@@ -81,8 +80,6 @@ export class CompanyService {
     if (!company) throw new HttpError(404, 'Company not found.');
 
     if (input.status === 'ACTIVE' && company.status === 'PENDING') {
-      const { prisma } = await import('../../../shared/infra/database/prisma.js');
-
       const templateRoles = await prisma.role.findMany({
         where: { companyId: null, isCompanyAdmin: false },
         select: {
