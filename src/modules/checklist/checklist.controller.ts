@@ -7,7 +7,6 @@ import type {
   UpdateChecklistInput,
   CreateVisitInput,
   ChecklistItemParams,
-  ResolveChecklistItemInput,
 } from "./checklist.schema.js";
 
 export class ChecklistController {
@@ -76,7 +75,6 @@ export class ChecklistController {
   async resolveItem(
     request: FastifyRequest<{
       Params: ChecklistItemParams;
-      Body: ResolveChecklistItemInput;
     }>,
     reply: FastifyReply,
   ) {
@@ -87,7 +85,6 @@ export class ChecklistController {
       request.params.itemId,
       companyId,
       userId,
-      request.body,
     );
     return reply.status(200).send(item);
   }

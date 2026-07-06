@@ -27,9 +27,7 @@ export const checklistItemParamsSchema = z.object({
   itemId: z.coerce.number().int().positive(),
 });
 
-export const resolveChecklistItemSchema = z.object({
-  notes: z.string().min(1).optional(),
-});
+export const resolveChecklistItemSchema = z.object({});
 
 export type ChecklistItemParams = z.infer<typeof checklistItemParamsSchema>;
 export type ResolveChecklistItemInput = z.infer<typeof resolveChecklistItemSchema>;
