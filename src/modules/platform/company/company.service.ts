@@ -80,24 +80,24 @@ export class CompanyService {
     if (!company) throw new HttpError(404, 'Company not found.');
 
     if (input.status === 'ACTIVE' && company.status === 'PENDING') {
-      const templateRoles = await prisma.role.findMany({
-        where: { companyId: null, isCompanyAdmin: false },
-        select: {
-          name: true,
-          description: true,
-          permissions: { select: { id: true } },
-        },
-      });
-
-      const templateServices = await prisma.service.findMany({
-        where: { companyId: null },
-        select: { name: true, description: true, category: true },
-      });
-
-      const templateApartmentTypes = await prisma.apartmentType.findMany({
-        where: { companyId: null },
-        select: { name: true, description: true },
-      });
+      const [templateRoles, templateServices, templateApartmentTypes] = await Promise.all([
+        prisma.role.findMany({
+          where: { companyId: null, isCompanyAdmin: false },
+          select: {
+            name: true,
+            description: true,
+            permissions: { select: { id: true } },
+          },
+        }),
+        prisma.service.findMany({
+          where: { companyId: null },
+          select: { name: true, description: true, category: true },
+        }),
+        prisma.apartmentType.findMany({
+          where: { companyId: null },
+          select: { name: true, description: true },
+        }),
+      ]);
 
       await this.repo.seedCompanyOnActivation(
         id,
