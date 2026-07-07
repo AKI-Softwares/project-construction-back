@@ -146,12 +146,14 @@ export class VisitRepository {
     finalizedById: number,
   ) {
     return prisma.$transaction(async (tx) => {
-      for (const item of items) {
-        await tx.checklistItem.update({
-          where: { id: item.checklistItemId },
-          data: { status: item.status },
-        });
-      }
+      await Promise.all(
+        items.map((item) =>
+          tx.checklistItem.update({
+            where: { id: item.checklistItemId },
+            data: { status: item.status },
+          }),
+        ),
+      );
 
       await tx.visit.update({
         where: { id: visitId },
