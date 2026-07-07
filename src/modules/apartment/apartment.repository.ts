@@ -19,20 +19,7 @@ const APARTMENT_ROOM_SELECT = {
   services: { select: APARTMENT_ROOM_SERVICE_SELECT },
 } as const;
 
-const APARTMENT_LIST_SELECT = {
-  id: true,
-  buildingId: true,
-  apartmentTypeId: true,
-  identifier: true,
-  floor: true,
-  block: true,
-  createdAt: true,
-  updatedAt: true,
-  building: { select: { id: true, name: true } },
-  apartmentType: { select: { id: true, name: true } },
-} as const;
-
-const APARTMENT_DETAIL_SELECT = {
+const APARTMENT_SELECT = {
   id: true,
   buildingId: true,
   apartmentTypeId: true,
@@ -53,7 +40,7 @@ export class ApartmentRepository {
   async findAll(companyId: number, buildingId?: number) {
     return prisma.apartment.findMany({
       where: { companyId, ...(buildingId !== undefined && { buildingId }) },
-      select: APARTMENT_LIST_SELECT,
+      select: APARTMENT_SELECT,
       orderBy: [{ buildingId: "asc" as const }, { identifier: "asc" as const }],
     });
   }
@@ -61,7 +48,7 @@ export class ApartmentRepository {
   async findById(id: number, companyId: number) {
     return prisma.apartment.findUnique({
       where: { id, companyId },
-      select: APARTMENT_DETAIL_SELECT,
+      select: APARTMENT_SELECT,
     });
   }
 
@@ -160,7 +147,7 @@ export class ApartmentRepository {
 
       const result = await tx.apartment.findUnique({
         where: { id: apartment.id },
-        select: APARTMENT_DETAIL_SELECT,
+        select: APARTMENT_SELECT,
       });
 
       return result!;
@@ -175,7 +162,7 @@ export class ApartmentRepository {
         ...(data.floor !== undefined && { floor: data.floor }),
         ...(data.block !== undefined && { block: data.block }),
       },
-      select: APARTMENT_DETAIL_SELECT,
+      select: APARTMENT_SELECT,
     });
   }
 
