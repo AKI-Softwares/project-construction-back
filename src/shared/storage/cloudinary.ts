@@ -9,16 +9,20 @@ export interface UploadParams {
   apiKey: string;
   cloudName: string;
   folder: string;
+  transformation: string;
 }
+
+const UPLOAD_TRANSFORMATION = "c_limit,w_1920/q_80/f_auto";
 
 export function generateUploadParams(): UploadParams {
   const timestamp = Math.round(Date.now() / 1000);
   const folder = CLOUDINARY_PHOTO_FOLDER;
+  const transformation = UPLOAD_TRANSFORMATION;
   const signature = cloudinary.utils.api_sign_request(
-    { timestamp, folder },
+    { timestamp, folder, transformation },
     env.CLOUDINARY_API_SECRET,
   );
-  return { signature, timestamp, apiKey: env.CLOUDINARY_API_KEY, cloudName: env.CLOUDINARY_CLOUD_NAME, folder };
+  return { signature, timestamp, apiKey: env.CLOUDINARY_API_KEY, cloudName: env.CLOUDINARY_CLOUD_NAME, folder, transformation };
 }
 
 cloudinary.config({
