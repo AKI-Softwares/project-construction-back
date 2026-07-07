@@ -279,6 +279,7 @@ model Checklist {
   visits        Visit[]
 
   @@index([companyId])
+  @@index([finalizedById])
   @@map("Inspection")
 }
 
@@ -359,6 +360,7 @@ model NonConformity {
   photos       Photo[]
 
   @@index([companyId])
+  @@index([resolvedById])
   @@map("NonConformity")
 }
 
