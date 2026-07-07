@@ -33,3 +33,10 @@ export const patchNcSchema = z.object({
 
 export type CreateNcInput = z.infer<typeof createNcSchema>;
 export type PatchNcInput = z.infer<typeof patchNcSchema>;
+
+export const confirmPhotoSchema = z.object({
+  url: z.string().url(),
+  publicId: z.string().min(1),
+});
+
+export type ConfirmPhotoInput = z.infer<typeof confirmPhotoSchema>;

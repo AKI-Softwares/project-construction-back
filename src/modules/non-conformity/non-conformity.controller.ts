@@ -2,7 +2,7 @@ import { HttpError } from "../../shared/errors/http-error.js";
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { getTenantId } from "../../shared/tenant/tenant-context.js";
 import type { NonConformityService } from "./non-conformity.service.js";
-import type { CreateNcInput, ListNcQuery, NcParams, PatchNcInput, PhotoParams } from "./non-conformity.schema.js";
+import type { ConfirmPhotoInput, CreateNcInput, ListNcQuery, NcParams, PatchNcInput, PhotoParams } from "./non-conformity.schema.js";
 
 export class NonConformityController {
   constructor(private service: NonConformityService) {}
@@ -81,6 +81,29 @@ export class NonConformityController {
     const userId = Number(request.user.sub);
     await this.service.deleteNc(request.params.id, companyId, userId);
     return reply.status(204).send();
+  }
+
+  async getUploadParams(
+    request: FastifyRequest<{ Params: NcParams }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const params = await this.service.getUploadParams(request.params.id, companyId);
+    return reply.status(200).send(params);
+  }
+
+  async confirmPhoto(
+    request: FastifyRequest<{ Params: NcParams; Body: ConfirmPhotoInput }>,
+    reply: FastifyReply,
+  ) {
+    const companyId = getTenantId(request);
+    const photo = await this.service.confirmPhoto(
+      request.params.id,
+      request.body.url,
+      request.body.publicId,
+      companyId,
+    );
+    return reply.status(201).send(photo);
   }
 
   async resolve(

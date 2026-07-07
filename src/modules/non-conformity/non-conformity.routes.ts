@@ -2,7 +2,7 @@ import type { FastifyPluginAsyncZod } from "fastify-type-provider-zod";
 import { NonConformityRepository } from "./non-conformity.repository.js";
 import { NonConformityService } from "./non-conformity.service.js";
 import { NonConformityController } from "./non-conformity.controller.js";
-import { createNcSchema, listNcQuerySchema, ncParamsSchema, patchNcSchema, photoParamsSchema } from "./non-conformity.schema.js";
+import { confirmPhotoSchema, createNcSchema, listNcQuerySchema, ncParamsSchema, patchNcSchema, photoParamsSchema } from "./non-conformity.schema.js";
 import { checkPermission } from "../../shared/rbac/check-permission.js";
 import { requireCompanyAdmin } from "../../shared/rbac/require-company-admin.js";
 
@@ -63,6 +63,24 @@ export const nonConformityRoutes: FastifyPluginAsyncZod = async (app) => {
       preHandler: [app.authenticate, checkPermission("photos:delete")],
     },
     controller.deletePhoto.bind(controller),
+  );
+
+  app.get(
+    "/:id/photos/upload-params",
+    {
+      schema: { params: ncParamsSchema },
+      preHandler: [app.authenticate, checkPermission("photos:create")],
+    },
+    controller.getUploadParams.bind(controller),
+  );
+
+  app.post(
+    "/:id/photos/confirm",
+    {
+      schema: { params: ncParamsSchema, body: confirmPhotoSchema },
+      preHandler: [app.authenticate, checkPermission("photos:create")],
+    },
+    controller.confirmPhoto.bind(controller),
   );
 
   app.patch(

@@ -1,6 +1,6 @@
 import { fileTypeFromBuffer } from "file-type";
 import { HttpError } from "../../shared/errors/http-error.js";
-import { uploadPhoto, deleteCloudinaryPhoto } from "../../shared/storage/cloudinary.js";
+import { uploadPhoto, deleteCloudinaryPhoto, generateUploadParams, CLOUDINARY_PHOTO_FOLDER, type UploadParams } from "../../shared/storage/cloudinary.js";
 import { logAudit } from "../../shared/audit/audit-log.js";
 import { sendPushToUsers } from "../../shared/push/push-notification.js";
 import type { NonConformityRepository } from "./non-conformity.repository.js";
@@ -115,6 +115,35 @@ export class NonConformityService {
     const result = await this.repo.deleteById(ncId);
     void logAudit({ companyId, userId, entityType: "NonConformity", entityId: ncId, action: "DELETED" });
     return result;
+  }
+
+  async getUploadParams(ncId: number, companyId: number): Promise<UploadParams> {
+    const nc = await this.repo.findById(ncId, companyId);
+    if (!nc) throw new HttpError(404, "Não conformidade não encontrada.");
+    if (nc.visitItem.visit.status === "FINALIZED") {
+      throw new HttpError(403, "Não é possível adicionar fotos a uma vistoria finalizada.");
+    }
+    const photoCount = await this.repo.countPhotos(ncId);
+    if (photoCount >= 5) {
+      throw new HttpError(422, "Máximo de 5 fotos por não conformidade.");
+    }
+    return generateUploadParams();
+  }
+
+  async confirmPhoto(ncId: number, url: string, publicId: string, companyId: number) {
+    if (!publicId.startsWith(CLOUDINARY_PHOTO_FOLDER + "/")) {
+      throw new HttpError(400, "publicId inválido.");
+    }
+    const nc = await this.repo.findById(ncId, companyId);
+    if (!nc) throw new HttpError(404, "Não conformidade não encontrada.");
+    if (nc.visitItem.visit.status === "FINALIZED") {
+      throw new HttpError(403, "Não é possível adicionar fotos a uma vistoria finalizada.");
+    }
+    const photoCount = await this.repo.countPhotos(ncId);
+    if (photoCount >= 5) {
+      throw new HttpError(422, "Máximo de 5 fotos por não conformidade.");
+    }
+    return this.repo.addPhoto(ncId, url, publicId, companyId);
   }
 
   async resolveNc(ncId: number, companyId: number, resolvedById: number) {
