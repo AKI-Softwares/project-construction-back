@@ -280,14 +280,29 @@ async function main() {
       const slice = createdApartments.slice(i * 10, (i + 1) * 10);
 
       for (const apt of slice) {
-        await prisma.visit.create({
+        const visit = await prisma.visit.create({
           data: {
             checklistId: apt.checklistId,
             inspectorId: inspector.id,
             createdById: admin.id,
             companyId: company.id,
           },
+          select: { id: true },
         });
+
+        // Criar VisitItems para cada ChecklistItem do apartamento
+        const checklistItems = await prisma.checklistItem.findMany({
+          where: { checklistId: apt.checklistId },
+          select: { id: true },
+        });
+        if (checklistItems.length > 0) {
+          await prisma.visitItem.createMany({
+            data: checklistItems.map((item) => ({
+              visitId: visit.id,
+              checklistItemId: item.id,
+            })),
+          });
+        }
       }
 
       const ids = slice.map((a) => a.identifier).join(", ");
