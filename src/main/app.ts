@@ -1,5 +1,6 @@
 import "dotenv/config";
 import Fastify from "fastify";
+import compress from "@fastify/compress";
 import {
   serializerCompiler,
   validatorCompiler,
@@ -44,6 +45,7 @@ export async function buildApp() {
   app.setSerializerCompiler(serializerCompiler);
 
   // Plugins
+  await app.register(compress, { global: true });
   await registerRateLimit(app);
   await registerCors(app);
   await registerJwt(app);

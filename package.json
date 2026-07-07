@@ -39,6 +39,7 @@
   },
   "homepage": "https://github.com/AKI-Softwares/project-construction-back#readme",
   "dependencies": {
+    "@fastify/compress": "^9.0.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/jwt": "^10.0.0",
     "@fastify/multipart": "^10.0.0",
