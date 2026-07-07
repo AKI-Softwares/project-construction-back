@@ -25,9 +25,8 @@ export class CronService {
       select: { id: true },
     });
 
-    const errors: string[] = [];
-    for (const company of companies) {
-      try {
+    const results = await Promise.allSettled(
+      companies.map(async (company) => {
         const raw = await this.analyticsRepo.getOverviewRealtime(
           company.id,
           yesterday,
@@ -42,10 +41,16 @@ export class CronService {
           totalNonConformities: raw.totalNonConformities,
           totalInspectors:      raw.totalInspectors,
         });
-      } catch (e) {
-        errors.push(`company ${company.id}: ${e instanceof Error ? e.message : String(e)}`);
-      }
-    }
+      }),
+    );
+
+    const errors = results
+      .map((r, i) =>
+        r.status === "rejected"
+          ? `company ${companies[i]!.id}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`
+          : null,
+      )
+      .filter((e): e is string => e !== null);
 
     if (errors.length > 0) {
       throw new HttpError(500, `Snapshot failed for ${errors.length} of ${companies.length} companies: ${errors.join("; ")}`);
