@@ -105,13 +105,13 @@ export class NonConformityService {
       throw new HttpError(400, "A vistoria já foi finalizada.");
     }
     const photos = await this.repo.findPhotosByNcId(ncId);
-    for (const photo of photos) {
-      try {
-        await deleteCloudinaryPhoto(photo.publicId);
-      } catch (err) {
-        console.error(`[deleteNc] Cloudinary cleanup failed for ${photo.publicId}:`, err);
-      }
-    }
+    await Promise.all(
+      photos.map((photo) =>
+        deleteCloudinaryPhoto(photo.publicId).catch((err) =>
+          console.error(`[deleteNc] Cloudinary cleanup failed for ${photo.publicId}:`, err),
+        ),
+      ),
+    );
     const result = await this.repo.deleteById(ncId);
     void logAudit({ companyId, userId, entityType: "NonConformity", entityId: ncId, action: "DELETED" });
     return result;
