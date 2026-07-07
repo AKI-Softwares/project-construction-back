@@ -10,6 +10,10 @@ const ROOM_SELECT = {
   name: true,
   createdAt: true,
   updatedAt: true,
+  defaultServices: {
+    select: { service: { select: { id: true, name: true, category: true } } },
+    orderBy: { service: { name: "asc" as const } },
+  },
 } as const;
 
 const APARTMENT_TYPE_SELECT = {
